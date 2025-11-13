@@ -23,20 +23,22 @@
 
 // ----------------------------------------------------------------------------
 
-//! Ecosystem.
+//! Cargo workspace.
 
-mod cargo;
-mod error;
+use serde::Deserialize;
+use std::collections::BTreeMap;
 
-pub use cargo::Cargo;
-pub use error::{Error, Result};
+use super::dependency::Dependency;
 
 // ----------------------------------------------------------------------------
-// Enums
+// Structs
 // ----------------------------------------------------------------------------
 
-/// Platform.
-pub enum Ecosystem {
-    /// Cargo ecosystem.
-    Cargo(Cargo),
+/// Cargo workspace.
+#[derive(Debug, Deserialize)]
+pub struct Workspace {
+    /// Workspace members.
+    pub members: Vec<String>,
+    /// Workspace dependencies.
+    pub dependencies: Option<BTreeMap<String, Dependency>>,
 }

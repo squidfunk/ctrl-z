@@ -23,31 +23,72 @@
 
 // ----------------------------------------------------------------------------
 
-//! Cargo package.
+//! Cargo manifest.
 
 use serde::Deserialize;
 use std::collections::BTreeMap;
+use std::fs;
+use std::path::Path;
+use std::str::FromStr;
 
-use super::dependency::Dependency;
+use super::{Error, Result};
+
+mod dependency;
+mod package;
+mod workspace;
+
+use dependency::Dependency;
+use package::Package;
+use workspace::Workspace;
 
 // ----------------------------------------------------------------------------
-// Structs
+// Enums
 // ----------------------------------------------------------------------------
 
-/// Cargo package.
+/// Cargo manifest.
 #[derive(Debug, Deserialize)]
-pub struct Package {
-    /// Package information.
-    package: PackageInfo,
-    /// Package dependencies.
-    dependencies: Option<BTreeMap<String, Dependency>>,
+#[serde(untagged)]
+pub enum Cargo {
+    /// Cargo package.
+    Package {
+        /// Package information.
+        package: Package,
+        /// Package dependencies.
+        dependencies: Option<BTreeMap<String, Dependency>>,
+    },
+    /// Cargo workspace.
+    Workspace {
+        /// Workspace information.
+        workspace: Workspace,
+    },
 }
 
-/// Package information.
-#[derive(Debug, Deserialize)]
-pub struct PackageInfo {
-    /// Package name.
-    name: String,
-    /// Package version.
-    version: String,
+// ----------------------------------------------------------------------------
+// Implementations
+// ----------------------------------------------------------------------------
+
+impl Cargo {
+    /// Attempts to load a Cargo manifest from the given path.
+    pub fn new<P>(path: P) -> Result<Self>
+    where
+        P: AsRef<Path>,
+    {
+        fs::read_to_string(path)
+            .map_err(Into::into)
+            .and_then(|content| Self::from_str(&content))
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Trait implementations
+// ----------------------------------------------------------------------------
+
+impl FromStr for Cargo {
+    type Err = Error;
+
+    /// Attempts to create a Cargo manifest from a string.
+    #[inline]
+    fn from_str(value: &str) -> Result<Self> {
+        toml::from_str(value).map_err(Into::into)
+    }
 }

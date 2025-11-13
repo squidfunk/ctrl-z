@@ -23,4 +23,30 @@
 
 // ----------------------------------------------------------------------------
 
-//! Tag and release management.
+//! Cargo dependency.
+
+use semver::VersionReq;
+use serde::Deserialize;
+
+// ----------------------------------------------------------------------------
+// Structs
+// ----------------------------------------------------------------------------
+
+/// Cargo dependency.
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+pub enum Dependency {
+    /// Dependency with version requirement.
+    Version(VersionReq),
+    /// Dependency with information.
+    Info(DependencyInfo),
+}
+
+/// Cargo dependency information.
+#[derive(Debug, Deserialize)]
+pub struct DependencyInfo {
+    /// Version.
+    pub version: Option<VersionReq>,
+    /// Features.
+    pub workspace: Option<bool>,
+}

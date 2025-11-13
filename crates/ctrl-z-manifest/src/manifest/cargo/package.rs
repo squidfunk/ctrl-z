@@ -23,62 +23,19 @@
 
 // ----------------------------------------------------------------------------
 
-//! Cargo manifest.
+//! Cargo package.
 
 use serde::Deserialize;
-use std::fs;
-use std::path::Path;
-use std::str::FromStr;
-
-use super::{Error, Result};
-
-mod dependency;
-mod package;
-mod workspace;
-
-use package::Package;
-use workspace::Workspace;
 
 // ----------------------------------------------------------------------------
-// Enums
+// Structs
 // ----------------------------------------------------------------------------
 
-/// Cargo manifest.
+/// Cargo package.
 #[derive(Debug, Deserialize)]
-#[serde(untagged)]
-pub enum Cargo {
-    /// Cargo package.
-    Package(Package),
-    /// Cargo workspace.
-    Workspace(Workspace),
-}
-
-// ----------------------------------------------------------------------------
-// Implementations
-// ----------------------------------------------------------------------------
-
-impl Cargo {
-    /// Attempts to load a Cargo manifest from the given path.
-    pub fn new<P>(path: P) -> Result<Self>
-    where
-        P: AsRef<Path>,
-    {
-        fs::read_to_string(path)
-            .map_err(Into::into)
-            .and_then(|content| Self::from_str(&content))
-    }
-}
-
-// ----------------------------------------------------------------------------
-// Trait implementations
-// ----------------------------------------------------------------------------
-
-impl FromStr for Cargo {
-    type Err = Error;
-
-    /// Attempts to create a Cargo manifest from a string.
-    #[inline]
-    fn from_str(value: &str) -> Result<Self> {
-        toml::from_str(value).map_err(Into::into)
-    }
+pub struct Package {
+    /// Package name.
+    pub name: String,
+    /// Package version.
+    pub version: String,
 }

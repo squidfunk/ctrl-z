@@ -23,30 +23,20 @@
 
 // ----------------------------------------------------------------------------
 
-//! Cargo dependency.
+//! Manifest.
 
-use semver::VersionReq;
-use serde::Deserialize;
+mod cargo;
+mod error;
+
+pub use cargo::Cargo;
+pub use error::{Error, Result};
 
 // ----------------------------------------------------------------------------
-// Structs
+// Enums
 // ----------------------------------------------------------------------------
 
-/// Cargo dependency.
-#[derive(Debug, Deserialize)]
-#[serde(untagged)]
-pub enum Dependency {
-    /// Dependency with version requirement.
-    Version(VersionReq),
-    /// Dependency with information.
-    Info(DependencyInfo),
-}
-
-/// Cargo dependency information.
-#[derive(Debug, Deserialize)]
-pub struct DependencyInfo {
-    /// Version.
-    version: Option<VersionReq>,
-    /// Features.
-    workspace: Option<bool>,
+/// Manifest.
+pub enum Manifest {
+    /// Cargo manifest.
+    Cargo(Cargo),
 }

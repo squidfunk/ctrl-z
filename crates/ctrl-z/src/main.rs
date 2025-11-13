@@ -36,7 +36,7 @@ use std::str::FromStr;
 use std::{env, fs, io};
 use toml_edit::{Document, Item};
 
-use ctrl_z_tag::manifest::Cargo;
+use ctrl_z_manifest::Cargo;
 
 // ----------------------------------------------------------------------------
 // Constants
@@ -128,14 +128,7 @@ fn get_repo() -> io::Result<()> {
     Ok(())
 }
 
-#[derive(Debug)]
-struct Package {
-    name: String,
-    version: Version,
-    // dependencies <- we must analyze dependencies as well...
-}
-
-fn find_packages(repo_path: &Path) -> BTreeMap<PathBuf, CargoToml> {
+fn find_packages(repo_path: &Path) -> BTreeMap<PathBuf, Cargo> {
     let root_cargo = repo_path.join("Cargo.toml");
     if !root_cargo.exists() {
         return BTreeMap::new();
@@ -145,17 +138,9 @@ fn find_packages(repo_path: &Path) -> BTreeMap<PathBuf, CargoToml> {
         fs::read_to_string(&root_cargo).expect("Failed to read Cargo.toml");
     let mut packages = BTreeMap::new();
 
-    let cargo: CargoToml =
-        toml::from_str(&content).expect("Failed to parse Cargo.toml");
-
     let cargo2 = Cargo::new(&root_cargo).expect("Failed to load Cargo.toml");
-    println!("Cargo2: {:#?}", cargo2);
-    // @todo: next, move resolution into Cargo module...
-    // create a map/graph of dependencies.
 
-    // Check if it's a workspace
-    // derive scopes from workspace members or from config file...
-    if let CargoToml::Workspace { workspace } = &cargo {
+    if let Cargo::Workspace { workspace } = &cargo2 {
         for member_pattern in &workspace.members {
             let base_path =
                 repo_path.join(member_pattern.trim_end_matches("/*"));
@@ -169,7 +154,7 @@ fn find_packages(repo_path: &Path) -> BTreeMap<PathBuf, CargoToml> {
                     } else if path.ends_with("Cargo.toml") {
                         let content = fs::read_to_string(&path)
                             .expect("Failed to read Cargo.toml");
-                        let p: CargoToml = toml::from_str(&content)
+                        let p: Cargo = toml::from_str(&content)
                             .expect("Failed to parse Cargo.toml");
                         packages.insert(path, p);
                     }
@@ -177,7 +162,7 @@ fn find_packages(repo_path: &Path) -> BTreeMap<PathBuf, CargoToml> {
             }
         }
     } else {
-        packages.insert(root_cargo.clone(), cargo);
+        packages.insert(root_cargo.clone(), cargo2);
     }
 
     println!("Found packages: {:#?}", packages);
@@ -185,38 +170,4 @@ fn find_packages(repo_path: &Path) -> BTreeMap<PathBuf, CargoToml> {
     // packages = scopes in a rust crate!
 
     packages
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(untagged)]
-enum CargoToml {
-    Package {
-        package: PackageInfo,
-        dependencies: Option<BTreeMap<String, Dependency>>,
-    },
-    Workspace {
-        workspace: WorkspaceInfo,
-    },
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(untagged)]
-enum Dependency {
-    Simple(String),
-    Detailed {
-        version: Option<String>,
-        workspace: Option<bool>,
-    },
-}
-
-#[derive(Debug, Deserialize)]
-struct PackageInfo {
-    name: String,
-    version: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct WorkspaceInfo {
-    members: Vec<String>,
-    dependencies: Option<BTreeMap<String, Dependency>>,
 }

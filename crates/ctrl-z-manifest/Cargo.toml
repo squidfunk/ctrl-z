@@ -22,7 +22,7 @@
 # IN THE SOFTWARE.
 
 [package]
-name = "ctrl-z"
+name = "ctrl-z-manifest"
 version = "0.0.0"
 description = ""
 edition.workspace = true
@@ -38,12 +38,7 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
-ctrl-z-manifest.workspace = true
-
-clap.workspace = true
-git2.workspace = true
-inquire.workspace = true
 semver.workspace = true
 serde.workspace = true
+thiserror.workspace = true
 toml.workspace = true
-toml_edit.workspace = true

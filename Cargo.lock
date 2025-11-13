@@ -163,13 +163,23 @@ name = "ctrl-z"
 version = "0.0.0"
 dependencies = [
  "clap",
- "ctrl-z-tag",
+ "ctrl-z-manifest",
  "git2",
  "inquire",
  "semver",
  "serde",
  "toml",
  "toml_edit",
+]
+
+[[package]]
+name = "ctrl-z-manifest"
+version = "0.0.0"
+dependencies = [
+ "semver",
+ "serde",
+ "thiserror",
+ "toml",
 ]
 
 [[package]]

@@ -38,6 +38,8 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+ctrl-z-tag.workspace = true
+
 clap.workspace = true
 git2.workspace = true
 inquire.workspace = true

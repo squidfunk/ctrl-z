@@ -163,12 +163,23 @@ name = "ctrl-z"
 version = "0.0.0"
 dependencies = [
  "clap",
+ "ctrl-z-tag",
  "git2",
  "inquire",
  "semver",
  "serde",
  "toml",
  "toml_edit",
+]
+
+[[package]]
+name = "ctrl-z-tag"
+version = "0.0.0"
+dependencies = [
+ "git2",
+ "semver",
+ "serde",
+ "toml",
 ]
 
 [[package]]
@@ -661,6 +672,10 @@ name = "semver"
 version = "1.0.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d767eb0aabc880b29956c35734170f26ed551a859dbd361d140cdbeca61ab1e2"
+dependencies = [
+ "serde",
+ "serde_core",
+]
 
 [[package]]
 name = "serde"

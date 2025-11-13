@@ -142,59 +142,37 @@ fn find_packages(repo_path: &Path) -> BTreeMap<PathBuf, CargoToml> {
     }
 
     let content = fs::read_to_string(&root_cargo).expect("Failed to read Cargo.toml");
-    // let cargo: CargoToml = toml_edit::from_str(&content).expect("Failed to parse Cargo.toml");
-
-    // println!("Parsing Cargo.toml at {:?}", content);
-
     let mut packages = BTreeMap::new();
 
     let cargo: CargoToml = toml::from_str(&content).expect("Failed to parse Cargo.toml");
 
-
     // Check if it's a workspace
+    // derive scopes from workspace members or from config file...
     if let CargoToml::Workspace { workspace } = &cargo {
-        // Workspace project - find all member packages
         for member_pattern in &workspace.members {
-            // Simple glob support for patterns like "crates/*"
-            if member_pattern.contains('*') {
-                let base = member_pattern.trim_end_matches("/*");
-                let base_path = repo_path.join(base);
-                if let Ok(entries) = fs::read_dir(base_path) {
-                    for entry in entries.flatten() {
-                        let cargo_path = entry.path().join("Cargo.toml");
-                        if cargo_path.exists() {
-                            let content = fs::read_to_string(&cargo_path).expect("Failed to read Cargo.toml");
-                            let p: CargoToml = toml::from_str(&content).expect("Failed to parse Cargo.toml");
-                            packages.insert(cargo_path, p);
+            let base_path = repo_path.join(member_pattern.trim_end_matches("/*"));
 
-
-                            // if let Some(pkg) = read_package(&cargo_path) {
-                            //     packages.push(pkg);
-                            // }
-                        }
+            if let Ok(entries) = fs::read_dir(&base_path) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.is_dir() {
+                        // Recursively find packages in subdirectories
+                        packages.extend(find_packages(&path));
+                    } else if path.ends_with("Cargo.toml") {
+                        let content = fs::read_to_string(&path).expect("Failed to read Cargo.toml");
+                        let p: CargoToml = toml::from_str(&content).expect("Failed to parse Cargo.toml");
+                        packages.insert(path, p);
                     }
                 }
-            } else {
-                let cargo_path = repo_path.join(&member_pattern).join("Cargo.toml");
-                // if let Some(pkg) = read_package(&cargo_path) {
-                //     packages.push(pkg);
-                // }
             }
         }
-    } else if let CargoToml::Package { package, .. } = &cargo {
-        // println!("Single package project: {:?}", package);
-        // Single package project
-        // packages.push(Package {
-        //     name: package.name,
-        //     path: repo_path.to_path_buf(),
-        //     version: parse_version_tag(&package.version)
-        //         .unwrap_or_else(|| Version::new(0, 0, 0)),
-        // });
+    } else {
+        packages.insert(root_cargo.clone(), cargo);
     }
 
-    packages.insert(root_cargo.clone(), cargo);
+    println!("Found packages: {:#?}", packages);
 
-    println!("Discovered packages: {:#?}", packages);
+    // packages = scopes in a rust crate!
 
     packages
 }

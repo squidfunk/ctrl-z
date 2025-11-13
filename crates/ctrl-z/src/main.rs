@@ -23,6 +23,7 @@
 
 // ----------------------------------------------------------------------------
 
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::{env, fs, io};
@@ -128,31 +129,32 @@ fn get_repo() -> io::Result<()> {
 #[derive(Debug)]
 struct Package {
     name: String,
-    path: PathBuf,
     version: Version,
+    // dependencies <- we must analyze dependencies as well...
 }
 
 
 
-fn find_packages(repo_path: &Path) -> Vec<Package> {
+fn find_packages(repo_path: &Path) -> BTreeMap<PathBuf, CargoToml> {
     let root_cargo = repo_path.join("Cargo.toml");
     if !root_cargo.exists() {
-        return Vec::new();
+        return BTreeMap::new();
     }
 
     let content = fs::read_to_string(&root_cargo).expect("Failed to read Cargo.toml");
     // let cargo: CargoToml = toml_edit::from_str(&content).expect("Failed to parse Cargo.toml");
 
-    println!("Parsing Cargo.toml at {:?}", content);
+    // println!("Parsing Cargo.toml at {:?}", content);
 
-    let mut packages = Vec::new();
+    let mut packages = BTreeMap::new();
 
     let cargo: CargoToml = toml::from_str(&content).expect("Failed to parse Cargo.toml");
 
+
     // Check if it's a workspace
-    if let CargoToml::Workspace { workspace } = cargo {
+    if let CargoToml::Workspace { workspace } = &cargo {
         // Workspace project - find all member packages
-        for member_pattern in workspace.members {
+        for member_pattern in &workspace.members {
             // Simple glob support for patterns like "crates/*"
             if member_pattern.contains('*') {
                 let base = member_pattern.trim_end_matches("/*");
@@ -161,7 +163,11 @@ fn find_packages(repo_path: &Path) -> Vec<Package> {
                     for entry in entries.flatten() {
                         let cargo_path = entry.path().join("Cargo.toml");
                         if cargo_path.exists() {
-                            println!("Found package at {:?}", cargo_path);
+                            let content = fs::read_to_string(&cargo_path).expect("Failed to read Cargo.toml");
+                            let p: CargoToml = toml::from_str(&content).expect("Failed to parse Cargo.toml");
+                            packages.insert(cargo_path, p);
+
+
                             // if let Some(pkg) = read_package(&cargo_path) {
                             //     packages.push(pkg);
                             // }
@@ -175,8 +181,8 @@ fn find_packages(repo_path: &Path) -> Vec<Package> {
                 // }
             }
         }
-    } else if let CargoToml::Package { package } = cargo {
-        println!("Single package project: {:?}", package);
+    } else if let CargoToml::Package { package, .. } = &cargo {
+        // println!("Single package project: {:?}", package);
         // Single package project
         // packages.push(Package {
         //     name: package.name,
@@ -186,14 +192,25 @@ fn find_packages(repo_path: &Path) -> Vec<Package> {
         // });
     }
 
+    packages.insert(root_cargo.clone(), cargo);
+
+    println!("Discovered packages: {:#?}", packages);
+
     packages
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 enum CargoToml {
-    Package { package: PackageInfo },
+    Package { package: PackageInfo, dependencies: Option<BTreeMap<String, Dependency>> },
     Workspace { workspace: WorkspaceInfo },
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+enum Dependency {
+    Simple(String),
+    Detailed { version: Option<String>, workspace: Option<bool> },
 }
 
 #[derive(Debug, Deserialize)]
@@ -205,4 +222,5 @@ struct PackageInfo {
 #[derive(Debug, Deserialize)]
 struct WorkspaceInfo {
     members: Vec<String>,
+    dependencies: Option<BTreeMap<String, Dependency>>
 }

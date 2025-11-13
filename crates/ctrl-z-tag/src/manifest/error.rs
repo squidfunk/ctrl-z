@@ -23,18 +23,30 @@
 
 // ----------------------------------------------------------------------------
 
-//! Ecosystem.
+//! Manifest error.
 
-mod cargo;
-
-use cargo::Cargo;
+use std::{io, result};
+use thiserror::Error;
 
 // ----------------------------------------------------------------------------
 // Enums
 // ----------------------------------------------------------------------------
 
-/// Platform.
-pub enum Ecosystem {
-    /// Cargo ecosystem.
-    Cargo(Cargo),
+/// Manifest error.
+#[derive(Debug, Error)]
+pub enum Error {
+    /// I/O error.
+    #[error(transparent)]
+    Io(#[from] io::Error),
+
+    /// TOML error.
+    #[error(transparent)]
+    Toml(#[from] toml::de::Error),
 }
+
+// ----------------------------------------------------------------------------
+// Type aliases
+// ----------------------------------------------------------------------------
+
+/// Manifest result.
+pub type Result<T = ()> = result::Result<T, Error>;

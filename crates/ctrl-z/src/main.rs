@@ -23,18 +23,20 @@
 
 // ----------------------------------------------------------------------------
 
+use clap::builder::styling::{AnsiColor, Effects};
+use clap::builder::Styles;
+use clap::{Parser, Subcommand};
+use git2::Repository;
+use inquire::Confirm;
+use semver::Version;
+use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::{env, fs, io};
-use clap::{Parser, Subcommand};
-use clap::builder::styling::{AnsiColor, Effects};
-use clap::builder::{Styles};
-use git2::{Repository};
-use inquire::Confirm;
-use semver::Version;
-use serde::Deserialize;
 use toml_edit::{Document, Item};
+
+use ctrl_z_tag::manifest::Cargo;
 
 // ----------------------------------------------------------------------------
 // Constants
@@ -133,24 +135,30 @@ struct Package {
     // dependencies <- we must analyze dependencies as well...
 }
 
-
-
 fn find_packages(repo_path: &Path) -> BTreeMap<PathBuf, CargoToml> {
     let root_cargo = repo_path.join("Cargo.toml");
     if !root_cargo.exists() {
         return BTreeMap::new();
     }
 
-    let content = fs::read_to_string(&root_cargo).expect("Failed to read Cargo.toml");
+    let content =
+        fs::read_to_string(&root_cargo).expect("Failed to read Cargo.toml");
     let mut packages = BTreeMap::new();
 
-    let cargo: CargoToml = toml::from_str(&content).expect("Failed to parse Cargo.toml");
+    let cargo: CargoToml =
+        toml::from_str(&content).expect("Failed to parse Cargo.toml");
+
+    let cargo2 = Cargo::new(&root_cargo).expect("Failed to load Cargo.toml");
+    println!("Cargo2: {:#?}", cargo2);
+    // @todo: next, move resolution into Cargo module...
+    // create a map/graph of dependencies.
 
     // Check if it's a workspace
     // derive scopes from workspace members or from config file...
     if let CargoToml::Workspace { workspace } = &cargo {
         for member_pattern in &workspace.members {
-            let base_path = repo_path.join(member_pattern.trim_end_matches("/*"));
+            let base_path =
+                repo_path.join(member_pattern.trim_end_matches("/*"));
 
             if let Ok(entries) = fs::read_dir(&base_path) {
                 for entry in entries.flatten() {
@@ -159,8 +167,10 @@ fn find_packages(repo_path: &Path) -> BTreeMap<PathBuf, CargoToml> {
                         // Recursively find packages in subdirectories
                         packages.extend(find_packages(&path));
                     } else if path.ends_with("Cargo.toml") {
-                        let content = fs::read_to_string(&path).expect("Failed to read Cargo.toml");
-                        let p: CargoToml = toml::from_str(&content).expect("Failed to parse Cargo.toml");
+                        let content = fs::read_to_string(&path)
+                            .expect("Failed to read Cargo.toml");
+                        let p: CargoToml = toml::from_str(&content)
+                            .expect("Failed to parse Cargo.toml");
                         packages.insert(path, p);
                     }
                 }
@@ -180,15 +190,23 @@ fn find_packages(repo_path: &Path) -> BTreeMap<PathBuf, CargoToml> {
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 enum CargoToml {
-    Package { package: PackageInfo, dependencies: Option<BTreeMap<String, Dependency>> },
-    Workspace { workspace: WorkspaceInfo },
+    Package {
+        package: PackageInfo,
+        dependencies: Option<BTreeMap<String, Dependency>>,
+    },
+    Workspace {
+        workspace: WorkspaceInfo,
+    },
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 enum Dependency {
     Simple(String),
-    Detailed { version: Option<String>, workspace: Option<bool> },
+    Detailed {
+        version: Option<String>,
+        workspace: Option<bool>,
+    },
 }
 
 #[derive(Debug, Deserialize)]
@@ -200,5 +218,5 @@ struct PackageInfo {
 #[derive(Debug, Deserialize)]
 struct WorkspaceInfo {
     members: Vec<String>,
-    dependencies: Option<BTreeMap<String, Dependency>>
+    dependencies: Option<BTreeMap<String, Dependency>>,
 }

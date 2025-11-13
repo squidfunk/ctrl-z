@@ -23,27 +23,20 @@
 
 // ----------------------------------------------------------------------------
 
-//! Cargo ecosystem.
+//! Ecosystem.
 
-use serde::Deserialize;
+mod cargo;
+mod error;
 
-mod dependency;
-mod package;
-mod workspace;
-
-use package::Package;
-use workspace::Workspace;
+pub use cargo::Cargo;
+pub use error::{Error, Result};
 
 // ----------------------------------------------------------------------------
 // Enums
 // ----------------------------------------------------------------------------
 
-/// Cargo ecosystem.
-#[derive(Debug, Deserialize)]
-#[serde(untagged)]
-pub enum Cargo {
-    /// Cargo package.
-    Package(Package),
-    /// Cargo workspace.
-    Workspace(Workspace),
+/// Platform.
+pub enum Ecosystem {
+    /// Cargo ecosystem.
+    Cargo(Cargo),
 }

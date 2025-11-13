@@ -46,7 +46,7 @@ pub enum Dependency {
 #[derive(Debug, Deserialize)]
 pub struct DependencyInfo {
     /// Version.
-    version: Option<String>,
+    version: Option<VersionReq>,
     /// Features.
     workspace: Option<bool>,
 }

@@ -25,6 +25,6 @@
 
 //! Tag and release management.
 
-mod ecosystem;
+pub mod manifest;
 
-use ecosystem::Ecosystem;
+pub use manifest::Ecosystem;

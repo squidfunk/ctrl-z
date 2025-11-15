@@ -23,21 +23,22 @@
 
 // ----------------------------------------------------------------------------
 
-//! Package.json manifest path iterator.
+//! @todo tbd
 
 use glob::glob;
 use std::path::PathBuf;
 
-use super::{PackageJson, Result};
+use super::Result;
 
 // ----------------------------------------------------------------------------
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Package.json manifest path iterator.
-pub struct Iter {
-    /// Stack of members.
-    members: Vec<PathBuf>,
+/// Pattern iterator.
+#[derive(Debug, Default)]
+pub struct Paths {
+    /// Stack of patterns.
+    patterns: Vec<PathBuf>,
     /// Stack of paths.
     paths: Vec<PathBuf>,
 }
@@ -46,20 +47,16 @@ pub struct Iter {
 // Implementation
 // ----------------------------------------------------------------------------
 
-impl Iter {
-    /// Creates a manifest path iterator.
-    pub fn new(package: &PackageJson) -> Self {
-        match &package.workspaces {
-            None => Self::default(),
-            Some(workspaces) => {
-                let iter = workspaces.iter().rev();
-                Self {
-                    members: iter
-                        .map(|path| PathBuf::from(path).join("package.json"))
-                        .collect(),
-                    paths: Vec::new(),
-                }
-            }
+impl Paths {
+    /// Creates a path iterator.
+    pub fn new<P>(patterns: P) -> Self
+    where
+        P: IntoIterator<Item = PathBuf>,
+        P::IntoIter: DoubleEndedIterator,
+    {
+        Self {
+            patterns: patterns.into_iter().rev().collect(),
+            paths: Vec::new(),
         }
     }
 }
@@ -68,15 +65,15 @@ impl Iter {
 // Implementation
 // ----------------------------------------------------------------------------
 
-impl Iterator for Iter {
+impl Iterator for Paths {
     type Item = Result<PathBuf>;
 
     /// Returns the next path.
     fn next(&mut self) -> Option<Self::Item> {
         if self.paths.is_empty() {
-            // Take next member from the stack of members, and expand it as a
+            // Take next item from the stack of patterns, and expand it as a
             // glob - if the pattern is invalid, propagate the error
-            let paths = match glob(self.members.pop()?.to_str()?) {
+            let paths = match glob(self.patterns.pop()?.to_str()?) {
                 Ok(paths) => paths,
                 Err(err) => return Some(Err(err.into())),
             };
@@ -92,17 +89,5 @@ impl Iterator for Iter {
 
         // Return next path
         self.paths.pop().map(Ok)
-    }
-}
-
-// ----------------------------------------------------------------------------
-
-impl Default for Iter {
-    /// Creates a manifest path iterator.
-    fn default() -> Self {
-        Self {
-            members: Vec::new(),
-            paths: Vec::new(),
-        }
     }
 }

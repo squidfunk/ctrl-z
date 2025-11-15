@@ -32,11 +32,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
+use crate::manifest::paths::Paths;
+
 use super::{Error, Result};
-
-mod iter;
-
-use iter::Iter;
 
 // ----------------------------------------------------------------------------
 // Enums
@@ -79,8 +77,16 @@ impl PackageJson {
     /// Creates an iterator over Cargo workspace members.
     #[inline]
     #[must_use]
-    pub fn iter(&self) -> Iter {
-        Iter::new(self)
+    pub fn iter(&self) -> Paths {
+        match &self.workspaces {
+            None => Paths::default(),
+            Some(workspaces) => Paths::new(
+                workspaces
+                    .iter()
+                    .rev()
+                    .map(|path| PathBuf::from(path).join("package.json")),
+            ),
+        }
     }
 }
 
@@ -102,7 +108,7 @@ impl FromStr for PackageJson {
 
 impl IntoIterator for &PackageJson {
     type Item = Result<PathBuf>;
-    type IntoIter = Iter;
+    type IntoIter = Paths;
 
     /// Creates an iterator over Package.json workspace members.
     fn into_iter(self) -> Self::IntoIter {

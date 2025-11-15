@@ -31,15 +31,15 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
+use crate::manifest::paths::Paths;
+
 use super::{Error, Result};
 
 mod dependency;
-mod iter;
 mod package;
 mod workspace;
 
 pub use dependency::Dependency;
-use iter::Iter;
 pub use package::Package;
 pub use workspace::Workspace;
 
@@ -86,8 +86,17 @@ impl Cargo {
     /// Creates an iterator over Cargo workspace members.
     #[inline]
     #[must_use]
-    pub fn iter(&self) -> Iter {
-        Iter::new(self)
+    pub fn iter(&self) -> Paths {
+        match self {
+            Cargo::Package { .. } => Paths::default(),
+            Cargo::Workspace { workspace } => Paths::new(
+                workspace
+                    .members
+                    .iter()
+                    .rev()
+                    .map(|path| PathBuf::from(path).join("Cargo.toml")),
+            ),
+        }
     }
 }
 
@@ -107,9 +116,10 @@ impl FromStr for Cargo {
 
 // ----------------------------------------------------------------------------
 
+// @todo: do we need this? rather call it members? use a trait?
 impl IntoIterator for &Cargo {
     type Item = Result<PathBuf>;
-    type IntoIter = Iter;
+    type IntoIter = Paths;
 
     /// Creates an iterator over Cargo workspace members.
     fn into_iter(self) -> Self::IntoIter {

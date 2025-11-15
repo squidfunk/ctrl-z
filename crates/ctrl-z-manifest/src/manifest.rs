@@ -31,11 +31,13 @@ pub mod cargo;
 mod error;
 mod iter;
 pub mod npm;
+mod paths;
 
 use cargo::Cargo;
 pub use error::{Error, Result};
 use iter::Iter;
 use npm::PackageJson;
+use paths::Paths;
 
 // ----------------------------------------------------------------------------
 // Enums

@@ -31,11 +31,11 @@ use std::str::FromStr;
 use super::{Error, Result};
 
 pub mod cargo;
-pub mod package;
+pub mod npm;
 mod paths;
 
 pub use cargo::Cargo;
-pub use package::PackageJson;
+pub use npm::PackageJson;
 pub use paths::Paths;
 
 // ----------------------------------------------------------------------------

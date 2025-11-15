@@ -51,6 +51,10 @@ pub enum Error {
     #[error(transparent)]
     Toml(#[from] toml::de::Error),
 
+    /// JSON error.
+    #[error(transparent)]
+    Json(#[from] serde_json::Error),
+
     /// Invalid manifest.
     #[error("Invalid manifest")]
     Invalid,

@@ -23,50 +23,47 @@
 
 // ----------------------------------------------------------------------------
 
-//! Manifest.
+//! Package.json manifest.
 
+use semver::{Version, VersionReq};
+use serde::Deserialize;
+use std::collections::BTreeMap;
+use std::fs;
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 
-pub mod cargo;
-mod error;
+use super::{Error, Result};
+
 mod iter;
-pub mod npm;
 
-use cargo::Cargo;
-pub use error::{Error, Result};
 use iter::Iter;
-use npm::PackageJson;
 
 // ----------------------------------------------------------------------------
 // Enums
 // ----------------------------------------------------------------------------
 
-/// Manifest.
-#[derive(Debug)]
-pub enum Manifest {
-    /// Cargo manifest.
-    Cargo {
-        /// Manifest path.
-        path: PathBuf,
-        /// Manifest data.
-        data: Cargo,
-    },
-
-    /// Package.json manifest.
-    PackageJson {
-        /// Manifest path.
-        path: PathBuf,
-        /// Manifest data.
-        data: PackageJson,
-    },
+/// Package.json manifest.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PackageJson {
+    /// Package name.
+    pub name: String,
+    /// Package version.
+    pub version: Version,
+    /// Package workspace members.
+    pub workspaces: Option<Vec<String>>,
+    /// Package dependencies.
+    pub dependencies: Option<BTreeMap<String, VersionReq>>,
+    /// Package development dependencies.
+    pub dev_dependencies: Option<BTreeMap<String, VersionReq>>,
 }
 
 // ----------------------------------------------------------------------------
 // Implementations
 // ----------------------------------------------------------------------------
 
-impl Manifest {
-    /// Load manifest from path.
+impl PackageJson {
+    /// Attempts to load a Package.json manifest from the given path.
     ///
     /// # Errors
     ///
@@ -75,18 +72,15 @@ impl Manifest {
     where
         P: AsRef<Path>,
     {
-        let path = path.as_ref();
-        match path.file_name().and_then(|value| value.to_str()) {
-            Some("Cargo.toml") => Ok(Manifest::Cargo {
-                path: path.to_path_buf(),
-                data: Cargo::new(path)?,
-            }),
-            Some("package.json") => Ok(Manifest::PackageJson {
-                path: path.to_path_buf(),
-                data: PackageJson::new(path)?,
-            }),
-            _ => Err(Error::Invalid),
-        }
+        let content = fs::read_to_string(path)?;
+        Self::from_str(&content)
+    }
+
+    /// Creates an iterator over Cargo workspace members.
+    #[inline]
+    #[must_use]
+    pub fn iter(&self) -> Iter {
+        Iter::new(self)
     }
 }
 
@@ -94,12 +88,24 @@ impl Manifest {
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl IntoIterator for Manifest {
-    type Item = Result<Manifest>;
+impl FromStr for PackageJson {
+    type Err = Error;
+
+    /// Attempts to create a Package.json manifest from a string.
+    #[inline]
+    fn from_str(value: &str) -> Result<Self> {
+        serde_json::from_str(value).map_err(Into::into)
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+impl IntoIterator for &PackageJson {
+    type Item = Result<PathBuf>;
     type IntoIter = Iter;
 
-    /// Creates an iterator over the manifest.
+    /// Creates an iterator over Package.json workspace members.
     fn into_iter(self) -> Self::IntoIter {
-        Iter::new(self)
+        self.iter()
     }
 }

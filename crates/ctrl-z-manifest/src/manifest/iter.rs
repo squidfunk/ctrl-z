@@ -73,6 +73,20 @@ impl Iterator for Iter {
                 // Add manifests to stack for pre-order traversal
                 self.stack.extend(manifests.into_iter().rev());
             }
+
+            Manifest::PackageJson { data, .. } => {
+                let iter =
+                    data.into_iter().map(|res| res.and_then(Manifest::new));
+
+                // Collect and return manifests
+                let manifests = match iter.collect::<Result<Vec<_>>>() {
+                    Ok(manifests) => manifests,
+                    Err(err) => return Some(Err(err)),
+                };
+
+                // Add manifests to stack for pre-order traversal
+                self.stack.extend(manifests.into_iter().rev());
+            }
         }
 
         // Return next manifest

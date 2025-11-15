@@ -23,18 +23,18 @@
 
 // ----------------------------------------------------------------------------
 
-//! Cargo manifest path iterator.
+//! Package.json manifest path iterator.
 
 use glob::glob;
 use std::path::PathBuf;
 
-use super::{Cargo, Result};
+use super::{PackageJson, Result};
 
 // ----------------------------------------------------------------------------
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Cargo manifest path iterator.
+/// Package.json manifest path iterator.
 pub struct Iter {
     /// Stack of members.
     members: Vec<PathBuf>,
@@ -48,14 +48,14 @@ pub struct Iter {
 
 impl Iter {
     /// Creates a manifest path iterator.
-    pub fn new(cargo: &Cargo) -> Self {
-        match cargo {
-            Cargo::Package { .. } => Self::default(),
-            Cargo::Workspace { workspace } => {
-                let iter = workspace.members.iter().rev();
+    pub fn new(package: &PackageJson) -> Self {
+        match &package.workspaces {
+            None => Self::default(),
+            Some(workspaces) => {
+                let iter = workspaces.iter().rev();
                 Self {
                     members: iter
-                        .map(|path| PathBuf::from(path).join("Cargo.toml"))
+                        .map(|path| PathBuf::from(path).join("package.json"))
                         .collect(),
                     paths: Vec::new(),
                 }

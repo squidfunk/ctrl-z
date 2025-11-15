@@ -126,9 +126,14 @@ fn get_repo() -> io::Result<()> {
 }
 
 fn find_packages(repo_path: &Path) -> BTreeMap<PathBuf, Cargo> {
-    let root_cargo = repo_path.join("Cargo.toml");
+    let mut root_cargo = repo_path.join("Cargo.toml");
     if !root_cargo.exists() {
-        return BTreeMap::new();
+        // return BTreeMap::new();
+
+        root_cargo = repo_path.join("package.json");
+        if !root_cargo.exists() {
+            return BTreeMap::new();
+        }
     }
 
     let manfiest = Manifest::new(&root_cargo).unwrap();

@@ -185,6 +185,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "ctrl-z-manifest-2"
+version = "0.0.0"
+dependencies = [
+ "glob",
+ "semver",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "toml",
+]
+
+[[package]]
 name = "ctrl-z-tag"
 version = "0.0.0"
 dependencies = [

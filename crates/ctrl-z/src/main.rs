@@ -33,7 +33,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::{env, fs, io};
 
-use ctrl_z_manifest::{Cargo, Manifest};
+use ctrl_z_manifest::Cargo;
 
 // ----------------------------------------------------------------------------
 // Constants

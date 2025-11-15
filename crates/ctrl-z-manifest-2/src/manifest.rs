@@ -23,43 +23,43 @@
 
 // ----------------------------------------------------------------------------
 
-//! Cargo manifest.
+//! Manifest.
 
-use serde::Deserialize;
-use std::collections::BTreeMap;
-use std::fs;
 use std::path::{Path, PathBuf};
-use std::str::FromStr;
 
-use super::{Error, Result};
+pub mod cargo;
+mod error;
+mod iter;
+pub mod npm;
+mod paths;
 
-mod dependency;
-mod package;
-mod workspace;
-
-pub use dependency::Dependency;
-pub use package::Package;
-pub use workspace::Workspace;
+use cargo::Cargo;
+pub use error::{Error, Result};
+use iter::Iter;
+use npm::PackageJson;
+use paths::Paths;
 
 // ----------------------------------------------------------------------------
 // Enums
 // ----------------------------------------------------------------------------
 
-/// Cargo manifest.
-#[derive(Debug, Deserialize)]
-#[serde(untagged)]
-pub enum Cargo {
-    /// Cargo package.
-    Package {
-        /// Package information.
-        package: Package,
-        /// Package dependencies.
-        dependencies: Option<BTreeMap<String, Dependency>>,
+/// Manifest.
+#[derive(Debug)]
+pub enum Manifest {
+    /// Cargo manifest.
+    Cargo {
+        /// Manifest path.
+        path: PathBuf,
+        /// Manifest data.
+        data: Cargo,
     },
-    /// Cargo workspace.
-    Workspace {
-        /// Workspace information.
-        workspace: Workspace,
+
+    /// Package.json manifest.
+    PackageJson {
+        /// Manifest path.
+        path: PathBuf,
+        /// Manifest data.
+        data: PackageJson,
     },
 }
 
@@ -67,8 +67,8 @@ pub enum Cargo {
 // Implementations
 // ----------------------------------------------------------------------------
 
-impl Cargo {
-    /// Attempts to load a Cargo manifest from the given path.
+impl Manifest {
+    /// Load manifest from path.
     ///
     /// # Errors
     ///
@@ -77,37 +77,31 @@ impl Cargo {
     where
         P: AsRef<Path>,
     {
-        let content = fs::read_to_string(path)?;
-        Self::from_str(&content)
+        let path = path.as_ref();
+        match path.file_name().and_then(|value| value.to_str()) {
+            Some("Cargo.toml") => Ok(Manifest::Cargo {
+                path: path.to_path_buf(),
+                data: Cargo::new(path)?,
+            }),
+            Some("package.json") => Ok(Manifest::PackageJson {
+                path: path.to_path_buf(),
+                data: PackageJson::new(path)?,
+            }),
+            _ => Err(Error::Invalid),
+        }
     }
-
-    // /// Creates an iterator over Cargo workspace members.
-    // #[inline]
-    // #[must_use]
-    // pub fn iter(&self) -> Paths {
-    //     match self {
-    //         Cargo::Package { .. } => Paths::default(),
-    //         Cargo::Workspace { workspace } => Paths::new(
-    //             workspace
-    //                 .members
-    //                 .iter()
-    //                 .rev()
-    //                 .map(|path| PathBuf::from(path).join("Cargo.toml")),
-    //         ),
-    //     }
-    // }
 }
 
 // ----------------------------------------------------------------------------
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl FromStr for Cargo {
-    type Err = Error;
+impl IntoIterator for Manifest {
+    type Item = Result<Manifest>;
+    type IntoIter = Iter;
 
-    /// Attempts to create a Cargo manifest from a string.
-    #[inline]
-    fn from_str(value: &str) -> Result<Self> {
-        toml::from_str(value).map_err(Into::into)
+    /// Creates an iterator over the manifest.
+    fn into_iter(self) -> Self::IntoIter {
+        Iter::new(self)
     }
 }

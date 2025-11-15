@@ -23,9 +23,46 @@
 
 // ----------------------------------------------------------------------------
 
-//! Manifest.
+//! Manifest error.
 
-pub mod manifest;
+use std::{io, result};
+use thiserror::Error;
 
-// pub use manifest::cargo::Cargo;
-pub use manifest::Manifest;
+// ----------------------------------------------------------------------------
+// Enums
+// ----------------------------------------------------------------------------
+
+/// Manifest error.
+#[derive(Debug, Error)]
+pub enum Error {
+    /// I/O error.
+    #[error(transparent)]
+    Io(#[from] io::Error),
+
+    /// Glob error.
+    #[error(transparent)]
+    Glob(#[from] glob::GlobError),
+
+    /// Pattern error.
+    #[error(transparent)]
+    Pattern(#[from] glob::PatternError),
+
+    /// TOML error.
+    #[error(transparent)]
+    Toml(#[from] toml::de::Error),
+
+    /// JSON error.
+    #[error(transparent)]
+    Json(#[from] serde_json::Error),
+
+    /// Invalid manifest.
+    #[error("Invalid manifest")]
+    Invalid,
+}
+
+// ----------------------------------------------------------------------------
+// Type aliases
+// ----------------------------------------------------------------------------
+
+/// Manifest result.
+pub type Result<T = ()> = result::Result<T, Error>;

@@ -23,9 +23,20 @@
 
 // ----------------------------------------------------------------------------
 
-//! Manifest.
+//! Cargo package.
 
-pub mod manifest;
+use semver::Version;
+use serde::Deserialize;
 
-// pub use manifest::cargo::Cargo;
-pub use manifest::Manifest;
+// ----------------------------------------------------------------------------
+// Structs
+// ----------------------------------------------------------------------------
+
+/// Cargo package.
+#[derive(Debug, Deserialize)]
+pub struct Package {
+    /// Package name.
+    pub name: String,
+    /// Package version.
+    pub version: Version,
+}

@@ -25,83 +25,24 @@
 
 //! Manifest.
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 pub mod cargo;
 mod error;
-mod iter;
-pub mod npm;
-mod paths;
 
-use cargo::Cargo;
 pub use error::{Error, Result};
-use iter::Iter;
-use npm::PackageJson;
-use paths::Paths;
 
 // ----------------------------------------------------------------------------
-// Enums
+// Traits
 // ----------------------------------------------------------------------------
 
 /// Manifest.
-#[derive(Debug)]
-pub enum Manifest {
-    /// Cargo manifest.
-    Cargo {
-        /// Manifest path.
-        path: PathBuf,
-        /// Manifest data.
-        data: Cargo,
-    },
+///
+/// @todo explain
+pub trait Manifest: Sized {
+    /// Iterator type.
+    type Iter: Iterator<Item = Result<Self>>;
 
-    /// Package.json manifest.
-    PackageJson {
-        /// Manifest path.
-        path: PathBuf,
-        /// Manifest data.
-        data: PackageJson,
-    },
-}
-
-// ----------------------------------------------------------------------------
-// Implementations
-// ----------------------------------------------------------------------------
-
-impl Manifest {
-    /// Load manifest from path.
-    ///
-    /// # Errors
-    ///
-    /// This method returns [`Error::Io`], if the manifest could not be read.
-    pub fn new<P>(path: P) -> Result<Self>
-    where
-        P: AsRef<Path>,
-    {
-        let path = path.as_ref();
-        match path.file_name().and_then(|value| value.to_str()) {
-            Some("Cargo.toml") => Ok(Manifest::Cargo {
-                path: path.to_path_buf(),
-                data: Cargo::new(path)?,
-            }),
-            Some("package.json") => Ok(Manifest::PackageJson {
-                path: path.to_path_buf(),
-                data: PackageJson::new(path)?,
-            }),
-            _ => Err(Error::Invalid),
-        }
-    }
-}
-
-// ----------------------------------------------------------------------------
-// Trait implementations
-// ----------------------------------------------------------------------------
-
-impl IntoIterator for Manifest {
-    type Item = Result<Manifest>;
-    type IntoIter = Iter;
-
-    /// Creates an iterator over the manifest.
-    fn into_iter(self) -> Self::IntoIter {
-        Iter::new(self)
-    }
+    /// Creates an iterator over the manifests children.
+    fn iter(&self) -> Self::Iter;
 }

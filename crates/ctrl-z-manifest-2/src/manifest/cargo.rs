@@ -31,6 +31,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
+use crate::manifest::paths::Paths;
+
 use super::{Error, Result};
 
 mod dependency;
@@ -81,21 +83,21 @@ impl Cargo {
         Self::from_str(&content)
     }
 
-    // /// Creates an iterator over Cargo workspace members.
-    // #[inline]
-    // #[must_use]
-    // pub fn iter(&self) -> Paths {
-    //     match self {
-    //         Cargo::Package { .. } => Paths::default(),
-    //         Cargo::Workspace { workspace } => Paths::new(
-    //             workspace
-    //                 .members
-    //                 .iter()
-    //                 .rev()
-    //                 .map(|path| PathBuf::from(path).join("Cargo.toml")),
-    //         ),
-    //     }
-    // }
+    /// Creates an iterator over Cargo workspace members.
+    #[inline]
+    #[must_use]
+    pub fn iter(&self) -> Paths {
+        match self {
+            Cargo::Package { .. } => Paths::default(),
+            Cargo::Workspace { workspace } => Paths::new(
+                workspace
+                    .members
+                    .iter()
+                    .rev()
+                    .map(|path| PathBuf::from(path).join("Cargo.toml")),
+            ),
+        }
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -109,5 +111,18 @@ impl FromStr for Cargo {
     #[inline]
     fn from_str(value: &str) -> Result<Self> {
         toml::from_str(value).map_err(Into::into)
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+// @todo: do we need this? rather call it members? use a trait?
+impl IntoIterator for &Cargo {
+    type Item = Result<PathBuf>;
+    type IntoIter = Paths;
+
+    /// Creates an iterator over Cargo workspace members.
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
     }
 }

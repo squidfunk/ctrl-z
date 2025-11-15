@@ -23,9 +23,22 @@
 
 // ----------------------------------------------------------------------------
 
-//! Manifest.
+//! Cargo workspace.
 
-pub mod manifest;
+use serde::Deserialize;
+use std::collections::BTreeMap;
 
-// pub use manifest::cargo::Cargo;
-pub use manifest::Manifest;
+use super::dependency::Dependency;
+
+// ----------------------------------------------------------------------------
+// Structs
+// ----------------------------------------------------------------------------
+
+/// Cargo workspace.
+#[derive(Debug, Deserialize)]
+pub struct Workspace {
+    /// Workspace members.
+    pub members: Vec<String>,
+    /// Workspace dependencies.
+    pub dependencies: Option<BTreeMap<String, Dependency>>,
+}

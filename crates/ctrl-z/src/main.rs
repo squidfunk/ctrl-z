@@ -135,8 +135,7 @@ fn find_packages(repo_path: &Path) -> BTreeMap<PathBuf, Cargo> {
             let manfiest = Manifest::<PackageJson>::read(&root_cargo).unwrap();
             for res in manfiest {
                 if let Ok(m) = res {
-                    if let (Some(name), Some(version)) =
-                        (m.data.name(), m.data.version())
+                    if let (Some(name), Some(version)) = (m.name(), m.version())
                     {
                         println!("{} {}", name, version)
                     }
@@ -151,9 +150,7 @@ fn find_packages(repo_path: &Path) -> BTreeMap<PathBuf, Cargo> {
 
     for res in manfiest {
         if let Ok(m) = res {
-            if let (Some(name), Some(version)) =
-                (m.data.name(), m.data.version())
-            {
+            if let (Some(name), Some(version)) = (m.name(), m.version()) {
                 println!("{} {}", name, version)
             }
         }

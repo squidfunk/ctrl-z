@@ -25,6 +25,7 @@
 
 //! Manifest.
 
+use semver::Version;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -75,6 +76,18 @@ where
             path: path.to_path_buf(),
             data: F::from_str(&content)?,
         })
+    }
+
+    /// Returns the manifest's name.
+    #[inline]
+    pub fn name(&self) -> Option<&str> {
+        self.data.name()
+    }
+
+    /// Returns the manifest's version
+    #[inline]
+    pub fn version(&self) -> Option<&Version> {
+        self.data.version()
     }
 }
 

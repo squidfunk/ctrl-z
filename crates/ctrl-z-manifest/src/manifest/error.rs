@@ -39,9 +39,21 @@ pub enum Error {
     #[error(transparent)]
     Io(#[from] io::Error),
 
+    /// Glob error.
+    #[error(transparent)]
+    Glob(#[from] glob::GlobError),
+
+    /// Pattern error.
+    #[error(transparent)]
+    Pattern(#[from] glob::PatternError),
+
     /// TOML error.
     #[error(transparent)]
     Toml(#[from] toml::de::Error),
+
+    /// Invalid manifest.
+    #[error("Invalid manifest")]
+    Invalid,
 }
 
 // ----------------------------------------------------------------------------

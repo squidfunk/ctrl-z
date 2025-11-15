@@ -23,69 +23,59 @@
 
 // ----------------------------------------------------------------------------
 
-//! Manifest.
+//! Manifest iterator.
 
-use std::path::{Path, PathBuf};
-
-pub mod cargo;
-mod error;
-mod iter;
-
-use cargo::Cargo;
-pub use error::{Error, Result};
-use iter::Iter;
+use super::error::Result;
+use super::Manifest;
 
 // ----------------------------------------------------------------------------
-// Enums
+// Structs
 // ----------------------------------------------------------------------------
 
-/// Manifest.
-#[derive(Debug)]
-pub enum Manifest {
-    /// Cargo manifest.
-    Cargo {
-        /// Manifest path.
-        path: PathBuf,
-        /// Manifest data.
-        data: Cargo,
-    },
+/// Manifest iterator.
+pub struct Iter {
+    /// Stack of manifests.
+    stack: Vec<Manifest>,
 }
 
 // ----------------------------------------------------------------------------
-// Implementations
+// Implementation
 // ----------------------------------------------------------------------------
 
-impl Manifest {
-    /// Load manifest from path.
-    ///
-    /// # Errors
-    ///
-    /// This method returns [`Error::Io`], if the manifest could not be read.
-    pub fn new<P>(path: P) -> Result<Self>
-    where
-        P: AsRef<Path>,
-    {
-        let path = path.as_ref();
-        match path.file_name().and_then(|value| value.to_str()) {
-            Some("Cargo.toml") => Ok(Manifest::Cargo {
-                path: path.to_path_buf(),
-                data: Cargo::new(path)?,
-            }),
-            _ => Err(Error::Invalid),
-        }
+impl Iter {
+    /// Creates a manifest iterator.
+    pub fn new(manifest: Manifest) -> Self {
+        Self { stack: vec![manifest] }
     }
 }
 
 // ----------------------------------------------------------------------------
-// Trait implementations
+// Implementation
 // ----------------------------------------------------------------------------
 
-impl IntoIterator for Manifest {
+impl Iterator for Iter {
     type Item = Result<Manifest>;
-    type IntoIter = Iter;
 
-    /// Creates an iterator over the manifest.
-    fn into_iter(self) -> Self::IntoIter {
-        Iter::new(self)
+    /// Returns the next manifest.
+    fn next(&mut self) -> Option<Self::Item> {
+        let manifest = self.stack.pop()?;
+        match &manifest {
+            Manifest::Cargo { data, .. } => {
+                let iter =
+                    data.into_iter().map(|res| res.and_then(Manifest::new));
+
+                // Collect and return manifests
+                let manifests = match iter.collect::<Result<Vec<_>>>() {
+                    Ok(manifests) => manifests,
+                    Err(err) => return Some(Err(err)),
+                };
+
+                // Add manifests to stack for pre-order traversal
+                self.stack.extend(manifests.into_iter().rev());
+            }
+        }
+
+        // Return next manifest
+        Some(Ok(manifest))
     }
 }

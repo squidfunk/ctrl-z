@@ -29,14 +29,11 @@ use clap::{Parser, Subcommand};
 use git2::Repository;
 use inquire::Confirm;
 use semver::Version;
-use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
-use std::str::FromStr;
 use std::{env, fs, io};
-use toml_edit::{Document, Item};
 
-use ctrl_z_manifest::Cargo;
+use ctrl_z_manifest::{Cargo, Manifest};
 
 // ----------------------------------------------------------------------------
 // Constants
@@ -134,40 +131,43 @@ fn find_packages(repo_path: &Path) -> BTreeMap<PathBuf, Cargo> {
         return BTreeMap::new();
     }
 
-    let content =
-        fs::read_to_string(&root_cargo).expect("Failed to read Cargo.toml");
-    let mut packages = BTreeMap::new();
+    let manfiest = Manifest::new(&root_cargo).unwrap();
+    // println!("Manifest: {:?}", manfiest);
 
-    let cargo2 = Cargo::new(&root_cargo).expect("Failed to load Cargo.toml");
-
-    if let Cargo::Workspace { workspace } = &cargo2 {
-        for member_pattern in &workspace.members {
-            let base_path =
-                repo_path.join(member_pattern.trim_end_matches("/*"));
-
-            if let Ok(entries) = fs::read_dir(&base_path) {
-                for entry in entries.flatten() {
-                    let path = entry.path();
-                    if path.is_dir() {
-                        // Recursively find packages in subdirectories
-                        packages.extend(find_packages(&path));
-                    } else if path.ends_with("Cargo.toml") {
-                        let content = fs::read_to_string(&path)
-                            .expect("Failed to read Cargo.toml");
-                        let p: Cargo = toml::from_str(&content)
-                            .expect("Failed to parse Cargo.toml");
-                        packages.insert(path, p);
-                    }
-                }
-            }
-        }
-    } else {
-        packages.insert(root_cargo.clone(), cargo2);
+    for m in manfiest {
+        println!(">> {m:#?}")
     }
 
-    println!("Found packages: {:#?}", packages);
+    let mut packages = BTreeMap::new();
 
-    // packages = scopes in a rust crate!
+    // let cargo2 = Cargo::new(&root_cargo).expect("Failed to load Cargo.toml");
+    // for x in cargo2.iter() {
+    //     println!("Member: {:?}", x);
+    // }
+
+    // if let Cargo::Workspace { workspace } = &cargo2 {
+    //     for member_pattern in &workspace.members {
+    //         let base_path = repo_path.join(member_pattern);
+
+    //         // Use glob to handle patterns like "crates/*"
+    //         if let Ok(paths) = glob(base_path.to_str().unwrap()) {
+    //             for entry in paths.flatten() {
+    //                 if entry.is_dir() {
+    //                     // Recursively find packages in subdirectories
+    //                     packages.extend(find_packages(&entry));
+    //                 } else if entry.ends_with("Cargo.toml") {
+    //                     let content = fs::read_to_string(&entry)
+    //                         .expect("Failed to read Cargo.toml");
+    //                     let p: Cargo = toml::from_str(&content)
+    //                         .expect("Failed to parse Cargo.toml");
+    //                     packages.insert(entry, p);
+    //                 }
+    //             }
+    //         }
+    //     }
+    // } else {
+    //     packages.insert(root_cargo.clone(), cargo2);
+    // }
 
     packages
 }

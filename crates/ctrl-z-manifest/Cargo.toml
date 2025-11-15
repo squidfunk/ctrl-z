@@ -38,6 +38,7 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+glob.workspace = true
 semver.workspace = true
 serde.workspace = true
 thiserror.workspace = true

@@ -28,18 +28,20 @@
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
 use super::{Error, Result};
 
 mod dependency;
+mod iter;
 mod package;
 mod workspace;
 
-use dependency::Dependency;
-use package::Package;
-use workspace::Workspace;
+pub use dependency::Dependency;
+use iter::Iter;
+pub use package::Package;
+pub use workspace::Workspace;
 
 // ----------------------------------------------------------------------------
 // Enums
@@ -69,13 +71,23 @@ pub enum Cargo {
 
 impl Cargo {
     /// Attempts to load a Cargo manifest from the given path.
+    ///
+    /// # Errors
+    ///
+    /// This method returns [`Error::Io`], if the manifest could not be read.
     pub fn new<P>(path: P) -> Result<Self>
     where
         P: AsRef<Path>,
     {
-        fs::read_to_string(path)
-            .map_err(Into::into)
-            .and_then(|content| Self::from_str(&content))
+        let content = fs::read_to_string(path)?;
+        Self::from_str(&content)
+    }
+
+    /// Creates an iterator over Cargo workspace members.
+    #[inline]
+    #[must_use]
+    pub fn iter(&self) -> Iter {
+        Iter::new(self)
     }
 }
 
@@ -90,5 +102,17 @@ impl FromStr for Cargo {
     #[inline]
     fn from_str(value: &str) -> Result<Self> {
         toml::from_str(value).map_err(Into::into)
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+impl IntoIterator for &Cargo {
+    type Item = Result<PathBuf>;
+    type IntoIter = Iter;
+
+    /// Creates an iterator over Cargo workspace members.
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
     }
 }

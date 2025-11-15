@@ -27,4 +27,5 @@
 
 pub mod manifest;
 
-pub use manifest::{Cargo, Manifest};
+pub use manifest::cargo::Cargo;
+pub use manifest::Manifest;

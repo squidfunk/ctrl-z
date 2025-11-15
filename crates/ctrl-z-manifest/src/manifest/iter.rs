@@ -23,41 +23,36 @@
 
 // ----------------------------------------------------------------------------
 
-//! @todo tbd
+//! Manifest iterator.
 
-use glob::glob;
-use std::path::PathBuf;
-
-use super::Result;
+use super::error::Result;
+use super::format::Format;
+use super::Manifest;
 
 // ----------------------------------------------------------------------------
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Pattern iterator.
-#[derive(Debug, Default)]
-pub struct Paths {
-    /// Stack of patterns.
-    patterns: Vec<PathBuf>,
-    /// Stack of paths.
-    paths: Vec<PathBuf>,
+/// Manifest iterator.
+pub struct Iter<F>
+where
+    F: Format,
+{
+    /// Stack of manifests.
+    stack: Vec<Manifest<F>>,
 }
 
 // ----------------------------------------------------------------------------
 // Implementation
 // ----------------------------------------------------------------------------
 
-impl Paths {
-    /// Creates a path iterator.
-    pub fn new<P>(patterns: P) -> Self
-    where
-        P: IntoIterator<Item = PathBuf>,
-        P::IntoIter: DoubleEndedIterator,
-    {
-        Self {
-            patterns: patterns.into_iter().rev().collect(),
-            paths: Vec::new(),
-        }
+impl<F> Iter<F>
+where
+    F: Format,
+{
+    /// Creates a manifest iterator.
+    pub fn new(manifest: Manifest<F>) -> Self {
+        Self { stack: vec![manifest] }
     }
 }
 
@@ -65,29 +60,28 @@ impl Paths {
 // Implementation
 // ----------------------------------------------------------------------------
 
-impl Iterator for Paths {
-    type Item = Result<PathBuf>;
+impl<F> Iterator for Iter<F>
+where
+    F: Format,
+{
+    type Item = Result<Manifest<F>>;
 
-    /// Returns the next path.
+    /// Returns the next manifest.
     fn next(&mut self) -> Option<Self::Item> {
-        if self.paths.is_empty() {
-            // Take next item from the stack of patterns, and expand it as a
-            // glob - if the pattern is invalid, propagate the error
-            let paths = match glob(self.patterns.pop()?.to_str()?) {
-                Ok(paths) => paths,
-                Err(err) => return Some(Err(err.into())),
-            };
+        let manifest = self.stack.pop()?;
+        let data = &manifest.data;
 
-            // Collect paths and propagate errors - note that we need to know
-            // when an error occurs, so we don't just silence them
-            let iter = paths.into_iter().map(|res| res.map_err(Into::into));
-            match iter.collect::<Result<Vec<_>>>() {
-                Ok(paths) => self.paths.extend(paths.into_iter().rev()),
-                Err(err) => return Some(Err(err)),
-            }
-        }
+        // Collect paths and read manifests
+        let iter = data.paths().map(|res| res.and_then(Manifest::read));
+        let manifests = match iter.collect::<Result<Vec<_>>>() {
+            Ok(manifests) => manifests,
+            Err(err) => return Some(Err(err)),
+        };
 
-        // Return next path
-        self.paths.pop().map(Ok)
+        // Add manifests to stack in pre-order
+        self.stack.extend(manifests.into_iter().rev());
+
+        // Return next manifest
+        Some(Ok(manifest))
     }
 }

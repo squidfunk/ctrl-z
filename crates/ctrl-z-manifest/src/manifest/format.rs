@@ -23,20 +23,27 @@
 
 // ----------------------------------------------------------------------------
 
-//! Cargo package.
+//! Manifest format.
 
-use semver::Version;
-use serde::Deserialize;
+use std::fmt::Debug;
+use std::str::FromStr;
+
+use super::{Error, Result};
+
+pub mod cargo;
+pub mod package;
+mod paths;
+
+pub use cargo::Cargo;
+pub use package::PackageJson;
+pub use paths::Paths;
 
 // ----------------------------------------------------------------------------
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Cargo package.
-#[derive(Debug, Deserialize)]
-pub struct Package {
-    /// Package name.
-    pub name: String,
-    /// Package version.
-    pub version: Version,
+/// Manifest format.
+pub trait Format: Debug + FromStr<Err = Error> {
+    /// Creates an iterator over the manifest's paths.
+    fn paths(&self) -> Paths;
 }

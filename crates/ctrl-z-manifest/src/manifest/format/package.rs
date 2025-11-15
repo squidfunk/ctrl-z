@@ -23,46 +23,61 @@
 
 // ----------------------------------------------------------------------------
 
-//! Manifest error.
+//! Package.json manifest.
 
-use std::{io, result};
-use thiserror::Error;
+use semver::{Version, VersionReq};
+use serde::Deserialize;
+use std::collections::BTreeMap;
+use std::path::Path;
+use std::str::FromStr;
+
+use super::paths::Paths;
+use super::{Error, Format, Result};
 
 // ----------------------------------------------------------------------------
-// Enums
+// Structs
 // ----------------------------------------------------------------------------
 
-/// Manifest error.
-#[derive(Debug, Error)]
-pub enum Error {
-    /// I/O error.
-    #[error(transparent)]
-    Io(#[from] io::Error),
-
-    /// Glob error.
-    #[error(transparent)]
-    Glob(#[from] glob::GlobError),
-
-    /// Pattern error.
-    #[error(transparent)]
-    Pattern(#[from] glob::PatternError),
-
-    /// TOML error.
-    #[error(transparent)]
-    Toml(#[from] toml::de::Error),
-
-    /// JSON error.
-    #[error(transparent)]
-    Json(#[from] serde_json::Error),
-
-    /// Invalid manifest.
-    #[error("Invalid manifest")]
-    Invalid,
+/// Package.json manifest.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PackageJson {
+    /// Package name.
+    pub name: String,
+    /// Package version.
+    pub version: Version,
+    /// Package workspace members.
+    pub workspaces: Option<Vec<String>>,
+    /// Package dependencies.
+    pub dependencies: Option<BTreeMap<String, VersionReq>>,
+    /// Package development dependencies.
+    pub dev_dependencies: Option<BTreeMap<String, VersionReq>>,
 }
 
 // ----------------------------------------------------------------------------
-// Type aliases
+// Trait implementations
 // ----------------------------------------------------------------------------
 
-/// Manifest result.
-pub type Result<T = ()> = result::Result<T, Error>;
+impl Format for PackageJson {
+    /// Creates an iterator over the manifest's paths.
+    fn paths(&self) -> Paths {
+        if let Some(workspaces) = &self.workspaces {
+            let iter = workspaces.iter().rev();
+            Paths::new(iter.map(|path| Path::new(path).join("package.json")))
+        } else {
+            Paths::default()
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+impl FromStr for PackageJson {
+    type Err = Error;
+
+    /// Attempts to create a manifest from a string.
+    #[inline]
+    fn from_str(value: &str) -> Result<Self> {
+        serde_json::from_str(value).map_err(Into::into)
+    }
+}

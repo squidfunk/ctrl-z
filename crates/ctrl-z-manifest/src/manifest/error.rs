@@ -54,10 +54,6 @@ pub enum Error {
     /// JSON error.
     #[error(transparent)]
     Json(#[from] serde_json::Error),
-
-    /// Invalid manifest.
-    #[error("Invalid manifest")]
-    Invalid,
 }
 
 // ----------------------------------------------------------------------------

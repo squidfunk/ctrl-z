@@ -27,5 +27,7 @@
 
 pub mod manifest;
 
-// pub use manifest::cargo::Cargo;
+pub use manifest::format::cargo::Cargo;
+pub use manifest::format::package::PackageJson;
+pub use manifest::format::{self, Format};
 pub use manifest::Manifest;

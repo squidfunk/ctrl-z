@@ -25,24 +25,72 @@
 
 //! Manifest.
 
-use std::path::Path;
+use std::fs;
+use std::path::{Path, PathBuf};
 
-pub mod cargo;
 mod error;
+pub mod format;
+mod iter;
 
 pub use error::{Error, Result};
+use format::Format;
+use iter::Iter;
 
 // ----------------------------------------------------------------------------
-// Traits
+// Structs
 // ----------------------------------------------------------------------------
 
 /// Manifest.
-///
-/// @todo explain
-pub trait Manifest: Sized {
-    /// Iterator type.
-    type Iter: Iterator<Item = Result<Self>>;
+#[derive(Debug)]
+pub struct Manifest<F>
+where
+    F: Format,
+{
+    /// Manifest path.
+    pub path: PathBuf,
+    /// Manifest data.
+    pub data: F,
+}
 
-    /// Creates an iterator over the manifests children.
-    fn iter(&self) -> Self::Iter;
+// ----------------------------------------------------------------------------
+// Implementations
+// ----------------------------------------------------------------------------
+
+impl<F> Manifest<F>
+where
+    F: Format,
+{
+    /// Attempts to read a manifest from the given path.
+    ///
+    /// # Errors
+    ///
+    /// This method returns [`Error::Io`], if the manifest could not be read.
+    pub fn read<P>(path: P) -> Result<Self>
+    where
+        P: AsRef<Path>,
+    {
+        let path = path.as_ref();
+        let content = fs::read_to_string(path)?;
+        Ok(Self {
+            path: path.to_path_buf(),
+            data: F::from_str(&content)?,
+        })
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Trait implementations
+// ----------------------------------------------------------------------------
+
+impl<F> IntoIterator for Manifest<F>
+where
+    F: Format,
+{
+    type Item = Result<Manifest<F>>;
+    type IntoIter = Iter<F>;
+
+    /// Creates an iterator over the manifest.
+    fn into_iter(self) -> Self::IntoIter {
+        Iter::new(self)
+    }
 }

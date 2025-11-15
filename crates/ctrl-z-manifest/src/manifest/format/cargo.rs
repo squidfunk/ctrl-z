@@ -23,22 +23,70 @@
 
 // ----------------------------------------------------------------------------
 
-//! Cargo workspace.
+//! Cargo manifest.
 
 use serde::Deserialize;
 use std::collections::BTreeMap;
+use std::path::Path;
+use std::str::FromStr;
 
-use super::dependency::Dependency;
+use super::paths::Paths;
+use super::{Error, Format, Result};
+
+mod dependency;
+mod package;
+mod workspace;
+
+pub use dependency::Dependency;
+pub use package::Package;
+pub use workspace::Workspace;
 
 // ----------------------------------------------------------------------------
-// Structs
+// Enums
 // ----------------------------------------------------------------------------
 
-/// Cargo workspace.
+/// Cargo manifest.
 #[derive(Debug, Deserialize)]
-pub struct Workspace {
-    /// Workspace members.
-    pub members: Vec<String>,
-    /// Workspace dependencies.
-    pub dependencies: Option<BTreeMap<String, Dependency>>,
+#[serde(untagged)]
+pub enum Cargo {
+    /// Cargo package.
+    Package {
+        /// Package information.
+        package: Package,
+        /// Package dependencies.
+        dependencies: Option<BTreeMap<String, Dependency>>,
+    },
+    /// Cargo workspace.
+    Workspace {
+        /// Workspace information.
+        workspace: Workspace,
+    },
+}
+
+// ----------------------------------------------------------------------------
+// Trait implementations
+// ----------------------------------------------------------------------------
+
+impl Format for Cargo {
+    /// Creates an iterator over the manifest's paths.
+    fn paths(&self) -> Paths {
+        if let Cargo::Workspace { workspace } = self {
+            let iter = workspace.members.iter().rev();
+            Paths::new(iter.map(|path| Path::new(path).join("Cargo.toml")))
+        } else {
+            Paths::default()
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+impl FromStr for Cargo {
+    type Err = Error;
+
+    /// Attempts to create a manifest from a string.
+    #[inline]
+    fn from_str(value: &str) -> Result<Self> {
+        toml::from_str(value).map_err(Into::into)
+    }
 }

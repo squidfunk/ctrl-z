@@ -72,18 +72,20 @@ impl Format for Cargo {
     /// Returns the manifest's name.
     #[inline]
     fn name(&self) -> Option<&str> {
-        match self {
-            Cargo::Package { package, .. } => Some(&package.name),
-            _ => None,
+        if let Cargo::Package { package, .. } = self {
+            Some(&package.name)
+        } else {
+            None
         }
     }
 
     /// Returns the manifest's version
     #[inline]
     fn version(&self) -> Option<&Version> {
-        match self {
-            Cargo::Package { package, .. } => Some(&package.version),
-            _ => None,
+        if let Cargo::Package { package, .. } = self {
+            Some(&package.version)
+        } else {
+            None
         }
     }
 

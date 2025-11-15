@@ -25,6 +25,7 @@
 
 //! Cargo manifest.
 
+use semver::Version;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -68,7 +69,26 @@ pub enum Cargo {
 // ----------------------------------------------------------------------------
 
 impl Format for Cargo {
+    /// Returns the manifest's name.
+    #[inline]
+    fn name(&self) -> Option<&str> {
+        match self {
+            Cargo::Package { package, .. } => Some(&package.name),
+            _ => None,
+        }
+    }
+
+    /// Returns the manifest's version
+    #[inline]
+    fn version(&self) -> Option<&Version> {
+        match self {
+            Cargo::Package { package, .. } => Some(&package.version),
+            _ => None,
+        }
+    }
+
     /// Creates an iterator over the manifest's paths.
+    #[inline]
     fn paths(&self) -> Paths {
         if let Cargo::Workspace { workspace } = self {
             let iter = workspace.members.iter().rev();

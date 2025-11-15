@@ -33,7 +33,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::{env, fs, io};
 
-use ctrl_z_manifest::{Cargo, Manifest, PackageJson};
+use ctrl_z_manifest::{Cargo, Format, Manifest, PackageJson};
 
 // ----------------------------------------------------------------------------
 // Constants
@@ -133,8 +133,14 @@ fn find_packages(repo_path: &Path) -> BTreeMap<PathBuf, Cargo> {
             return BTreeMap::new();
         } else {
             let manfiest = Manifest::<PackageJson>::read(&root_cargo).unwrap();
-            for m in manfiest {
-                println!(">> {m:#?}")
+            for res in manfiest {
+                if let Ok(m) = res {
+                    if let (Some(name), Some(version)) =
+                        (m.data.name(), m.data.version())
+                    {
+                        println!("{} {}", name, version)
+                    }
+                }
             }
             return BTreeMap::new();
         }
@@ -143,8 +149,14 @@ fn find_packages(repo_path: &Path) -> BTreeMap<PathBuf, Cargo> {
     let manfiest = Manifest::<Cargo>::read(&root_cargo).unwrap();
     // println!("Manifest: {:?}", manfiest);
 
-    for m in manfiest {
-        println!(">> {m:#?}")
+    for res in manfiest {
+        if let Ok(m) = res {
+            if let (Some(name), Some(version)) =
+                (m.data.name(), m.data.version())
+            {
+                println!("{} {}", name, version)
+            }
+        }
     }
 
     let mut packages = BTreeMap::new();

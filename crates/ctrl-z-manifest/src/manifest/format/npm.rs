@@ -59,7 +59,20 @@ pub struct PackageJson {
 // ----------------------------------------------------------------------------
 
 impl Format for PackageJson {
+    /// Returns the manifest's name.
+    #[inline]
+    fn name(&self) -> Option<&str> {
+        Some(&self.name)
+    }
+
+    /// Returns the manifest's version
+    #[inline]
+    fn version(&self) -> Option<&Version> {
+        Some(&self.version)
+    }
+
     /// Creates an iterator over the manifest's paths.
+    #[inline]
     fn paths(&self) -> Paths {
         if let Some(workspaces) = &self.workspaces {
             let iter = workspaces.iter().rev();

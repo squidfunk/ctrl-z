@@ -25,6 +25,7 @@
 
 //! Manifest format.
 
+use semver::Version;
 use std::fmt::Debug;
 use std::str::FromStr;
 
@@ -44,6 +45,10 @@ pub use paths::Paths;
 
 /// Manifest format.
 pub trait Format: Debug + FromStr<Err = Error> {
+    /// Returns the manifest's name.
+    fn name(&self) -> Option<&str>;
+    /// Returns the manifest's version
+    fn version(&self) -> Option<&Version>;
     /// Creates an iterator over the manifest's paths.
     fn paths(&self) -> Paths;
 }

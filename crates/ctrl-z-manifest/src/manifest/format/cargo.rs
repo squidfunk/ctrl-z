@@ -79,7 +79,7 @@ impl Format for Cargo {
         }
     }
 
-    /// Returns the manifest's version
+    /// Returns the manifest's version.
     #[inline]
     fn version(&self) -> Option<&Version> {
         if let Cargo::Package { package, .. } = self {

@@ -182,6 +182,7 @@ dependencies = [
  "serde_json",
  "thiserror",
  "toml",
+ "toml_edit",
 ]
 
 [[package]]

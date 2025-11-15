@@ -65,7 +65,7 @@ impl Format for PackageJson {
         Some(&self.name)
     }
 
-    /// Returns the manifest's version
+    /// Returns the manifest's version.
     #[inline]
     fn version(&self) -> Option<&Version> {
         Some(&self.version)

@@ -23,32 +23,37 @@
 
 // ----------------------------------------------------------------------------
 
-//! Manifest format.
+//! Cargo manifest writer.
+
+use std::fs;
 
 use semver::Version;
-use std::fmt::Debug;
-use std::str::FromStr;
+use toml_edit::DocumentMut;
 
-use super::{Error, Result};
+use crate::manifest::format::Cargo;
+use crate::manifest::Manifest;
 
-pub mod cargo;
-pub mod npm;
-mod paths;
-
-pub use cargo::Cargo;
-pub use npm::PackageJson;
-pub use paths::Paths;
+use super::{Result, Writer};
 
 // ----------------------------------------------------------------------------
-// Traits
+// Trait implementations
 // ----------------------------------------------------------------------------
 
-/// Manifest format.
-pub trait Format: Debug + FromStr<Err = Error> {
-    /// Returns the manifest's name.
-    fn name(&self) -> Option<&str>;
-    /// Returns the manifest's version.
-    fn version(&self) -> Option<&Version>;
-    /// Creates an iterator over the manifest's paths.
-    fn paths(&self) -> Paths;
+// Manifst: to_writer <- make this a writer struct?
+
+// @todo abstract that again?
+impl Writer for Manifest<Cargo> {
+    /// Updates the manifest's version.
+    fn set_version(&self, version: Version) -> Result {
+        let mut document: DocumentMut =
+            fs::read_to_string(&self.path)?.parse()?;
+
+        // could also be workspace!!!
+        let option = document.get("package");
+        println!("option {:#?}", option);
+        // if let Some(package) = option.and_then(|x| x.as_table_mut()) {}
+        //  document.as_table_mut()
+
+        todo!()
+    }
 }

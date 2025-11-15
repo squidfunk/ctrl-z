@@ -51,6 +51,10 @@ pub enum Error {
     #[error(transparent)]
     Toml(#[from] toml::de::Error),
 
+    /// TOML edit error.
+    #[error(transparent)]
+    TomlEdit(#[from] toml_edit::TomlError),
+
     /// JSON error.
     #[error(transparent)]
     Json(#[from] serde_json::Error),

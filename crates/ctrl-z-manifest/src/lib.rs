@@ -30,4 +30,5 @@ pub mod manifest;
 pub use manifest::format::cargo::Cargo;
 pub use manifest::format::npm::PackageJson;
 pub use manifest::format::{self, Format};
+pub use manifest::writer::{self, Writer};
 pub use manifest::Manifest;

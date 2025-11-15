@@ -32,6 +32,7 @@ use std::path::{Path, PathBuf};
 mod error;
 pub mod format;
 mod iter;
+pub mod writer;
 
 pub use error::{Error, Result};
 use format::Format;
@@ -84,7 +85,7 @@ where
         self.data.name()
     }
 
-    /// Returns the manifest's version
+    /// Returns the manifest's version.
     #[inline]
     pub fn version(&self) -> Option<&Version> {
         self.data.version()

@@ -23,32 +23,21 @@
 
 // ----------------------------------------------------------------------------
 
-//! Manifest format.
+//! Manifest writer.
 
 use semver::Version;
 use std::fmt::Debug;
-use std::str::FromStr;
 
 use super::{Error, Result};
 
-pub mod cargo;
-pub mod npm;
-mod paths;
-
-pub use cargo::Cargo;
-pub use npm::PackageJson;
-pub use paths::Paths;
+mod cargo;
 
 // ----------------------------------------------------------------------------
 // Traits
 // ----------------------------------------------------------------------------
 
-/// Manifest format.
-pub trait Format: Debug + FromStr<Err = Error> {
-    /// Returns the manifest's name.
-    fn name(&self) -> Option<&str>;
-    /// Returns the manifest's version.
-    fn version(&self) -> Option<&Version>;
-    /// Creates an iterator over the manifest's paths.
-    fn paths(&self) -> Paths;
+/// Manifest writer.
+pub trait Writer: Debug {
+    /// Updates the manifest's version.
+    fn set_version(&self, version: Version) -> Result;
 }

@@ -33,7 +33,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::{env, fs, io};
 
-use ctrl_z_manifest::{Cargo, Format, Manifest, PackageJson};
+use ctrl_z_manifest::{Cargo, Format, Manifest, PackageJson, Writer};
 
 // ----------------------------------------------------------------------------
 // Constants
@@ -146,6 +146,8 @@ fn find_packages(repo_path: &Path) -> BTreeMap<PathBuf, Cargo> {
     }
 
     let manfiest = Manifest::<Cargo>::read(&root_cargo).unwrap();
+    manfiest.set_version(Version::new(0, 1, 2));
+
     // println!("Manifest: {:?}", manfiest);
 
     for res in manfiest {

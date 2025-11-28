@@ -23,23 +23,37 @@
 
 // ----------------------------------------------------------------------------
 
-//! Cargo workspace.
+//! Repository.
 
-use serde::Deserialize;
-use std::collections::BTreeMap;
+use std::path::Path;
 
-use super::dependency::Dependency;
+use super::error::{Error, Result};
+
+mod commits;
 
 // ----------------------------------------------------------------------------
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Cargo workspace.
-#[derive(Debug, Deserialize)]
-pub struct Workspace {
-    /// Workspace members.
-    pub members: Vec<String>,
-    /// Workspace dependencies.
-    #[serde(default)]
-    pub dependencies: BTreeMap<String, Dependency>,
+/// Repository.
+pub struct Repository {
+    /// Git repository.
+    git_repository: git2::Repository,
+}
+
+// ----------------------------------------------------------------------------
+// Implementations
+// ----------------------------------------------------------------------------
+
+impl Repository {
+    ///
+    pub fn open<P>(path: P) -> Result<Self>
+    where
+        P: AsRef<Path>,
+    {
+        let repository = git2::Repository::discover(path)?;
+        Ok(Self { git_repository: repository })
+    }
+
+    // pub fn commits<P>
 }

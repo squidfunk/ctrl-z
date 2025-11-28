@@ -39,6 +39,7 @@ workspace = true
 
 [dependencies]
 ctrl-z-manifest.workspace = true
+ctrl-z-git.workspace = true
 
 clap.workspace = true
 git2.workspace = true
@@ -47,3 +48,4 @@ semver.workspace = true
 serde.workspace = true
 toml.workspace = true
 toml_edit.workspace = true
+zrx.workspace = true

@@ -23,23 +23,46 @@
 
 // ----------------------------------------------------------------------------
 
-//! Cargo workspace.
+//! Commit.
 
-use serde::Deserialize;
-use std::collections::BTreeMap;
+use git2::{Oid, Repository};
+use std::path::Path;
 
-use super::dependency::Dependency;
+mod changes;
+
+use super::{Error, Result};
 
 // ----------------------------------------------------------------------------
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Cargo workspace.
-#[derive(Debug, Deserialize)]
-pub struct Workspace {
-    /// Workspace members.
-    pub members: Vec<String>,
-    /// Workspace dependencies.
-    #[serde(default)]
-    pub dependencies: BTreeMap<String, Dependency>,
+/// Commit.
+pub struct Commit<'a> {
+    /// Repository.
+    git_repo: &'a Repository,
+    /// Inner commit.
+    git_commit: git2::Commit<'a>,
+}
+
+// ----------------------------------------------------------------------------
+// Implementations
+// ----------------------------------------------------------------------------
+
+impl<'a> Commit<'a> {
+    /// Loads the commit associated with the given object identifier.
+    /// // @todo rather say repo.commit(oid?)
+    pub fn new(repo: &'a Repository, oid: Oid) -> Result<Self> {
+        let git_commit = repo.find_commit(oid)?; // is this a good abstraction?
+        Ok(Self { git_repo: repo, git_commit })
+    }
+
+    #[inline]
+    pub fn id(&self) -> Oid {
+        self.git_commit.id()
+    }
+
+    #[inline]
+    pub fn summary(&self) -> Option<&str> {
+        self.git_commit.summary()
+    }
 }

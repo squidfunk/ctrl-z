@@ -23,4 +23,8 @@
 
 // ----------------------------------------------------------------------------
 
-//! Tag and release management.
+//! tbd.
+
+#![allow(clippy::match_same_arms)]
+
+pub mod git;

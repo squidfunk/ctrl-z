@@ -39,8 +39,8 @@ use super::Result;
 pub struct Paths {
     /// Stack of patterns.
     patterns: Vec<PathBuf>,
-    /// Stack of paths.
-    paths: Vec<PathBuf>,
+    /// Stack of packages.
+    packages: Vec<PathBuf>,
 }
 
 // ----------------------------------------------------------------------------
@@ -56,7 +56,7 @@ impl Paths {
     {
         Self {
             patterns: patterns.into_iter().rev().collect(),
-            paths: Vec::new(),
+            packages: Vec::new(),
         }
     }
 }
@@ -70,24 +70,24 @@ impl Iterator for Paths {
 
     /// Returns the next path.
     fn next(&mut self) -> Option<Self::Item> {
-        if self.paths.is_empty() {
-            // Take next item from the stack of patterns, and expand it as a
-            // glob - if the pattern is invalid, propagate the error
+        if self.packages.is_empty() {
+            // Take next pattern from the stack, and expand it as a glob - if
+            // the pattern is invalid, we propagate the error
             let paths = match glob(self.patterns.pop()?.to_str()?) {
                 Ok(paths) => paths,
                 Err(err) => return Some(Err(err.into())),
             };
 
-            // Collect paths and propagate errors - note that we need to know
-            // when an error occurs, so we don't just silence them
+            // Collect packages and propagate errors - note that we need to
+            // know when an error occurs, so we don't just silence them
             let iter = paths.into_iter().map(|res| res.map_err(Into::into));
             match iter.collect::<Result<Vec<_>>>() {
-                Ok(paths) => self.paths.extend(paths.into_iter().rev()),
+                Ok(paths) => self.packages.extend(paths.into_iter().rev()),
                 Err(err) => return Some(Err(err)),
             }
         }
 
         // Return next path
-        self.paths.pop().map(Ok)
+        self.packages.pop().map(Ok)
     }
 }

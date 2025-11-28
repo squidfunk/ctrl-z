@@ -29,7 +29,7 @@ use semver::VersionReq;
 use serde::Deserialize;
 
 // ----------------------------------------------------------------------------
-// Structs
+// Enums
 // ----------------------------------------------------------------------------
 
 /// Cargo dependency.
@@ -42,6 +42,10 @@ pub enum Dependency {
     Info(DependencyInfo),
 }
 
+// ----------------------------------------------------------------------------
+// Structs
+// ----------------------------------------------------------------------------
+
 /// Cargo dependency information.
 #[derive(Debug, Deserialize)]
 pub struct DependencyInfo {
@@ -49,4 +53,19 @@ pub struct DependencyInfo {
     pub version: Option<VersionReq>,
     /// Features.
     pub workspace: Option<bool>,
+}
+
+// ----------------------------------------------------------------------------
+// Implementations
+// ----------------------------------------------------------------------------
+
+impl Dependency {
+    /// Returns the version requirement, if any.
+    #[must_use]
+    pub fn version(&self) -> Option<&VersionReq> {
+        match self {
+            Dependency::Version(v) => Some(v),
+            Dependency::Info(info) => info.version.as_ref(),
+        }
+    }
 }

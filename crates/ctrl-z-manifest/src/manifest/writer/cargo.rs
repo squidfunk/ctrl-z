@@ -39,7 +39,7 @@ use super::{Result, Writer};
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-// Manifst: to_writer <- make this a writer struct?
+// Manifest: to_writer <- make this a writer struct?
 
 // @todo abstract that again?
 impl Writer for Manifest<Cargo> {
@@ -48,12 +48,17 @@ impl Writer for Manifest<Cargo> {
         let mut document: DocumentMut =
             fs::read_to_string(&self.path)?.parse()?;
 
-        // could also be workspace!!!
-        let option = document.get("package");
-        println!("option {:#?}", option);
-        // if let Some(package) = option.and_then(|x| x.as_table_mut()) {}
+        // what happens in case of workspace?
+        let option = document.get_mut("package");
+        if let Some(package) = option.and_then(|x| x.as_table_mut()) {
+            package["version"] = toml_edit::value(version.to_string());
+            fs::write(&self.path, document.to_string())?;
+            // return Ok(());
+        }
+
+        Ok(())
         //  document.as_table_mut()
 
-        todo!()
+        // todo!()
     }
 }

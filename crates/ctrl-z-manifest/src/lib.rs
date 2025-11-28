@@ -23,7 +23,7 @@
 
 // ----------------------------------------------------------------------------
 
-//! Manifest.
+//! Manifest reader and writer.
 
 pub mod manifest;
 

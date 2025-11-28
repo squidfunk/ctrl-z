@@ -23,23 +23,26 @@
 
 // ----------------------------------------------------------------------------
 
-//! Cargo workspace.
+//! Manifest writer error.
 
-use serde::Deserialize;
-use std::collections::BTreeMap;
-
-use super::dependency::Dependency;
+use std::{io, result};
+use thiserror::Error;
 
 // ----------------------------------------------------------------------------
-// Structs
+// Enums
 // ----------------------------------------------------------------------------
 
-/// Cargo workspace.
-#[derive(Debug, Deserialize)]
-pub struct Workspace {
-    /// Workspace members.
-    pub members: Vec<String>,
-    /// Workspace dependencies.
-    #[serde(default)]
-    pub dependencies: BTreeMap<String, Dependency>,
+/// Manifest error.
+#[derive(Debug, Error)]
+pub enum Error {
+    /// I/O error.
+    #[error(transparent)]
+    Io(#[from] io::Error),
 }
+
+// ----------------------------------------------------------------------------
+// Type aliases
+// ----------------------------------------------------------------------------
+
+/// Manifest result.
+pub type Result<T = ()> = result::Result<T, Error>;

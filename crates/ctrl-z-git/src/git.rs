@@ -23,23 +23,13 @@
 
 // ----------------------------------------------------------------------------
 
-//! Cargo workspace.
+//! Project.
 
-use serde::Deserialize;
-use std::collections::BTreeMap;
+use std::path::Path;
 
-use super::dependency::Dependency;
+pub mod change;
+pub mod commit;
+mod error;
+pub mod repository;
 
-// ----------------------------------------------------------------------------
-// Structs
-// ----------------------------------------------------------------------------
-
-/// Cargo workspace.
-#[derive(Debug, Deserialize)]
-pub struct Workspace {
-    /// Workspace members.
-    pub members: Vec<String>,
-    /// Workspace dependencies.
-    #[serde(default)]
-    pub dependencies: BTreeMap<String, Dependency>,
-}
+pub use error::{Error, Result};

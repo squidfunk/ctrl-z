@@ -55,7 +55,8 @@ pub enum Cargo {
         /// Package information.
         package: Package,
         /// Package dependencies.
-        dependencies: Option<BTreeMap<String, Dependency>>,
+        #[serde(default)]
+        dependencies: BTreeMap<String, Dependency>,
     },
     /// Cargo workspace.
     Workspace {

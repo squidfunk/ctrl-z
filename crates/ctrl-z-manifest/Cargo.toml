@@ -24,7 +24,7 @@
 [package]
 name = "ctrl-z-manifest"
 version = "0.0.0"
-description = "Manifest parser and utilities"
+description = "Manifest reader and writer"
 edition.workspace = true
 rust-version.workspace = true
 homepage.workspace = true

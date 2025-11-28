@@ -23,23 +23,41 @@
 
 // ----------------------------------------------------------------------------
 
-//! Cargo workspace.
+//! Change.
 
-use serde::Deserialize;
-use std::collections::BTreeMap;
-
-use super::dependency::Dependency;
+use std::path::PathBuf;
 
 // ----------------------------------------------------------------------------
-// Structs
+// Enums
 // ----------------------------------------------------------------------------
 
-/// Cargo workspace.
-#[derive(Debug, Deserialize)]
-pub struct Workspace {
-    /// Workspace members.
-    pub members: Vec<String>,
-    /// Workspace dependencies.
-    #[serde(default)]
-    pub dependencies: BTreeMap<String, Dependency>,
+/// Change.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Change {
+    /// Path was created.
+    Create { path: PathBuf },
+    /// Path was modified.
+    Modify { path: PathBuf },
+    /// Path was renamed.
+    Rename { from: PathBuf, path: PathBuf },
+    /// Path was deleted
+    Delete { path: PathBuf },
+}
+
+// ----------------------------------------------------------------------------
+// Trait implementations
+// ----------------------------------------------------------------------------
+
+impl Change {
+    /// Returns the path of the change.
+    #[inline]
+    #[must_use]
+    pub fn path(&self) -> &PathBuf {
+        match self {
+            Change::Create { path, .. } => path,
+            Change::Modify { path, .. } => path,
+            Change::Rename { path, .. } => path,
+            Change::Delete { path, .. } => path,
+        }
+    }
 }

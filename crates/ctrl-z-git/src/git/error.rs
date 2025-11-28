@@ -23,23 +23,30 @@
 
 // ----------------------------------------------------------------------------
 
-//! Cargo workspace.
+//! Project error.
 
-use serde::Deserialize;
-use std::collections::BTreeMap;
-
-use super::dependency::Dependency;
+use std::{io, result};
+use thiserror::Error;
 
 // ----------------------------------------------------------------------------
-// Structs
+// Enums
 // ----------------------------------------------------------------------------
 
-/// Cargo workspace.
-#[derive(Debug, Deserialize)]
-pub struct Workspace {
-    /// Workspace members.
-    pub members: Vec<String>,
-    /// Workspace dependencies.
-    #[serde(default)]
-    pub dependencies: BTreeMap<String, Dependency>,
+/// Project error.
+#[derive(Debug, Error)]
+pub enum Error {
+    /// I/O error.
+    #[error(transparent)]
+    Io(#[from] io::Error),
+
+    /// Git error.
+    #[error(transparent)]
+    Git(#[from] git2::Error),
 }
+
+// ----------------------------------------------------------------------------
+// Type aliases
+// ----------------------------------------------------------------------------
+
+/// Project result.
+pub type Result<T = ()> = result::Result<T, Error>;

@@ -23,76 +23,62 @@
 
 // ----------------------------------------------------------------------------
 
-//! Package.json manifest.
+//! Iterator over commits in a repository.
 
-use semver::{Version, VersionReq};
-use serde::Deserialize;
-use std::collections::BTreeMap;
-use std::path::Path;
-use std::str::FromStr;
+use crate::git::commit::Commit;
+use crate::git::error::Result;
 
-use super::paths::Paths;
-use super::{Error, Format, Result};
+use super::Repository;
 
 // ----------------------------------------------------------------------------
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Package.json manifest.
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PackageJson {
-    /// Package name.
-    pub name: String,
-    /// Package version.
-    pub version: Version,
-    /// Package private flag.
-    pub private: bool,
-    /// Package workspace members.
-    pub workspaces: Option<Vec<String>>,
-    /// Package dependencies.
-    pub dependencies: Option<BTreeMap<String, VersionReq>>,
-    /// Package development dependencies.
-    pub dev_dependencies: Option<BTreeMap<String, VersionReq>>,
+/// Iterator over commits in a repository.
+pub struct Commits<'a> {
+    git_repository: &'a git2::Repository,
+    /// Git diff object.
+    git_revwalk: git2::Revwalk<'a>,
+    /// Current index.
+    index: usize,
+}
+
+// ----------------------------------------------------------------------------
+// Implementations
+// ----------------------------------------------------------------------------
+
+impl Repository {
+    ///
+    pub fn commits(&self) -> Result<Commits<'_>> {
+        // Create a walk over all revisions starting from HEAD and walking
+        // backwards topologically for as long as the iterator is consumed
+        let mut revwalk = self.git_repository.revwalk()?;
+        revwalk.push_head()?;
+        revwalk.set_sorting(git2::Sort::TOPOLOGICAL)?;
+
+        Ok(Commits {
+            git_repository: &self.git_repository,
+            git_revwalk: revwalk,
+            index: 0,
+        })
+    }
 }
 
 // ----------------------------------------------------------------------------
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl Format for PackageJson {
-    /// Returns the manifest's name.
-    #[inline]
-    fn name(&self) -> Option<&str> {
-        Some(&self.name)
-    }
+impl<'a> Iterator for Commits<'a> {
+    type Item = Result<Commit<'a>>;
 
-    /// Returns the manifest's version.
-    #[inline]
-    fn version(&self) -> Option<&Version> {
-        Some(&self.version)
-    }
-
-    /// Creates an iterator over the manifest's paths.
-    #[inline]
-    fn paths(&self) -> Paths {
-        if let Some(workspaces) = &self.workspaces {
-            let iter = workspaces.iter().rev();
-            Paths::new(iter.map(|path| Path::new(path).join("package.json")))
-        } else {
-            Paths::default()
-        }
-    }
-}
-
-// ----------------------------------------------------------------------------
-
-impl FromStr for PackageJson {
-    type Err = Error;
-
-    /// Attempts to create a manifest from a string.
-    #[inline]
-    fn from_str(value: &str) -> Result<Self> {
-        serde_json::from_str(value).map_err(Into::into)
+    ///
+    fn next(&mut self) -> Option<Self::Item> {
+        // Get the next delta from the diff
+        let oid = self.git_revwalk.next()?;
+        return match oid {
+            Ok(oid) => Some(Commit::new(self.git_repository, oid)),
+            Err(err) => Some(Err(err.into())),
+        };
+        None
     }
 }

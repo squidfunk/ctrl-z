@@ -23,10 +23,10 @@
 
 // ----------------------------------------------------------------------------
 
-//! Iterator over commits in a repository.
+//! Iterator over references in a repository.
 
 use crate::git::Result;
-use crate::git::commit::Commit;
+use crate::git::reference::Reference;
 
 use super::Repository;
 
@@ -34,13 +34,10 @@ use super::Repository;
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Iterator over commits in a repository.
-pub struct Commits<'a> {
-    git_repository: &'a git2::Repository,
-    /// Git diff object.
-    git_revwalk: git2::Revwalk<'a>,
-    /// Current index.
-    index: usize,
+/// Iterator over references in a repository.
+pub struct References<'a> {
+    /// Git references iterator.
+    git_references: git2::References<'a>,
 }
 
 // ----------------------------------------------------------------------------
@@ -48,19 +45,10 @@ pub struct Commits<'a> {
 // ----------------------------------------------------------------------------
 
 impl Repository {
-    ///
-    pub fn commits(&self) -> Result<Commits<'_>> {
-        // Create a walk over all revisions starting from HEAD and walking
-        // backwards topologically for as long as the iterator is consumed
-        let mut revwalk = self.git_repository.revwalk()?;
-        revwalk.push_head()?;
-        revwalk.set_sorting(git2::Sort::TOPOLOGICAL)?;
-
-        Ok(Commits {
-            git_repository: &self.git_repository,
-            git_revwalk: revwalk,
-            index: 0,
-        })
+    /// Creates an iterator over all references (heads, tags, remotes, etc.).
+    pub fn references(&self) -> Result<References<'_>> {
+        let refs = self.git_repository.references()?;
+        Ok(References { git_references: refs })
     }
 }
 
@@ -68,17 +56,13 @@ impl Repository {
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl<'a> Iterator for Commits<'a> {
-    type Item = Result<Commit<'a>>;
+impl<'a> Iterator for References<'a> {
+    type Item = Result<Reference<'a>>;
 
-    ///
     fn next(&mut self) -> Option<Self::Item> {
-        // Get the next delta from the diff
-        let oid = self.git_revwalk.next()?;
-        return match oid {
-            Ok(oid) => Some(Commit::new(self.git_repository, oid)),
+        match self.git_references.next()? {
+            Ok(reference) => Some(Ok(Reference::new(reference))),
             Err(err) => Some(Err(err.into())),
-        };
-        None
+        }
     }
 }

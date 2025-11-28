@@ -25,8 +25,8 @@
 
 //! Iterator over changes in a commit.
 
+use crate::git::Result;
 use crate::git::change::Change;
-use crate::git::error::Result;
 
 use super::Commit;
 

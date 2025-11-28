@@ -30,6 +30,10 @@ use std::path::Path;
 use super::error::{Error, Result};
 
 mod commits;
+mod references;
+
+// pub use commits::Commits;
+// pub use references::References;
 
 // ----------------------------------------------------------------------------
 // Structs

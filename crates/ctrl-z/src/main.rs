@@ -151,30 +151,7 @@ pub fn main() {
 
                                 let c = Commit::new(&repo, oid).unwrap();
                                 for change in c.changes().unwrap() {
-                                    match change {
-                                        Change::Create { path } => println!(
-                                            "Added: {}",
-                                            path.display()
-                                        ),
-                                        Change::Delete { path } => println!(
-                                            "Deleted: {}",
-                                            path.display()
-                                        ),
-                                        Change::Modify { path } => println!(
-                                            "Modified: {}",
-                                            path.display()
-                                        ),
-                                        Change::Rename {
-                                            from: old_path,
-                                            path: new_path,
-                                        } => {
-                                            println!(
-                                                "Renamed: {} -> {}",
-                                                old_path.display(),
-                                                new_path.display()
-                                            )
-                                        }
-                                    }
+                                    println!("{:#?}", change);
                                 }
                             }
                             Err(e) => eprintln!(
@@ -193,33 +170,20 @@ pub fn main() {
 
                 for commit in repo.commits().unwrap().flatten() {
                     println!(
-                        "Commit: {} - {}",
+                        "{} - {}",
                         commit.id(),
                         commit.summary().unwrap_or("<no summary>")
                     );
                     for change in commit.changes().unwrap() {
-                        match change {
-                            Change::Create { path } => {
-                                println!("- Added: {}", path.display())
-                            }
-                            Change::Delete { path } => {
-                                println!("- Deleted: {}", path.display())
-                            }
-                            Change::Modify { path } => {
-                                println!("- Modified: {}", path.display())
-                            }
-                            Change::Rename {
-                                from: old_path,
-                                path: new_path,
-                            } => {
-                                println!(
-                                    "- Renamed: {} -> {}",
-                                    old_path.display(),
-                                    new_path.display()
-                                )
-                            }
-                        }
+                        println!("{:?}", change);
                     }
+                }
+
+                for reference in repo.references().unwrap().flatten() {
+                    println!(
+                        "Reference: {}",
+                        reference.shorthand().unwrap_or("<no name>")
+                    );
                 }
 
                 let proceed = Confirm::new("Do you want to proceed?")

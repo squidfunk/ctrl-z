@@ -30,6 +30,7 @@ use std::path::Path;
 pub mod change;
 pub mod commit;
 mod error;
+pub mod reference;
 pub mod repository;
 
 pub use error::{Error, Result};

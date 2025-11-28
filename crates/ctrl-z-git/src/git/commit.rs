@@ -65,4 +65,9 @@ impl<'a> Commit<'a> {
     pub fn summary(&self) -> Option<&str> {
         self.git_commit.summary()
     }
+
+    // pub fn author(&self) -> Option<&str> {
+    //     // provide an author struct here as well!
+    //     // self.git_commit.author().name()
+    // }
 }

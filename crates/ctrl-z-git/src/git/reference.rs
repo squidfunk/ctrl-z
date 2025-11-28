@@ -4,7 +4,8 @@
 
 use git2::{ObjectType, Oid, Reference as GitReference};
 
-use crate::git::error::Result;
+use crate::git::Result;
+use crate::git::commit::Commit;
 
 /// Kind of git reference.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -22,12 +23,17 @@ pub enum ReferenceKind {
 /// Thin wrapper around git2::Reference.
 // #[derive(Debug)]
 pub struct Reference<'a> {
+    repository: &'a git2::Repository,
     inner: git2::Reference<'a>,
 }
 
+// implement get_reference and get_commit on Repo? then impl this instead of ::new.
+
 impl<'a> Reference<'a> {
-    pub fn new(inner: git2::Reference<'a>) -> Self {
-        Self { inner }
+    pub fn new(
+        repository: &'a git2::Repository, inner: git2::Reference<'a>,
+    ) -> Self {
+        Self { repository, inner }
     }
 
     /// Full ref name (e.g., "refs/tags/v1.0.0").
@@ -66,10 +72,10 @@ impl<'a> Reference<'a> {
     }
 
     /// Peel to a commit OID if possible (handles annotated tags).
-    pub fn peeled_commit_oid(&self) -> Option<Oid> {
+    pub fn commit(&self) -> Option<Result<Commit<'_>>> {
         // return a commit...
         match self.inner.peel(ObjectType::Commit) {
-            Ok(obj) => Some(obj.id()),
+            Ok(obj) => Some(Commit::new(self.repository, obj.id())),
             Err(_) => None,
         }
     }

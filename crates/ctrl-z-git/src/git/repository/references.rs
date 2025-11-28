@@ -36,6 +36,7 @@ use super::Repository;
 
 /// Iterator over references in a repository.
 pub struct References<'a> {
+    git_repository: &'a git2::Repository,
     /// Git references iterator.
     git_references: git2::References<'a>,
 }
@@ -48,7 +49,10 @@ impl Repository {
     /// Creates an iterator over all references (heads, tags, remotes, etc.).
     pub fn references(&self) -> Result<References<'_>> {
         let refs = self.git_repository.references()?;
-        Ok(References { git_references: refs })
+        Ok(References {
+            git_repository: &self.git_repository,
+            git_references: refs,
+        })
     }
 }
 
@@ -61,7 +65,9 @@ impl<'a> Iterator for References<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.git_references.next()? {
-            Ok(reference) => Some(Ok(Reference::new(reference))),
+            Ok(reference) => {
+                Some(Ok(Reference::new(self.git_repository, reference)))
+            }
             Err(err) => Some(Err(err.into())),
         }
     }

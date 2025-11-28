@@ -180,9 +180,11 @@ pub fn main() {
                 }
 
                 for reference in repo.references().unwrap().flatten() {
+                    let commit = reference.commit().unwrap().unwrap();
                     println!(
-                        "Reference: {}",
-                        reference.shorthand().unwrap_or("<no name>")
+                        "Reference: {} - {}",
+                        reference.shorthand().unwrap_or("<no name>"),
+                        commit.id()
                     );
                 }
 

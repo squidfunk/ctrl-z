@@ -102,6 +102,8 @@ pub fn main() {
                 // manifest ... tree? members? then from this we could generate
                 // the package graph? also, we could impl an iterator on this tree
 
+                // A vector of names + versions! we then apply this to each manifest.
+
                 // Build scope matcher
                 let mut builder = globset::GlobSetBuilder::new();
                 let root = repo.path();
@@ -497,8 +499,10 @@ fn create_tag(
 pub struct Revision<'a> {
     commit: Commit<'a>,
     change: Change,
-    scopes: Vec<usize>,
+    scopes: Vec<usize>, // Scopes is a globset + a list of patterns?
 }
+
+// ctrl-z-revision?
 
 // pub trait Dependencies {
 //     type Iter: Iterator<Item = (String, Option<VersionReq>)>;

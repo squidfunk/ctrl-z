@@ -35,7 +35,7 @@ use super::dependency::Dependency;
 // ----------------------------------------------------------------------------
 
 /// Cargo workspace.
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct Workspace {
     /// Workspace members.
     pub members: Vec<String>,

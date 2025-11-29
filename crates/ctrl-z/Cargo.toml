@@ -43,6 +43,7 @@ ctrl-z-git.workspace = true
 
 clap.workspace = true
 git2.workspace = true
+globset.workspace = true
 inquire.workspace = true
 semver.workspace = true
 serde.workspace = true

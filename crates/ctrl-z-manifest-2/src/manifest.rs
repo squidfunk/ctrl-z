@@ -31,8 +31,8 @@ use std::path::{Path, PathBuf};
 
 mod error;
 pub mod format;
-mod iter;
-pub mod writer;
+// mod iter;
+// pub mod writer;
 
 pub use error::{Error, Result};
 use format::Format;
@@ -94,6 +94,17 @@ where
 
 // paths should be iterated on manifest not on format... this is important
 // because the path must be correctly resolved...
+
+// Package, Workspace <- normalize,
+
+struct Package {
+    name: String,
+    version: Version,
+}
+
+struct Workspace {
+    members: Vec<String>, // ??? or Package | Workspace?
+}
 
 // ----------------------------------------------------------------------------
 // Trait implementations

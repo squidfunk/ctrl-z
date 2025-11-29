@@ -47,7 +47,7 @@ pub use workspace::Workspace;
 // ----------------------------------------------------------------------------
 
 /// Cargo manifest.
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(untagged)]
 pub enum Cargo {
     /// Cargo package.

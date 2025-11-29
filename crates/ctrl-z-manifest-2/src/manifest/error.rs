@@ -23,34 +23,46 @@
 
 // ----------------------------------------------------------------------------
 
-//! Manifest format.
+//! Manifest error.
 
-use semver::Version;
-use std::fmt::Debug;
-use std::str::FromStr;
-
-use super::{Error, Result};
-
-pub mod cargo;
-pub mod npm;
-mod paths;
-
-pub use cargo::Cargo;
-pub use npm::PackageJson;
-pub use paths::Paths;
+use std::{io, result};
+use thiserror::Error;
 
 // ----------------------------------------------------------------------------
-// Traits
+// Enums
 // ----------------------------------------------------------------------------
 
-/// Manifest format.
-pub trait Format: Debug + FromStr<Err = Error> {
-    /// Returns the manifest's name.
-    fn name(&self) -> Option<&str>;
-    /// Returns the manifest's version.
-    fn version(&self) -> Option<&Version>;
-    /// Creates an iterator over the manifest's paths.
-    fn paths(&self) -> Paths;
-    // /// Creates an iterator over the manifest's members.
-    // fn members(&self) -> Members;
+/// Manifest error.
+#[derive(Debug, Error)]
+pub enum Error {
+    /// I/O error.
+    #[error(transparent)]
+    Io(#[from] io::Error),
+
+    /// Glob error.
+    #[error(transparent)]
+    Glob(#[from] glob::GlobError),
+
+    /// Pattern error.
+    #[error(transparent)]
+    Pattern(#[from] glob::PatternError),
+
+    /// TOML error.
+    #[error(transparent)]
+    Toml(#[from] toml::de::Error),
+
+    /// TOML edit error.
+    #[error(transparent)]
+    TomlEdit(#[from] toml_edit::TomlError),
+
+    /// JSON error.
+    #[error(transparent)]
+    Json(#[from] serde_json::Error),
 }
+
+// ----------------------------------------------------------------------------
+// Type aliases
+// ----------------------------------------------------------------------------
+
+/// Manifest result.
+pub type Result<T = ()> = result::Result<T, Error>;

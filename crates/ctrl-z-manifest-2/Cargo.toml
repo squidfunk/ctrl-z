@@ -21,8 +21,27 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
-style_edition = "2021"
+[package]
+name = "ctrl-z-manifest-2"
+version = "0.0.0"
+description = "Manifest reader and writer"
+edition.workspace = true
+rust-version.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+repository.workspace = true
+authors.workspace = true
+license.workspace = true
+publish.workspace = true
 
-fn_params_layout = "compressed"
-max_width = 80
-struct_lit_width = 30
+[lints]
+workspace = true
+
+[dependencies]
+glob.workspace = true
+semver.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+toml.workspace = true
+toml_edit.workspace = true

@@ -33,7 +33,7 @@ use serde::Deserialize;
 // ----------------------------------------------------------------------------
 
 /// Cargo package.
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct Package {
     /// Package name.
     pub name: String,

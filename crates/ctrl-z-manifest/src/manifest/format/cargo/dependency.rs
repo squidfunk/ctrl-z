@@ -33,7 +33,7 @@ use serde::Deserialize;
 // ----------------------------------------------------------------------------
 
 /// Cargo dependency.
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(untagged)]
 pub enum Dependency {
     /// Dependency with version requirement.
@@ -47,7 +47,7 @@ pub enum Dependency {
 // ----------------------------------------------------------------------------
 
 /// Cargo dependency information.
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct DependencyInfo {
     /// Version.
     pub version: Option<VersionReq>,

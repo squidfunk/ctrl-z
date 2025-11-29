@@ -49,6 +49,7 @@ pub struct Commit<'a> {
 // ----------------------------------------------------------------------------
 
 impl<'a> Commit<'a> {
+    // @todo construct this with out ::new
     /// Loads the commit associated with the given object identifier.
     /// // @todo rather say repo.commit(oid?)
     pub fn new(repo: &'a Repository, oid: Oid) -> Result<Self> {
@@ -71,3 +72,11 @@ impl<'a> Commit<'a> {
     //     // self.git_commit.author().name()
     // }
 }
+
+impl PartialEq for Commit<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        self.git_commit.id() == other.git_commit.id()
+    }
+}
+
+impl Eq for Commit<'_> {}

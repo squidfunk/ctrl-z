@@ -59,5 +59,10 @@ impl Repository {
         Ok(Self { git_repository: repository })
     }
 
+    pub fn path(&self) -> &Path {
+        let path = self.git_repository.path();
+        path.parent().expect("invariant")
+    }
+
     // pub fn commits<P>
 }

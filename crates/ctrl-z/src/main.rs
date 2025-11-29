@@ -91,39 +91,19 @@ pub fn main() {
                 let repo =
                     Repository::open(env::current_dir().unwrap()).unwrap();
 
-                // println!("FIND PACKAGES");
                 let graph = find_packages(repo.path());
-                // println!(
-                //     "Packages: {:#?}",
-                //     graph.into_iter().map(|x| x.path).collect::<Vec<_>>()
-                // );
-
-                // manifest ... tree? members? then from this we could generate
-                // the package graph? also, we could impl an iterator on this tree
-
-                // A vector of names + versions! we then apply this to each manifest.
-
-                // Package<Cargo>?
-
-                // make all paths relative to repo root, and use relative paths
 
                 // Build scope matcher
-                let mut builder = globset::GlobSetBuilder::new();
-
-                let mut scopes_builder = Scope::builder();
+                let mut builder = Scope::builder();
                 let root = repo.path();
-                // we skip the initial entry, since its a workspace and not a
-                // package. we need to do this cleanly later on.
                 for meta in graph.into_iter() {
                     let path =
                         meta.path.parent().unwrap().strip_prefix(root).unwrap();
                     println!("Adding scope for path: {:?}", path);
                     let pattern = path.join("**");
-                    builder.add(Glob::new(pattern.to_str().unwrap()).unwrap());
-                    scopes_builder.add(pattern);
+                    builder.add(pattern);
                 }
                 let scopes = builder.build().unwrap();
-                let scopes2 = scopes_builder.build().unwrap();
 
                 // Determine LAST version that we released = last tag.
                 let last_ref = if let Some(last) = repo
@@ -148,16 +128,7 @@ pub fn main() {
                 let last_commit = last_ref.commit().unwrap().unwrap();
 
                 // @todo changeset...
-                let mut changeset = Changeset::new(scopes2);
-
-                // we need all packages. for each package, we create a
-                // package graph. in the end, we need to update the versions in
-                // all packages and crates.
-
-                // return;
-
-                // commit + scope + type association
-                // let mut revisions = Vec::new();
+                let mut changeset = Changeset::new(scopes);
                 let commits = repo
                     .commits()
                     .unwrap()
@@ -464,13 +435,6 @@ fn create_tag(
     let obj = repo.find_object(target, None)?;
     let sig = repo.signature()?;
     repo.tag(tag_name, &obj, &sig, message, false)
-}
-
-#[derive(Debug)]
-pub struct Revision<'a> {
-    commit: Commit<'a>,
-    change: Change,
-    scopes: Vec<usize>, // Scopes is a globset + a list of patterns?
 }
 
 // ctrl-z-revision?

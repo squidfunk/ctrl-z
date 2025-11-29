@@ -59,6 +59,11 @@ impl Repository {
         Ok(Self { git_repository: repository })
     }
 
+    // @todo temp
+    pub fn raw(&self) -> &git2::Repository {
+        &self.git_repository
+    }
+
     pub fn path(&self) -> &Path {
         let path = self.git_repository.path();
         path.parent().expect("invariant")

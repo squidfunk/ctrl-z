@@ -224,22 +224,109 @@ pub fn main() {
                     }
                 }
 
+                // also do transitive bumps. can we do this by traversing a
+                // graph upward? downward? we should define it downward.
+
+                let root =
+                    Manifest::<Cargo>::read(repo.path().join("Cargo.toml"))
+                        .unwrap();
+
+                // println!("Top-level manifest: {:#?}", manifest);
+
+                // 3) Ensure nothing else is left dirty - move this to the top!
+                ensure_clean_workdir(repo.raw(), &[]).unwrap();
+
                 println!("Increments: {:#?}", increments);
                 // next, determine package versions and compute next ones
                 for i in 0..increments.len() {
                     let manifest = &graph[i];
-                    if let Some(increment) = increments[i] {
-                        if let Some(current_version) = manifest.data.version() {
-                            let next_version = increment.apply(current_version);
-                            println!(
-                                "{}: {} -> {}",
-                                manifest.data.name().unwrap_or("<no name>"),
-                                current_version,
-                                next_version
-                            );
-                        }
-                    }
+                    let Some(increment) = increments[i] else {
+                        continue;
+                    };
+
+                    let Some(current_version) = manifest.data.version() else {
+                        continue;
+                    };
+
+                    let next_version = increment.apply(current_version);
+                    println!(
+                        "{}: {} -> {}",
+                        manifest.data.name().unwrap_or("<no name>"),
+                        current_version,
+                        next_version
+                    );
+
+                    root.set_version_req(
+                        manifest.data.name().unwrap(),
+                        next_version.clone(), // just hand over ref!
+                    );
+
+                    // now, do the version bump here!
+                    // we can make it interactive! ask for confirmation and
+                    // allow to select the bump type!
+
+                    // we compute the version bumps outside, and then just
+                    // iterate all packages and set versions and version reqs.
+                    // for this, we ideally have a notion of bumps
+
+                    manifest.set_version(next_version);
                 }
+
+                // let updated_files: Vec<PathBuf> = graph
+                //     .iter()
+                //     .enumerate()
+                //     .filter_map(|(i, m)| {
+                //         increments[i].is_some().then(|| m.path.clone())
+                //     })
+                //     .collect();
+
+                // enforce waiting for Cargo.lock
+                let output = std::process::Command::new("cargo")
+                    .arg("update")
+                    .arg("--workspace")
+                    .arg("--offline")
+                    // .arg("--format-version=1")
+                    .current_dir(repo.path())
+                    .output()
+                    .unwrap();
+
+                // 1) Stage everything
+                stage_all(repo.raw());
+
+                // // 2) Create the release commit
+                // let message = "chore: publish\n\n...details...";
+                // let oid = commit_index(repo.raw(), message).unwrap();
+
+                // // 4) Create tag
+                // let tag_name = "1.2.3"; // create tag, works as well!
+                // create_tag(repo.raw(), tag_name, oid, "release").unwrap();
+
+                // // 5) Push branch and tag
+                // let branch = current_branch(repo.raw())?;
+                // push_refs(
+                //     repo.raw(),
+                //     "origin",
+                //     &[
+                //         format!("HEAD:refs/heads/{branch}"),
+                //         format!("refs/tags/{tag_name}"),
+                //     ],
+                // )?;
+
+                // version bump!
+                // ensure_clean_workdir(&repo, &[]).unwrap();
+
+                // we KNOW all files to stage, and we should then check that
+                // everything is correctly staged.
+
+                // now, we would do the git commit
+
+                // last but not least, update the top-level
+
+                // bump version-reqs - how? iterate all manifests, and then
+                // determine which packages we need to bump, then bump the versions
+
+                // we might first instantiate a writer, which allows us to
+                // do version bumps + dependency version bumps
 
                 // start traversal from nodes.
 
@@ -306,6 +393,114 @@ pub fn main() {
             }
         }
     }
+}
+
+fn ensure_clean_workdir(
+    repo: &git2::Repository, allowed: &[PathBuf],
+) -> Result<(), git2::Error> {
+    let wd = repo
+        .workdir()
+        .ok_or_else(|| git2::Error::from_str("no workdir"))?;
+
+    let allowed: HashSet<PathBuf> = allowed
+        .iter()
+        .map(|p| p.strip_prefix(wd).unwrap_or(p).to_path_buf())
+        .collect();
+
+    let mut opts = git2::StatusOptions::new();
+    opts.include_untracked(true)
+        .recurse_untracked_dirs(true)
+        .include_ignored(false);
+
+    let statuses = repo.statuses(Some(&mut opts))?;
+
+    let offenders: Vec<_> = statuses
+        .iter()
+        .filter_map(|e| {
+            e.path().map(|p| (Path::new(p).to_path_buf(), e.status()))
+        })
+        .filter(|(path, _)| !allowed.contains(path))
+        .collect();
+
+    if offenders.is_empty() {
+        Ok(())
+    } else {
+        let detail: String = offenders
+            .iter()
+            .map(|(p, s)| format!("- {}: {:?}\n", p.display(), s))
+            .collect();
+        Err(git2::Error::from_str(&format!(
+            "working tree not clean; unexpected changes:\n{}",
+            detail
+        )))
+    }
+}
+
+fn stage_files(
+    repo: &git2::Repository, files: &[PathBuf],
+) -> Result<(), git2::Error> {
+    let workdir = repo
+        .workdir()
+        .ok_or_else(|| git2::Error::from_str("no workdir"))?;
+
+    let mut index = repo.index()?;
+    for path in files {
+        let rel = path
+            .strip_prefix(workdir)
+            .map_err(|_| git2::Error::from_str("strip_prefix"))?;
+        index.add_path(rel)?;
+    }
+    index.write()?;
+    Ok(())
+}
+
+fn stage_all(repo: &git2::Repository) -> Result<(), git2::Error> {
+    let mut index = repo.index()?;
+    // Stage all tracked changes and new files (respecting .gitignore)
+    index.add_all(["*"].iter(), git2::IndexAddOption::DEFAULT, None)?;
+    index.write()?;
+    Ok(())
+}
+
+fn commit_index(
+    repo: &git2::Repository, message: &str,
+) -> Result<git2::Oid, git2::Error> {
+    // Write tree from current index
+    let mut index = repo.index()?;
+    let tree_id = index.write_tree()?;
+    let tree = repo.find_tree(tree_id)?;
+
+    // Prepare signatures and parent
+    let sig = repo.signature()?;
+    let parent = repo.head()?.peel_to_commit()?;
+
+    // Commit
+    repo.commit(Some("HEAD"), &sig, &sig, message, &tree, &[&parent])
+}
+
+fn current_branch(repo: &git2::Repository) -> Result<String, git2::Error> {
+    let head = repo.head()?;
+    head.shorthand()
+        .map(|s| s.to_string())
+        .ok_or_else(|| git2::Error::from_str("detached HEAD"))
+}
+
+fn push_refs(
+    repo: &git2::Repository, remote_name: &str, refspecs: &[String],
+) -> Result<(), git2::Error> {
+    let mut remote = repo.find_remote(remote_name)?;
+    let mut opts = git2::PushOptions::new();
+    // Rely on system/git credential helpers by default (no callbacks)
+    let refspecs: Vec<&str> = refspecs.iter().map(String::as_str).collect();
+    remote.push(&refspecs, Some(&mut opts))
+}
+
+fn create_tag(
+    repo: &git2::Repository, tag_name: &str, target: git2::Oid, message: &str,
+) -> Result<git2::Oid, git2::Error> {
+    let obj = repo.find_object(target, None)?;
+    let sig = repo.signature()?;
+    repo.tag(tag_name, &obj, &sig, message, false)
 }
 
 #[derive(Debug)]
@@ -475,7 +670,7 @@ fn find_packages(repo_path: &Path) -> Graph<Manifest<Cargo>> {
     }
 
     for (n, m) in edges {
-        builder.add_edge(n, m, ()).unwrap();
+        builder.add_edge(m, n, ()).unwrap();
     }
 
     // println!("Builder: {:#?}", builder);

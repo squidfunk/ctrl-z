@@ -49,16 +49,30 @@ impl Writer for Manifest<Cargo> {
             fs::read_to_string(&self.path)?.parse()?;
 
         // what happens in case of workspace?
-        let option = document.get_mut("package");
-        if let Some(package) = option.and_then(|x| x.as_table_mut()) {
-            package["version"] = toml_edit::value(version.to_string());
+        let option = document.get_mut("package"); // we need to distinguish package and the other thing
+        if let Some(package) = option.and_then(|x| x.as_table_like_mut()) {
+            package.insert("version", toml_edit::value(version.to_string()));
             fs::write(&self.path, document.to_string())?;
             // return Ok(());
         }
 
         Ok(())
-        //  document.as_table_mut()
+    }
 
-        // todo!()
+    fn set_version_req(&self, name: &str, version: Version) -> Result {
+        let mut document: DocumentMut =
+            fs::read_to_string(&self.path)?.parse()?;
+
+        // what happens in case of workspace?
+        let option = document
+            .get_mut("workspace")
+            .and_then(|x| x.get_mut("dependencies"))
+            .and_then(|x| x.get_mut(name));
+
+        if let Some(dependency) = option.and_then(|x| x.as_table_like_mut()) {
+            dependency.insert("version", toml_edit::value(version.to_string()));
+            fs::write(&self.path, document.to_string())?;
+        }
+        Ok(())
     }
 }

@@ -25,7 +25,7 @@
 
 //! Manifest writer.
 
-use semver::Version;
+use semver::{Version, VersionReq};
 use std::fmt::Debug;
 
 use super::{Error, Result};
@@ -40,4 +40,6 @@ mod cargo;
 pub trait Writer: Debug {
     /// Updates the manifest's version.
     fn set_version(&self, version: Version) -> Result;
+    /// Updates the manifest's version.
+    fn set_version_req(&self, name: &str, version: Version) -> Result;
 }

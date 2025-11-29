@@ -104,9 +104,10 @@ pub fn main() {
                 let root = repo.path();
                 // we skip the initial entry, since its a workspace and not a
                 // package. we need to do this cleanly later on.
-                for meta in graph.into_iter().skip(1) {
-                    let path = meta.path.strip_prefix(root).unwrap();
-                    // println!("Adding scope for path: {:?}", path);
+                for meta in graph.into_iter() {
+                    let path =
+                        meta.path.parent().unwrap().strip_prefix(root).unwrap();
+                    println!("Adding scope for path: {:?}", path);
                     let pattern = path.join("**");
                     builder.add(Glob::new(pattern.to_str().unwrap()).unwrap());
                 }
@@ -141,7 +142,7 @@ pub fn main() {
                 // return;
 
                 // commit + scope + type association
-                let mut commits = Vec::new();
+                let mut revisions = Vec::new();
                 for commit in repo.commits().unwrap().flatten() {
                     if commit == last_commit {
                         break;
@@ -166,7 +167,6 @@ pub fn main() {
 
                     // collect all unique matches in files to associate the commit
                     let mut unique_scopes_per_commit = HashSet::new();
-                    let kind = Kind::Chore; // default
                     for change in commit.changes().unwrap() {
                         let x = scopes.matches(change.path());
                         println!("{change:?} - scopes: {x:?} ");
@@ -180,7 +180,7 @@ pub fn main() {
 
                     // commit id + scope + change
                     let scopes = unique_scopes_per_commit.into_iter().collect();
-                    commits.push(Revision {
+                    revisions.push(Revision {
                         change: Change::from_str(
                             commit.summary().unwrap_or(""),
                         )
@@ -194,11 +194,41 @@ pub fn main() {
                     // Oid
                 }
 
-                println!("Revisions: {:#?}", commits);
+                println!("Revisions: {:#?}", revisions);
 
                 // now, we collected all revisions, so we can determine the bumps
                 // we need to do. for this, we iterate all commits, and for each
                 // scope, collect the maximum bump necessary
+                let mut increments = vec![None; graph.len()];
+                for revision in &revisions {
+                    let increment = match revision.change.kind {
+                        Kind::Fix | Kind::Performance | Kind::Refactor => {
+                            Some(Increment::Patch)
+                        }
+                        Kind::Feature => Some(Increment::Minor),
+                        _ => None,
+                    };
+
+                    // preserve option
+                    let increment = if revision.change.is_breaking {
+                        increment.map(|_| Increment::Major)
+                    } else {
+                        increment
+                    };
+
+                    // next, determine scopes
+                    for &scope in &revision.scopes {
+                        increments[scope] =
+                            std::cmp::max(increments[scope], increment);
+                    }
+                    // increments.push(increment);
+                }
+
+                println!("Increments: {:#?}", increments);
+                // next, determine package versions and compute next ones
+
+                // parse a config? for scopes + other settings...
+                // .ctrl-z.toml
 
                 // we practically do not need to create intermediary structs.
                 // we should immediately create the right struct. now, first,
@@ -265,6 +295,60 @@ pub struct Revision<'a> {
     commit: Commit<'a>,
     change: Change,
     scopes: Vec<usize>,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Increment {
+    Patch = 0,
+    Minor = 1,
+    Major = 2,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct V(pub Version);
+
+impl Increment {
+    /// Apply increment to version, returning next version.
+    ///
+    /// @todo
+    pub fn apply(self, current: &Version) -> Version {
+        let mut version = current.clone();
+        match (current.major, current.minor, self) {
+            // 0.0.z -> 0.0.z+1
+            (0, 0, _) => {
+                version.patch = version.patch.saturating_add(1);
+            }
+            // 0.y.z -> 0.y+1.0
+            (0, _, Increment::Major | Increment::Minor) => {
+                version.minor = version.minor.saturating_add(1);
+                version.patch = 0;
+            }
+            // 0.y.z -> 0.y.z+1
+            (0, _, Increment::Patch) => {
+                version.patch = version.patch.saturating_add(1);
+            }
+            // x.y.z -> x+1.0.0
+            (_, _, Increment::Major) => {
+                version.major = version.major.saturating_add(1);
+                version.minor = 0;
+                version.patch = 0;
+            }
+            // x.y.z -> x.y+1.0
+            (_, _, Increment::Minor) => {
+                version.minor = version.minor.saturating_add(1);
+                version.patch = 0;
+            }
+            // x.y.z -> x.y.z+1
+            (_, _, Increment::Patch) => {
+                version.patch = version.patch.saturating_add(1);
+            }
+        }
+
+        // Reset pre-release and build metadata and return version
+        version.pre = semver::Prerelease::EMPTY;
+        version.build = semver::BuildMetadata::EMPTY;
+        version
+    }
 }
 
 // Change

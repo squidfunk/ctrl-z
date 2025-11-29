@@ -42,10 +42,10 @@ pub use kind::Kind;
 pub struct Change {
     /// Change kind.
     pub kind: Kind,
-    /// Change is breaking.
-    pub breaking: bool,
     /// Change description.
     pub description: String,
+    /// Change is breaking.
+    pub is_breaking: bool,
 }
 
 // ----------------------------------------------------------------------------
@@ -82,7 +82,7 @@ impl FromStr for Change {
 
         // Check if we have a breaking change, denoted by an exclamation mark
         // at the end of the string, and extract and parse the change kind
-        let (kind, breaking) = match kind.split_once('!') {
+        let (kind, is_breaking) = match kind.split_once('!') {
             Some((kind, _)) => (Kind::from_str(kind)?, true),
             None => (Kind::from_str(kind)?, false),
         };
@@ -95,7 +95,7 @@ impl FromStr for Change {
 
         // Return change
         let description = description.to_string();
-        Ok(Change { kind, breaking, description })
+        Ok(Change { kind, description, is_breaking })
     }
 }
 
@@ -117,7 +117,7 @@ mod tests {
         fn handles_non_breaking_changes() -> Result {
             let change = Change::from_str("fix: description")?;
             assert_eq!(change.kind, Kind::Fix);
-            assert_eq!(change.breaking, false);
+            assert_eq!(change.is_breaking, false);
             assert_eq!(change.description, "description");
             Ok(())
         }
@@ -126,7 +126,7 @@ mod tests {
         fn handles_breaking_changes() -> Result {
             let change = Change::from_str("fix!: description")?;
             assert_eq!(change.kind, Kind::Fix);
-            assert_eq!(change.breaking, true);
+            assert_eq!(change.is_breaking, true);
             assert_eq!(change.description, "description");
             Ok(())
         }

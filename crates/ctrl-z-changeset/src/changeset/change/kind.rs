@@ -52,8 +52,6 @@ pub enum Kind {
     Chore,
     /// Build.
     Build,
-    /// Revert.
-    Revert,
 }
 
 // ----------------------------------------------------------------------------
@@ -92,7 +90,6 @@ impl FromStr for Kind {
             "test" => Ok(Kind::Test),
             "chore" => Ok(Kind::Chore),
             "build" => Ok(Kind::Build),
-            "revert" => Ok(Kind::Revert),
             _ => Err(Error::Kind),
         }
     }
@@ -122,7 +119,6 @@ mod tests {
                 ("test", Kind::Test),
                 ("chore", Kind::Chore),
                 ("build", Kind::Build),
-                ("revert", Kind::Revert),
             ] {
                 assert_eq!(Kind::from_str(value)?, kind);
             }

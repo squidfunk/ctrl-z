@@ -45,11 +45,11 @@ use crate::Increment;
 // Changeset.
 #[derive(Debug)]
 pub struct Changeset<'a> {
-    /// Scope.
+    /// List of scopes.
     scope: Scope,
-    /// Revisions.
+    /// Derived revisions.
     revisions: Vec<Revision<'a>>,
-    /// Increments.
+    /// Version increments.
     increments: Vec<Option<Increment>>,
 }
 

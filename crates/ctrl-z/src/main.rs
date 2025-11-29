@@ -127,7 +127,8 @@ pub fn main() {
 
                 let last_commit = last_ref.commit().unwrap().unwrap();
 
-                // @todo changeset...
+                // @todo changeset... - we can just create this from scopes!
+                // Changeset::from(...)?
                 let mut changeset = Changeset::new(scopes);
                 let commits = repo
                     .commits()
@@ -139,24 +140,9 @@ pub fn main() {
 
                 println!("Changeset: {:#?}", changeset);
 
-                // ------ adapt to changeset ------ ------ ------ ------ ------
-
-                // // now, we collected all revisions, so we can determine the bumps
-                // // we need to do. for this, we iterate all commits, and for each
-                // // scope, collect the maximum bump necessary
-                // let mut increments = vec![None; graph.len()];
-                // // let mut transitive = vec![None; graph.len()];
-                // for revision in &revisions {
-                //     let increment = revision.change.as_increment();
-
-                //     // next, determine scopes
-                //     for &scope in &revision.scopes {
-                //         increments[scope] =
-                //             cmp::max(increments[scope], increment);
-                //     }
-                // }
-
-                // scopes - determine scopes, then determine grpah in next step
+                // @todo: changeset now has all increments!
+                // we now need to compute the graph and propagate the increments
+                // and apply the versions
 
                 // // also do transitive bumps. can we do this by traversing a
                 // // graph upward? downward? we should define it downward.

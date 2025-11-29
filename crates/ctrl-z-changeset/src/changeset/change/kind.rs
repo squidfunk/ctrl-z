@@ -109,7 +109,7 @@ mod tests {
         use crate::changeset::{Error, Result};
 
         #[test]
-        fn handles_valid_kinds() -> Result {
+        fn handles_valid_variants() -> Result {
             for (value, kind) in [
                 ("fix", Kind::Fix),
                 ("feature", Kind::Feature),
@@ -126,7 +126,7 @@ mod tests {
         }
 
         #[test]
-        fn errors_on_invalid_kind() {
+        fn errors_on_invalid_variant() {
             for value in ["fi x", "feat", "perf", "doc", "testing"] {
                 let res = Kind::from_str(value);
                 assert!(matches!(res, Err(Error::Kind)));

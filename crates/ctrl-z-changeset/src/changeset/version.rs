@@ -23,12 +23,10 @@
 
 // ----------------------------------------------------------------------------
 
-//! Changeset utilities.
+//! Version.
 
-#![allow(clippy::match_same_arms)]
+mod ext;
+mod increment;
 
-mod changeset;
-
-pub use changeset::change::{self, Change};
-pub use changeset::version::{self, Increment, VersionExt};
-pub use changeset::Changeset;
+pub use ext::VersionExt;
+pub use increment::Increment;

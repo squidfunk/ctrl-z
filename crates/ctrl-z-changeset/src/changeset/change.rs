@@ -114,7 +114,7 @@ mod tests {
         use crate::changeset::{Error, Result};
 
         #[test]
-        fn handles_non_breaking_changes() -> Result {
+        fn handles_non_breaking() -> Result {
             let change = Change::from_str("fix: description")?;
             assert_eq!(change.kind, Kind::Fix);
             assert_eq!(change.is_breaking, false);
@@ -123,7 +123,7 @@ mod tests {
         }
 
         #[test]
-        fn handles_breaking_changes() -> Result {
+        fn handles_breaking() -> Result {
             let change = Change::from_str("fix!: description")?;
             assert_eq!(change.kind, Kind::Fix);
             assert_eq!(change.is_breaking, true);

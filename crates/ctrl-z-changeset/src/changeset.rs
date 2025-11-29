@@ -27,6 +27,7 @@
 
 pub mod change;
 mod error;
+pub mod version;
 
 use change::Change;
 pub use error::{Error, Result};

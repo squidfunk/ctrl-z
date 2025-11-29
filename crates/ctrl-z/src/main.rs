@@ -27,7 +27,7 @@ use clap::builder::styling::{AnsiColor, Effects};
 use clap::builder::Styles;
 use clap::{Parser, Subcommand};
 use ctrl_z_changeset::change::Kind;
-use ctrl_z_changeset::Change;
+use ctrl_z_changeset::{Change, VersionExt};
 use ctrl_z_git::git::commit::Commit;
 use ctrl_z_git::git::reference::Reference;
 // @todo: remove the git indirection
@@ -205,20 +205,7 @@ pub fn main() {
                 let mut increments = vec![None; graph.len()];
                 // let mut transitive = vec![None; graph.len()];
                 for revision in &revisions {
-                    let increment = match revision.change.kind {
-                        Kind::Fix | Kind::Performance | Kind::Refactor => {
-                            Some(Increment::Patch)
-                        }
-                        Kind::Feature => Some(Increment::Minor),
-                        _ => None,
-                    };
-
-                    // preserve option
-                    let increment = if revision.change.is_breaking {
-                        increment.map(|_| Increment::Major)
-                    } else {
-                        increment
-                    };
+                    let increment = revision.change.as_increment();
 
                     // next, determine scopes
                     for &scope in &revision.scopes {
@@ -251,7 +238,7 @@ pub fn main() {
                         continue;
                     };
 
-                    let next_version = increment.apply(current_version);
+                    let next_version = current_version.bump(increment);
                     println!(
                         "{}: {} -> {}",
                         manifest.data.name().unwrap_or("<no name>"),
@@ -513,64 +500,6 @@ pub struct Revision<'a> {
     scopes: Vec<usize>,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Increment {
-    Patch = 0,
-    Minor = 1,
-    Major = 2,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct V(pub Version);
-
-impl Increment {
-    /// Apply increment to version, returning next version.
-    ///
-    /// @todo
-    pub fn apply(self, current: &Version) -> Version {
-        let mut version = current.clone();
-        match (current.major, current.minor, self) {
-            // 0.0.z -> 0.0.z+1
-            (0, 0, _) => {
-                version.patch = version.patch.saturating_add(1);
-            }
-            // 0.y.z -> 0.y+1.0
-            (0, _, Increment::Major | Increment::Minor) => {
-                version.minor = version.minor.saturating_add(1);
-                version.patch = 0;
-            }
-            // 0.y.z -> 0.y.z+1
-            (0, _, Increment::Patch) => {
-                version.patch = version.patch.saturating_add(1);
-            }
-            // x.y.z -> x+1.0.0
-            (_, _, Increment::Major) => {
-                version.major = version.major.saturating_add(1);
-                version.minor = 0;
-                version.patch = 0;
-            }
-            // x.y.z -> x.y+1.0
-            (_, _, Increment::Minor) => {
-                version.minor = version.minor.saturating_add(1);
-                version.patch = 0;
-            }
-            // x.y.z -> x.y.z+1
-            (_, _, Increment::Patch) => {
-                version.patch = version.patch.saturating_add(1);
-            }
-        }
-
-        // Reset pre-release and build metadata and return version
-        version.pre = semver::Prerelease::EMPTY;
-        version.build = semver::BuildMetadata::EMPTY;
-        version
-    }
-}
-
-// Change
-// ChangeKind <-
-// Scope[s]?
-
 // pub trait Dependencies {
 //     type Iter: Iterator<Item = (String, Option<VersionReq>)>;
 //     fn dependencies(&self) -> Self::Iter;
@@ -607,8 +536,7 @@ impl Increment {
 // hand over repository
 
 fn find_packages(repo_path: &Path) -> Graph<Manifest<Cargo>> {
-    let mut root_cargo = repo_path.join("Cargo.toml");
-    // println!("Repo path: {:?}", root_cargo);
+    let root_cargo = repo_path.join("Cargo.toml");
     if !root_cargo.exists() {
         // throw here rather than returning nothing...
         return Graph::empty();
@@ -622,7 +550,7 @@ fn find_packages(repo_path: &Path) -> Graph<Manifest<Cargo>> {
 
     let mut builder = Graph::builder();
 
-    for res in root.into_iter() {
+    for res in root {
         let manifest = match res {
             Ok(manifest) => manifest,
             Err(err) => {

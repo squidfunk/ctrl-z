@@ -26,7 +26,8 @@
 use clap::builder::styling::{AnsiColor, Effects};
 use clap::builder::Styles;
 use clap::{Parser, Subcommand};
-use ctrl_z_git::git::change::Change;
+use ctrl_z_changeset::change::Kind;
+use ctrl_z_changeset::Change;
 use ctrl_z_git::git::commit::Commit;
 use ctrl_z_git::git::reference::Reference;
 // @todo: remove the git indirection
@@ -140,7 +141,7 @@ pub fn main() {
                 // return;
 
                 // commit + scope + type association
-                let mut commit_scopes = HashMap::new();
+                let mut commits = Vec::new();
                 for commit in repo.commits().unwrap().flatten() {
                     if commit == last_commit {
                         break;
@@ -150,6 +151,18 @@ pub fn main() {
                         commit.id(),
                         commit.summary().unwrap_or("<no summary>")
                     );
+
+                    if let Some(summary) = commit.summary() {
+                        match Change::from_str(summary) {
+                            Ok(change) => {
+                                println!("  - change: {:?}", change);
+                            }
+                            Err(err) => {
+                                println!("  - no change parsed: {}", err);
+                                continue;
+                            }
+                        }
+                    }
 
                     // collect all unique matches in files to associate the commit
                     let mut unique_scopes_per_commit = HashSet::new();
@@ -165,24 +178,28 @@ pub fn main() {
                     //     unique_scopes_per_commit
                     // );
 
-                    commit_scopes.insert(
-                        commit.id(),
-                        ScopeType {
-                            scopes: unique_scopes_per_commit
-                                .into_iter()
-                                .collect(),
-                            kind,
-                        },
-                    );
+                    // commit id + scope + change
+                    let scopes = unique_scopes_per_commit.into_iter().collect();
+                    commits.push(Revision {
+                        change: Change::from_str(
+                            commit.summary().unwrap_or(""),
+                        )
+                        .unwrap(),
+                        commit,
+                        scopes,
+                    });
 
                     // we need both - we need scopes per commit + commits per scope
 
                     // Oid
                 }
 
-                // commit id + scope + change
+                println!("Revisions: {:#?}", commits);
 
-                println!("Commit scopes: {:#?}", commit_scopes);
+                // now, we collected all revisions, so we can determine the bumps
+                // we need to do. for this, we iterate all commits, and for each
+                // scope, collect the maximum bump necessary
+
                 // we practically do not need to create intermediary structs.
                 // we should immediately create the right struct. now, first,
                 // we determine the version bumps necessary.
@@ -244,50 +261,10 @@ pub fn main() {
 }
 
 #[derive(Debug)]
-enum Kind {
-    Fix,
-    Feature,
-    Performance,
-    Refactor,
-    Ci,
-    Build,
-    Chore,
-    Docs,
-    Test,
-}
-
-#[derive(Debug)]
-struct ScopeType {
+pub struct Revision<'a> {
+    commit: Commit<'a>,
+    change: Change,
     scopes: Vec<usize>,
-    kind: Kind,
-}
-
-impl FromStr for Kind {
-    type Err = ();
-
-    fn from_str(value: &str) -> Result<Self, Self::Err> {
-        match value {
-            "fix" => Ok(Kind::Fix),
-            "feature" => Ok(Kind::Feature),
-            "performance" => Ok(Kind::Performance),
-            "refactor" => Ok(Kind::Refactor),
-            "ci" => Ok(Kind::Ci),
-            "build" => Ok(Kind::Build),
-            "chore" => Ok(Kind::Chore),
-            "docs" => Ok(Kind::Docs),
-            "test" => Ok(Kind::Test),
-            _ => Err(()),
-        }
-    }
-}
-
-/// Parsed conventional commit header.
-#[derive(Debug)]
-struct ConventionalHeader {
-    kind: Kind,
-    scope: Option<String>,
-    breaking: bool,
-    description: String,
 }
 
 // Change

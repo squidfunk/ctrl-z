@@ -26,6 +26,7 @@
 //! Commit.
 
 use git2::{Oid, Repository};
+use std::fmt;
 use std::path::Path;
 
 mod changes;
@@ -67,6 +68,8 @@ impl<'a> Commit<'a> {
         self.git_commit.summary()
     }
 
+    // fn is_merge
+
     // pub fn author(&self) -> Option<&str> {
     //     // provide an author struct here as well!
     //     // self.git_commit.author().name()
@@ -80,3 +83,12 @@ impl PartialEq for Commit<'_> {
 }
 
 impl Eq for Commit<'_> {}
+
+impl fmt::Debug for Commit<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Commit")
+            .field("id", &self.git_commit.id())
+            .field("summary", &self.git_commit.summary())
+            .finish()
+    }
+}

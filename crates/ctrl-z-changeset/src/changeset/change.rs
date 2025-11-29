@@ -80,12 +80,18 @@ impl FromStr for Change {
             return Err(Error::Format);
         };
 
-        // Check, if we have a breaking change, denoted by an exclamation mark
+        // Check if we have a breaking change, denoted by an exclamation mark
         // at the end of the string, and extract and parse the change kind
         let (kind, breaking) = match kind.split_once('!') {
             Some((kind, _)) => (Kind::from_str(kind)?, true),
             None => (Kind::from_str(kind)?, false),
         };
+
+        // Ensure description has no leading whitespace, as we chose to be as
+        // strict as possible with the format of commit messages
+        if description.chars().next().is_some_and(char::is_whitespace) {
+            return Err(Error::Format);
+        }
 
         // Return change
         let description = description.to_string();
@@ -129,6 +135,7 @@ mod tests {
         fn errors_on_invalid_format() {
             for format in [
                 "fix:description", // fmt
+                "fix:  description",
                 "fix :description",
                 "fix description",
             ] {

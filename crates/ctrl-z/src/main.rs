@@ -99,6 +99,9 @@ pub fn main() {
                 //     graph.into_iter().map(|x| x.path).collect::<Vec<_>>()
                 // );
 
+                // manifest ... tree? members? then from this we could generate
+                // the package graph? also, we could impl an iterator on this tree
+
                 // Build scope matcher
                 let mut builder = globset::GlobSetBuilder::new();
                 let root = repo.path();

@@ -74,7 +74,7 @@ impl Change {
         };
 
         // If a version increment is determined, check for breaking changes,
-        // which must always lead to a major version increment
+        // as they must always lead to a major version increment
         if self.is_breaking {
             Some(Increment::Major)
         } else {

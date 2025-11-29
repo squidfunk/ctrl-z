@@ -27,6 +27,7 @@
 
 pub mod change;
 mod error;
+pub mod scope;
 pub mod version;
 
 use change::Change;
@@ -41,3 +42,8 @@ pub struct Changeset {
     /// Changes.
     changes: Vec<Change>,
 }
+
+// a changeset - what is that? do we need this? can we rename this package to
+// revision and apply those to deduce the set of bumps?
+
+// scopes MUST come from outside...

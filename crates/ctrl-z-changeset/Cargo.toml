@@ -38,5 +38,6 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+globset.workspace = true
 semver.workspace = true
 thiserror.workspace = true

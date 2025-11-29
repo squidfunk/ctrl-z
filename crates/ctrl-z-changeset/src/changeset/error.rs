@@ -35,6 +35,10 @@ use thiserror::Error;
 /// Changeset error.
 #[derive(Debug, Error)]
 pub enum Error {
+    /// Globset error.
+    #[error(transparent)]
+    Glob(#[from] globset::Error),
+
     /// Invalid format.
     #[error("invalid format")]
     Format,

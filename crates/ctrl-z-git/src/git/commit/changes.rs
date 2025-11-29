@@ -25,8 +25,8 @@
 
 //! Iterator over changes in a commit.
 
-use crate::git::Result;
 use crate::git::change::Change;
+use crate::git::Result;
 
 use super::Commit;
 
@@ -46,6 +46,7 @@ pub struct Changes<'a> {
 // Implementations
 // ----------------------------------------------------------------------------
 
+// @todo rename this into Deltas? + Delta? not an event but a delta
 impl Commit<'_> {
     ///
     pub fn changes(&self) -> Result<Changes<'_>> {

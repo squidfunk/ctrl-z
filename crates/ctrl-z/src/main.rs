@@ -104,6 +104,8 @@ pub fn main() {
 
                 // A vector of names + versions! we then apply this to each manifest.
 
+                // Package<Cargo>?
+
                 // Build scope matcher
                 let mut builder = globset::GlobSetBuilder::new();
                 let root = repo.path();
@@ -182,6 +184,8 @@ pub fn main() {
                     //     "  - unique scopes: {:?}",
                     //     unique_scopes_per_commit
                     // );
+
+                    // Revision::from <- this would allocate the change, commit and scopes.
 
                     // commit id + scope + change
                     let scopes = unique_scopes_per_commit.into_iter().collect();

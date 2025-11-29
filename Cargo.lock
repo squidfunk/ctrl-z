@@ -251,6 +251,7 @@ name = "ctrl-z"
 version = "0.0.0"
 dependencies = [
  "clap",
+ "ctrl-z-changeset",
  "ctrl-z-git",
  "ctrl-z-manifest",
  "git2",
@@ -261,6 +262,13 @@ dependencies = [
  "toml",
  "toml_edit",
  "zrx",
+]
+
+[[package]]
+name = "ctrl-z-changeset"
+version = "0.0.0"
+dependencies = [
+ "thiserror",
 ]
 
 [[package]]

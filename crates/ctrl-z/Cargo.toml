@@ -38,8 +38,9 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
-ctrl-z-manifest.workspace = true
+ctrl-z-changeset.workspace = true
 ctrl-z-git.workspace = true
+ctrl-z-manifest.workspace = true
 
 clap.workspace = true
 git2.workspace = true

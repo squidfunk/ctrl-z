@@ -95,7 +95,14 @@ where
 // paths should be iterated on manifest not on format... this is important
 // because the path must be correctly resolved...
 
+/// -----
+
 // Package, Workspace <- normalize,
+
+enum Manifest {
+    Package(Package),
+    Workspace(Workspace),
+}
 
 struct Package {
     name: String,
@@ -103,8 +110,12 @@ struct Package {
 }
 
 struct Workspace {
-    members: Vec<String>, // ??? or Package | Workspace?
+    members: Vec<Manifest>, // ??? or Package | Workspace?
 }
+
+/// -----
+///
+/// move into an enum
 
 // ----------------------------------------------------------------------------
 // Trait implementations

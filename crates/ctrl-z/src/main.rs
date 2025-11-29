@@ -34,8 +34,9 @@ use ctrl_z_git::git::repository::Repository;
 use globset::Glob;
 use inquire::Confirm;
 use semver::{Version, VersionReq};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use std::{env, fs, io};
 use zrx::graph::Graph;
 
@@ -104,7 +105,7 @@ pub fn main() {
                 // package. we need to do this cleanly later on.
                 for path in packages.keys().skip(1) {
                     let path = path.strip_prefix(root).unwrap();
-                    println!("Adding scope for path: {:?}", path);
+                    // println!("Adding scope for path: {:?}", path);
                     let pattern = path.join("**");
                     builder.add(Glob::new(pattern.to_str().unwrap()).unwrap());
                 }
@@ -138,6 +139,8 @@ pub fn main() {
 
                 // return;
 
+                // commit + scope + type association
+                let mut commit_scopes = HashMap::new();
                 for commit in repo.commits().unwrap().flatten() {
                     if commit == last_commit {
                         break;
@@ -147,11 +150,44 @@ pub fn main() {
                         commit.id(),
                         commit.summary().unwrap_or("<no summary>")
                     );
+
+                    // collect all unique matches in files to associate the commit
+                    let mut unique_scopes_per_commit = HashSet::new();
+                    let kind = Kind::Chore; // default
                     for change in commit.changes().unwrap() {
                         let x = scopes.matches(change.path());
                         println!("{change:?} - scopes: {x:?} ");
+                        unique_scopes_per_commit.extend(x);
                     }
+
+                    // println!(
+                    //     "  - unique scopes: {:?}",
+                    //     unique_scopes_per_commit
+                    // );
+
+                    commit_scopes.insert(
+                        commit.id(),
+                        ScopeType {
+                            scopes: unique_scopes_per_commit
+                                .into_iter()
+                                .collect(),
+                            kind,
+                        },
+                    );
+
+                    // we need both - we need scopes per commit + commits per scope
+
+                    // Oid
                 }
+
+                // commit id + scope + change
+
+                println!("Commit scopes: {:#?}", commit_scopes);
+                // we practically do not need to create intermediary structs.
+                // we should immediately create the right struct. now, first,
+                // we determine the version bumps necessary.
+
+                // so we should save the commit oid + message, right?
 
                 // we don't have the notion of a workspace anymore, we just don't assign
                 // commits outside of scopes, since they won't be releesd anyway
@@ -206,6 +242,57 @@ pub fn main() {
         }
     }
 }
+
+#[derive(Debug)]
+enum Kind {
+    Fix,
+    Feature,
+    Performance,
+    Refactor,
+    Ci,
+    Build,
+    Chore,
+    Docs,
+    Test,
+}
+
+#[derive(Debug)]
+struct ScopeType {
+    scopes: Vec<usize>,
+    kind: Kind,
+}
+
+impl FromStr for Kind {
+    type Err = ();
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        match value {
+            "fix" => Ok(Kind::Fix),
+            "feature" => Ok(Kind::Feature),
+            "performance" => Ok(Kind::Performance),
+            "refactor" => Ok(Kind::Refactor),
+            "ci" => Ok(Kind::Ci),
+            "build" => Ok(Kind::Build),
+            "chore" => Ok(Kind::Chore),
+            "docs" => Ok(Kind::Docs),
+            "test" => Ok(Kind::Test),
+            _ => Err(()),
+        }
+    }
+}
+
+/// Parsed conventional commit header.
+#[derive(Debug)]
+struct ConventionalHeader {
+    kind: Kind,
+    scope: Option<String>,
+    breaking: bool,
+    description: String,
+}
+
+// Change
+// ChangeKind <-
+// Scope[s]?
 
 // pub trait Dependencies {
 //     type Iter: Iterator<Item = (String, Option<VersionReq>)>;

@@ -58,16 +58,10 @@ impl<'a> Changeset<'a> {
     /// # Errors
     ///
     /// This methods returns [`Error::Repository`] if the commit's deltas can't
-    /// be retrieved, or [`Error::Format`] if the commit summary is invalid.
+    /// be retrieved, or [`Error::Change`] if the commit couldn't be parsed.
     ///
-    /// [`Error::Format`]: crate::changeset::Error::Format
+    /// [`Error::Change`]: crate::changeset::Error::Change
     /// [`Error::Repository`]: crate::changeset::Error::Repository
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// todo!()
-    /// ```
     #[allow(clippy::missing_panics_doc)]
     pub fn add(&mut self, commit: Commit<'a>) -> Result {
         let change = Change::from_str(commit.summary().expect("invariant"))?;

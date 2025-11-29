@@ -30,8 +30,10 @@ use std::fmt;
 use std::path::{Path, PathBuf};
 
 mod builder;
+mod error;
 
 pub use builder::Builder;
+pub use error::{Error, Result};
 
 // ----------------------------------------------------------------------------
 // Structs

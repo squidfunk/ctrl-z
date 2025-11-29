@@ -23,37 +23,30 @@
 
 // ----------------------------------------------------------------------------
 
-//! Changeset error.
+//! Change error.
 
-use ctrl_z_repository as repository;
 use std::result;
 use thiserror::Error;
-
-use super::{change, scope};
 
 // ----------------------------------------------------------------------------
 // Enums
 // ----------------------------------------------------------------------------
 
-/// Changeset error.
+/// Change error.
 #[derive(Debug, Error)]
 pub enum Error {
-    /// Repository error.
-    #[error(transparent)]
-    Repository(#[from] repository::Error),
+    /// Invalid format.
+    #[error("invalid format")]
+    Format,
 
-    /// Change error.
-    #[error(transparent)]
-    Change(#[from] change::Error),
-
-    /// Scope error.
-    #[error(transparent)]
-    Scope(#[from] scope::Error),
+    /// Invalid kind.
+    #[error("invalid kind")]
+    Kind,
 }
 
 // ----------------------------------------------------------------------------
 // Type aliases
 // ----------------------------------------------------------------------------
 
-/// Changeset result.
+/// Change result.
 pub type Result<T = ()> = result::Result<T, Error>;

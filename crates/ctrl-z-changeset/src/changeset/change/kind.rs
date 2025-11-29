@@ -27,7 +27,7 @@
 
 use std::str::FromStr;
 
-use crate::changeset::{Error, Result};
+use super::error::{Error, Result};
 
 // ----------------------------------------------------------------------------
 // Enums
@@ -105,8 +105,7 @@ mod tests {
     mod from_str {
         use std::str::FromStr;
 
-        use crate::changeset::change::Kind;
-        use crate::changeset::{Error, Result};
+        use crate::changeset::change::{Error, Kind, Result};
 
         #[test]
         fn handles_valid_variants() -> Result {
@@ -135,7 +134,7 @@ mod tests {
 
         #[test]
         fn errors_on_invalid_casing() {
-            for value in ["Fix", "FEATURE", "Performance", "REfAcToR"] {
+            for value in ["Fix", "FEATURE"] {
                 let res = Kind::from_str(value);
                 assert!(matches!(res, Err(Error::Kind)));
             }

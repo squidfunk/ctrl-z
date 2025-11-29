@@ -32,4 +32,4 @@ mod changeset;
 pub use changeset::change::{self, Change};
 pub use changeset::scope::{self, Scope};
 pub use changeset::version::{self, Increment, VersionExt};
-pub use changeset::Changeset;
+pub use changeset::{Changeset, Error, Result};

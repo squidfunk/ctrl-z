@@ -28,8 +28,7 @@
 use globset::{Glob, GlobSetBuilder};
 use std::path::{Path, PathBuf};
 
-use crate::changeset::Result;
-
+use super::error::{Error, Result};
 use super::Scope;
 
 // ----------------------------------------------------------------------------
@@ -95,6 +94,11 @@ impl Builder {
         P: AsRef<Path>,
     {
         let path = path.as_ref();
+        if !path.is_relative() {
+            return Err(Error::RootDir);
+        }
+
+        // Create pattern matching all files under the given path
         let glob = format!("{}/**", path.to_string_lossy());
 
         // Create glob and add to builder

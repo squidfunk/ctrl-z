@@ -27,10 +27,10 @@
 
 use std::str::FromStr;
 
-use crate::changeset::{Error, Result};
-
+mod error;
 mod kind;
 
+pub use error::{Error, Result};
 pub use kind::Kind;
 
 // ----------------------------------------------------------------------------
@@ -110,8 +110,7 @@ mod tests {
     mod from_str {
         use std::str::FromStr;
 
-        use crate::changeset::change::{Change, Kind};
-        use crate::changeset::{Error, Result};
+        use crate::changeset::change::{Change, Error, Kind, Result};
 
         #[test]
         fn handles_non_breaking() -> Result {
@@ -147,6 +146,7 @@ mod tests {
         #[test]
         fn errors_on_invalid_kind() {
             for format in [
+                " fix: description", // fmt
                 "fix : description", // fmt
                 "fxi: description",
             ] {

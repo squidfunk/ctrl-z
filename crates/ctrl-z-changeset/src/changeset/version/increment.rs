@@ -93,8 +93,8 @@ mod tests {
     mod as_increment {
         use std::str::FromStr;
 
+        use crate::changeset::change::{Change, Result};
         use crate::changeset::version::Increment;
-        use crate::changeset::{Change, Result};
 
         #[test]
         fn handles_non_breaking() -> Result {

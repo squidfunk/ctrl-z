@@ -23,37 +23,30 @@
 
 // ----------------------------------------------------------------------------
 
-//! Changeset error.
+//! Scope error.
 
-use ctrl_z_repository as repository;
 use std::result;
 use thiserror::Error;
-
-use super::{change, scope};
 
 // ----------------------------------------------------------------------------
 // Enums
 // ----------------------------------------------------------------------------
 
-/// Changeset error.
+/// Scope error.
 #[derive(Debug, Error)]
 pub enum Error {
-    /// Repository error.
+    /// Globset error.
     #[error(transparent)]
-    Repository(#[from] repository::Error),
+    Glob(#[from] globset::Error),
 
-    /// Change error.
-    #[error(transparent)]
-    Change(#[from] change::Error),
-
-    /// Scope error.
-    #[error(transparent)]
-    Scope(#[from] scope::Error),
+    /// Path must not start at '/'.
+    #[error("path must not start at '/'")]
+    RootDir,
 }
 
 // ----------------------------------------------------------------------------
 // Type aliases
 // ----------------------------------------------------------------------------
 
-/// Changeset result.
+/// Scope result.
 pub type Result<T = ()> = result::Result<T, Error>;

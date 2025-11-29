@@ -101,10 +101,8 @@ impl Scope {
     where
         P: AsRef<Path>,
     {
-        self.globs
-            .matches(path)
-            .into_iter()
-            .max_by_key(|&index| self.paths[index].components().count())
+        let iter = self.globs.matches(path).into_iter();
+        iter.max_by_key(|&index| self.paths[index].components().count())
     }
 }
 

@@ -158,61 +158,13 @@ pub fn main() {
 
                 // commit + scope + type association
                 // let mut revisions = Vec::new();
-                for commit in repo.commits().unwrap().flatten() {
-                    if commit == last_commit {
-                        break;
-                    }
+                let commits = repo
+                    .commits()
+                    .unwrap()
+                    .flatten()
+                    .take_while(|commit| commit != &last_commit);
 
-                    println!(
-                        "{} - {}",
-                        commit.id(),
-                        commit.summary().unwrap_or("<no summary>")
-                    );
-
-                    changeset.add(commit);
-
-                    // if let Some(summary) = commit.summary() {
-                    //     match Change::from_str(summary) {
-                    //         Ok(change) => {
-                    //             println!("  - change: {:?}", change);
-                    //         }
-                    //         Err(err) => {
-                    //             println!("  - no change parsed: {}", err);
-                    //             continue;
-                    //         }
-                    //     }
-                    // }
-
-                    // // collect all unique matches in files to associate the commit
-                    // let mut unique_scopes_per_commit = HashSet::new(); // BTreeSet!
-                    // for delta in commit.deltas().unwrap() {
-                    //     let x = scopes.matches(delta.path());
-                    //     println!("{delta:?} - scopes: {x:?} ");
-                    //     unique_scopes_per_commit.extend(x);
-                    // }
-
-                    // // println!(
-                    // //     "  - unique scopes: {:?}",
-                    // //     unique_scopes_per_commit
-                    // // );
-
-                    // // Revision::from <- this would allocate the change, commit and scopes.
-
-                    // // commit id + scope + change
-                    // let scopes = unique_scopes_per_commit.into_iter().collect();
-                    // revisions.push(Revision {
-                    //     change: Change::from_str(
-                    //         commit.summary().unwrap_or(""),
-                    //     )
-                    //     .unwrap(),
-                    //     commit,
-                    //     scopes,
-                    // });
-
-                    // we need both - we need scopes per commit + commits per scope
-
-                    // Oid
-                }
+                changeset.extend(commits).unwrap();
 
                 println!("Changeset: {:#?}", changeset);
 

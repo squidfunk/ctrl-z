@@ -57,23 +57,52 @@ impl<'a> Changeset<'a> {
     ///
     /// # Errors
     ///
-    /// This methods returns [`Error::Repository`] if the commit's deltas can't
-    /// be retrieved, or [`Error::Change`] if the commit couldn't be parsed.
+    /// This methods returns [`Error::Repository`][] if the commit deltas can't
+    /// be retrieved. If the commit message couldn't be parsed, it will just be
+    /// ignored, since there are several types of commits that will not make it
+    /// into the changeset, e.g., merge commits.
     ///
-    /// [`Error::Change`]: crate::changeset::Error::Change
     /// [`Error::Repository`]: crate::changeset::Error::Repository
     #[allow(clippy::missing_panics_doc)]
     pub fn add(&mut self, commit: Commit<'a>) -> Result {
-        let change = Change::from_str(commit.summary().expect("invariant"))?;
+        let summary = commit.summary().expect("invariant");
+        if let Ok(change) = Change::from_str(summary) {
+            // Retrieve affected scopes from commit
+            let mut scopes = HashSet::new();
+            for delta in commit.deltas()? {
+                scopes.extend(self.scope.matches(delta.path()));
+            }
 
-        // Retrieve affected scopes from commit
-        let mut scopes = HashSet::new();
-        for delta in commit.deltas()? {
-            scopes.extend(self.scope.matches(delta.path()));
+            // Create revision and add to changeset
+            self.revisions.push(Revision { commit, change, scopes });
         }
 
-        // Create revision and add to changeset
-        self.revisions.push(Revision { commit, change, scopes });
+        // No errors occurred
+        Ok(())
+    }
+
+    /// Extends the changeset with the given commits
+    ///
+    /// Note that we can't just implement the [`Extend`] trait, since addition
+    /// of commits can fail due to parsing errors.
+    ///
+    /// # Errors
+    ///
+    /// This methods returns [`Error::Repository`][] if a commit's deltas can't
+    /// be retrieved. If a commit's message couldn't be parsed, it will just be
+    /// ignored, since there are several types of commits that will not make it
+    /// into the changset, e.g., merge commits.
+    ///
+    /// [`Error::Repository`]: crate::changeset::Error::Repository
+    pub fn extend<T>(&mut self, iter: T) -> Result
+    where
+        T: IntoIterator<Item = Commit<'a>>,
+    {
+        for commit in iter {
+            self.add(commit)?;
+        }
+
+        // No errors occurred
         Ok(())
     }
 }

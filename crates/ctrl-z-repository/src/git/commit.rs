@@ -23,41 +23,72 @@
 
 // ----------------------------------------------------------------------------
 
-//! Change.
+//! Commit.
 
-use std::path::PathBuf;
+use git2::{Oid, Repository};
+use std::fmt;
+use std::path::Path;
+
+mod changes;
+
+use super::{Error, Result};
 
 // ----------------------------------------------------------------------------
-// Enums
+// Structs
 // ----------------------------------------------------------------------------
 
-/// Change.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum Change {
-    /// Path was created.
-    Create { path: PathBuf },
-    /// Path was modified.
-    Modify { path: PathBuf },
-    /// Path was renamed.
-    Rename { from: PathBuf, path: PathBuf },
-    /// Path was deleted
-    Delete { path: PathBuf },
+/// Commit.
+pub struct Commit<'a> {
+    /// Repository.
+    git_repo: &'a Repository,
+    /// Inner commit.
+    git_commit: git2::Commit<'a>, // rather ref a commit?
 }
 
 // ----------------------------------------------------------------------------
-// Trait implementations
+// Implementations
 // ----------------------------------------------------------------------------
 
-impl Change {
-    /// Returns the path of the change.
+impl<'a> Commit<'a> {
+    // @todo construct this with out ::new
+    /// Loads the commit associated with the given object identifier.
+    /// // @todo rather say repo.commit(oid?)
+    pub fn new(repo: &'a Repository, oid: Oid) -> Result<Self> {
+        let git_commit = repo.find_commit(oid)?; // is this a good abstraction?
+        Ok(Self { git_repo: repo, git_commit })
+    }
+
     #[inline]
-    #[must_use]
-    pub fn path(&self) -> &PathBuf {
-        match self {
-            Change::Create { path, .. } => path,
-            Change::Modify { path, .. } => path,
-            Change::Rename { path, .. } => path,
-            Change::Delete { path, .. } => path,
-        }
+    pub fn id(&self) -> Oid {
+        self.git_commit.id()
+    }
+
+    #[inline]
+    pub fn summary(&self) -> Option<&str> {
+        self.git_commit.summary()
+    }
+
+    // fn is_merge
+
+    // pub fn author(&self) -> Option<&str> {
+    //     // provide an author struct here as well!
+    //     // self.git_commit.author().name()
+    // }
+}
+
+impl PartialEq for Commit<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        self.git_commit.id() == other.git_commit.id()
+    }
+}
+
+impl Eq for Commit<'_> {}
+
+impl fmt::Debug for Commit<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Commit")
+            .field("id", &self.git_commit.id())
+            .field("summary", &self.git_commit.summary())
+            .finish()
     }
 }

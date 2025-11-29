@@ -27,23 +27,53 @@
 
 pub mod change;
 mod error;
+pub mod revision;
 pub mod scope;
 pub mod version;
 
 use change::Change;
 pub use error::{Error, Result};
+use revision::Revision;
+use scope::Scope;
 
 // ----------------------------------------------------------------------------
 // Structs
 // ----------------------------------------------------------------------------
 
 // Changeset.
-pub struct Changeset {
-    /// Changes.
-    changes: Vec<Change>,
+#[derive(Debug)]
+pub struct Changeset<'a> {
+    /// Scope.
+    scope: Scope,
+    /// Revisions.
+    revisions: Vec<Revision<'a>>,
 }
+
+// ----------------------------------------------------------------------------
+// Implementations
+// ----------------------------------------------------------------------------
+
+impl Changeset<'_> {
+    /// Creates a changeset.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// todo!()
+    /// ```
+    pub fn new(scope: Scope) -> Self {
+        Self { scope, revisions: Vec::new() }
+    }
+}
+
+// create a changeset fomr a scope, and then add commits to it to create revisions
+
+// Revisions as changesets + scope builder?
+// ok, so we create a changset from a set of scopes, and then add commits to it!
 
 // a changeset - what is that? do we need this? can we rename this package to
 // revision and apply those to deduce the set of bumps?
 
 // scopes MUST come from outside...
+
+// revisions + scopes!

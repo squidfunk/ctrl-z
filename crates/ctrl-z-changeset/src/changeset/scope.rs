@@ -26,6 +26,7 @@
 //! Scope.
 
 use globset::GlobSet;
+use std::fmt;
 use std::path::{Path, PathBuf};
 
 mod builder;
@@ -42,7 +43,7 @@ pub use builder::Builder;
 /// repository, where a list of paths is matched through a [`GlobSet`]. When
 /// two paths overlap, one path must be the prefix of another path. Then, we
 /// return the longer path as the matching scope.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Scope {
     /// Registered paths.
     paths: Vec<PathBuf>,
@@ -78,33 +79,42 @@ impl Scope {
     /// # use std::error::Error;
     /// # fn main() -> Result<(), Box<dyn Error>> {
     /// use ctrl_z_changeset::Scope;
-    /// use std::path::{Path, PathBuf};
+    /// use std::path::Path;
     ///
     /// // Create scope builder and add path
     /// let mut builder = Scope::builder();
     /// builder.add(".")?;
-    /// builder.add("crates/ctrl-z-git")?;
+    /// builder.add("crates/ctrl-z")?;
     ///
     /// // Create scope from builder
     /// let scope = builder.build()?;
     ///
     /// // Create path and obtain longest matching scope
-    /// let path = Path::new("crates/ctrl-z-git/Cargo.toml");
-    /// assert_eq!(
-    ///     scope.matches(&path),
-    ///     Some(&PathBuf::from("crates/ctrl-z-git"))
-    /// );
+    /// let path = Path::new("crates/ctrl-z/Cargo.toml");
+    /// assert_eq!(scope.matches(&path), Some(1));
     /// # Ok(())
     /// # }
     /// ```
-    pub fn matches<P>(&self, path: P) -> Option<&PathBuf>
+    pub fn matches<P>(&self, path: P) -> Option<usize>
     where
         P: AsRef<Path>,
     {
         self.globs
             .matches(path)
-            .iter()
-            .map(|&index| &self.paths[index])
-            .max_by_key(|path| path.components().count())
+            .into_iter()
+            .max_by_key(|&index| self.paths[index].components().count())
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Trait implementations
+// ----------------------------------------------------------------------------
+
+impl fmt::Debug for Scope {
+    /// Formats the scope for debugging.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Scope")
+            .field("paths", &self.paths)
+            .finish_non_exhaustive()
     }
 }

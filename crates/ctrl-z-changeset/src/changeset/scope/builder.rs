@@ -86,7 +86,7 @@ impl Builder {
     ///
     /// // Create scope builder and add path
     /// let mut builder = Scope::builder();
-    /// builder.add("crates/ctrl-z-git")?;
+    /// builder.add("crates/ctrl-z")?;
     /// # Ok(())
     /// # }
     /// ```
@@ -122,7 +122,7 @@ impl Builder {
     ///
     /// // Create scope builder and add path
     /// let mut builder = Scope::builder();
-    /// builder.add("crates/ctrl-z-git")?;
+    /// builder.add("crates/ctrl-z")?;
     ///
     /// // Create scope from builder
     /// let scope = builder.build()?;

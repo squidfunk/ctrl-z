@@ -25,7 +25,7 @@
 
 //! Iterator over changes in a commit.
 
-use crate::git::change::Change;
+use crate::git::change::Delta;
 use crate::git::Result;
 
 use super::Commit;
@@ -49,7 +49,7 @@ pub struct Changes<'a> {
 // @todo rename this into Deltas? + Delta? not an event but a delta
 impl Commit<'_> {
     ///
-    pub fn changes(&self) -> Result<Changes<'_>> {
+    pub fn deltas(&self) -> Result<Changes<'_>> {
         let tree = self.git_commit.tree()?;
         let parent_tree = if self.git_commit.parent_count() > 0 {
             Some(self.git_commit.parent(0)?.tree()?)
@@ -76,7 +76,7 @@ impl Commit<'_> {
 // ----------------------------------------------------------------------------
 
 impl Iterator for Changes<'_> {
-    type Item = Change;
+    type Item = Delta;
 
     ///
     fn next(&mut self) -> Option<Self::Item> {
@@ -89,25 +89,25 @@ impl Iterator for Changes<'_> {
             git2::Delta::Added => {
                 // A new file was added
                 let new_path = delta.new_file().path()?.to_path_buf();
-                Some(Change::Create { path: new_path })
+                Some(Delta::Create { path: new_path })
             }
             git2::Delta::Deleted => {
                 // A file was deleted
                 let old_path = delta.old_file().path()?.to_path_buf();
-                Some(Change::Delete { path: old_path })
+                Some(Delta::Delete { path: old_path })
             }
             git2::Delta::Modified
             | git2::Delta::Copied
             | git2::Delta::Typechange => {
                 // A file was modified
                 let new_path = delta.new_file().path()?.to_path_buf();
-                Some(Change::Modify { path: new_path })
+                Some(Delta::Modify { path: new_path })
             }
             git2::Delta::Renamed => {
                 // A file was renamed
                 let old_path = delta.old_file().path()?.to_path_buf();
                 let new_path = delta.new_file().path()?.to_path_buf();
-                Some(Change::Rename { from: old_path, path: new_path })
+                Some(Delta::Rename { from: old_path, path: new_path })
             }
             // Ignore other statuses (e.g., Unmodified, Ignored, Untracked)
             _ => self.next(),

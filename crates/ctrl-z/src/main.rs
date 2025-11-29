@@ -27,11 +27,10 @@ use clap::builder::styling::{AnsiColor, Effects};
 use clap::builder::Styles;
 use clap::{Parser, Subcommand};
 use ctrl_z_changeset::change::Kind;
-use ctrl_z_changeset::{Change, VersionExt};
-use ctrl_z_git::git::commit::Commit;
-use ctrl_z_git::git::reference::Reference;
+use ctrl_z_changeset::{Change, Changeset, Scope, VersionExt};
+use ctrl_z_repository::Reference;
+use ctrl_z_repository::{Commit, Repository};
 // @todo: remove the git indirection
-use ctrl_z_git::git::repository::Repository;
 use globset::Glob;
 use inquire::Confirm;
 use semver::{Version, VersionReq};
@@ -106,8 +105,12 @@ pub fn main() {
 
                 // Package<Cargo>?
 
+                // make all paths relative to repo root, and use relative paths
+
                 // Build scope matcher
                 let mut builder = globset::GlobSetBuilder::new();
+
+                let mut scopes_builder = Scope::builder();
                 let root = repo.path();
                 // we skip the initial entry, since its a workspace and not a
                 // package. we need to do this cleanly later on.
@@ -117,8 +120,10 @@ pub fn main() {
                     println!("Adding scope for path: {:?}", path);
                     let pattern = path.join("**");
                     builder.add(Glob::new(pattern.to_str().unwrap()).unwrap());
+                    scopes_builder.add(pattern);
                 }
                 let scopes = builder.build().unwrap();
+                let scopes2 = scopes_builder.build().unwrap();
 
                 // Determine LAST version that we released = last tag.
                 let last_ref = if let Some(last) = repo
@@ -142,6 +147,9 @@ pub fn main() {
 
                 let last_commit = last_ref.commit().unwrap().unwrap();
 
+                // @todo changeset...
+                let mut changeset = Changeset::new(scopes2);
+
                 // we need all packages. for each package, we create a
                 // package graph. in the end, we need to update the versions in
                 // all packages and crates.
@@ -149,145 +157,152 @@ pub fn main() {
                 // return;
 
                 // commit + scope + type association
-                let mut revisions = Vec::new();
+                // let mut revisions = Vec::new();
                 for commit in repo.commits().unwrap().flatten() {
                     if commit == last_commit {
                         break;
                     }
+
                     println!(
                         "{} - {}",
                         commit.id(),
                         commit.summary().unwrap_or("<no summary>")
                     );
 
-                    if let Some(summary) = commit.summary() {
-                        match Change::from_str(summary) {
-                            Ok(change) => {
-                                println!("  - change: {:?}", change);
-                            }
-                            Err(err) => {
-                                println!("  - no change parsed: {}", err);
-                                continue;
-                            }
-                        }
-                    }
+                    changeset.add(commit);
 
-                    // collect all unique matches in files to associate the commit
-                    let mut unique_scopes_per_commit = HashSet::new();
-                    for change in commit.changes().unwrap() {
-                        let x = scopes.matches(change.path());
-                        println!("{change:?} - scopes: {x:?} ");
-                        unique_scopes_per_commit.extend(x);
-                    }
+                    // if let Some(summary) = commit.summary() {
+                    //     match Change::from_str(summary) {
+                    //         Ok(change) => {
+                    //             println!("  - change: {:?}", change);
+                    //         }
+                    //         Err(err) => {
+                    //             println!("  - no change parsed: {}", err);
+                    //             continue;
+                    //         }
+                    //     }
+                    // }
 
-                    // println!(
-                    //     "  - unique scopes: {:?}",
-                    //     unique_scopes_per_commit
-                    // );
+                    // // collect all unique matches in files to associate the commit
+                    // let mut unique_scopes_per_commit = HashSet::new(); // BTreeSet!
+                    // for delta in commit.deltas().unwrap() {
+                    //     let x = scopes.matches(delta.path());
+                    //     println!("{delta:?} - scopes: {x:?} ");
+                    //     unique_scopes_per_commit.extend(x);
+                    // }
 
-                    // Revision::from <- this would allocate the change, commit and scopes.
+                    // // println!(
+                    // //     "  - unique scopes: {:?}",
+                    // //     unique_scopes_per_commit
+                    // // );
 
-                    // commit id + scope + change
-                    let scopes = unique_scopes_per_commit.into_iter().collect();
-                    revisions.push(Revision {
-                        change: Change::from_str(
-                            commit.summary().unwrap_or(""),
-                        )
-                        .unwrap(),
-                        commit,
-                        scopes,
-                    });
+                    // // Revision::from <- this would allocate the change, commit and scopes.
+
+                    // // commit id + scope + change
+                    // let scopes = unique_scopes_per_commit.into_iter().collect();
+                    // revisions.push(Revision {
+                    //     change: Change::from_str(
+                    //         commit.summary().unwrap_or(""),
+                    //     )
+                    //     .unwrap(),
+                    //     commit,
+                    //     scopes,
+                    // });
 
                     // we need both - we need scopes per commit + commits per scope
 
                     // Oid
                 }
 
-                println!("Revisions: {:#?}", revisions);
+                println!("Changeset: {:#?}", changeset);
 
-                // now, we collected all revisions, so we can determine the bumps
-                // we need to do. for this, we iterate all commits, and for each
-                // scope, collect the maximum bump necessary
-                let mut increments = vec![None; graph.len()];
-                // let mut transitive = vec![None; graph.len()];
-                for revision in &revisions {
-                    let increment = revision.change.as_increment();
+                // ------ adapt to changeset ------ ------ ------ ------ ------
 
-                    // next, determine scopes
-                    for &scope in &revision.scopes {
-                        increments[scope] =
-                            cmp::max(increments[scope], increment);
-                    }
-                }
+                // // now, we collected all revisions, so we can determine the bumps
+                // // we need to do. for this, we iterate all commits, and for each
+                // // scope, collect the maximum bump necessary
+                // let mut increments = vec![None; graph.len()];
+                // // let mut transitive = vec![None; graph.len()];
+                // for revision in &revisions {
+                //     let increment = revision.change.as_increment();
 
-                // also do transitive bumps. can we do this by traversing a
-                // graph upward? downward? we should define it downward.
+                //     // next, determine scopes
+                //     for &scope in &revision.scopes {
+                //         increments[scope] =
+                //             cmp::max(increments[scope], increment);
+                //     }
+                // }
 
-                let root =
-                    Manifest::<Cargo>::read(repo.path().join("Cargo.toml"))
-                        .unwrap();
+                // // also do transitive bumps. can we do this by traversing a
+                // // graph upward? downward? we should define it downward.
 
-                // println!("Top-level manifest: {:#?}", manifest);
+                // let root =
+                //     Manifest::<Cargo>::read(repo.path().join("Cargo.toml"))
+                //         .unwrap();
 
-                // 3) Ensure nothing else is left dirty - move this to the top!
-                ensure_clean_workdir(repo.raw(), &[]).unwrap();
+                // // println!("Top-level manifest: {:#?}", manifest);
 
-                println!("Increments: {:#?}", increments);
-                // next, determine package versions and compute next ones
-                for i in 0..increments.len() {
-                    let manifest = &graph[i];
-                    let Some(increment) = increments[i] else {
-                        continue;
-                    };
+                // // 3) Ensure nothing else is left dirty - move this to the top!
+                // ensure_clean_workdir(repo.raw(), &[]).unwrap();
 
-                    let Some(current_version) = manifest.data.version() else {
-                        continue;
-                    };
+                // println!("Increments: {:#?}", increments);
+                // // next, determine package versions and compute next ones
+                // for i in 0..increments.len() {
+                //     let manifest = &graph[i];
+                //     let Some(increment) = increments[i] else {
+                //         continue;
+                //     };
 
-                    let next_version = current_version.bump(increment);
-                    println!(
-                        "{}: {} -> {}",
-                        manifest.data.name().unwrap_or("<no name>"),
-                        current_version,
-                        next_version
-                    );
+                //     let Some(current_version) = manifest.data.version() else {
+                //         continue;
+                //     };
 
-                    root.set_version_req(
-                        manifest.data.name().unwrap(),
-                        next_version.clone(), // just hand over ref!
-                    );
+                //     let next_version = current_version.bump(increment);
+                //     println!(
+                //         "{}: {} -> {}",
+                //         manifest.data.name().unwrap_or("<no name>"),
+                //         current_version,
+                //         next_version
+                //     );
 
-                    // now, do the version bump here!
-                    // we can make it interactive! ask for confirmation and
-                    // allow to select the bump type!
+                //     root.set_version_req(
+                //         manifest.data.name().unwrap(),
+                //         next_version.clone(), // just hand over ref!
+                //     );
 
-                    // we compute the version bumps outside, and then just
-                    // iterate all packages and set versions and version reqs.
-                    // for this, we ideally have a notion of bumps
+                //     // now, do the version bump here!
+                //     // we can make it interactive! ask for confirmation and
+                //     // allow to select the bump type!
 
-                    manifest.set_version(next_version);
-                }
+                //     // we compute the version bumps outside, and then just
+                //     // iterate all packages and set versions and version reqs.
+                //     // for this, we ideally have a notion of bumps
 
-                // let updated_files: Vec<PathBuf> = graph
-                //     .iter()
-                //     .enumerate()
-                //     .filter_map(|(i, m)| {
-                //         increments[i].is_some().then(|| m.path.clone())
-                //     })
-                //     .collect();
+                //     manifest.set_version(next_version);
+                // }
 
-                // enforce waiting for Cargo.lock
-                let output = std::process::Command::new("cargo")
-                    .arg("update")
-                    .arg("--workspace")
-                    .arg("--offline")
-                    // .arg("--format-version=1")
-                    .current_dir(repo.path())
-                    .output()
-                    .unwrap();
+                // // let updated_files: Vec<PathBuf> = graph
+                // //     .iter()
+                // //     .enumerate()
+                // //     .filter_map(|(i, m)| {
+                // //         increments[i].is_some().then(|| m.path.clone())
+                // //     })
+                // //     .collect();
 
-                // 1) Stage everything
-                stage_all(repo.raw());
+                // // enforce waiting for Cargo.lock
+                // let output = std::process::Command::new("cargo")
+                //     .arg("update")
+                //     .arg("--workspace")
+                //     .arg("--offline")
+                //     // .arg("--format-version=1")
+                //     .current_dir(repo.path())
+                //     .output()
+                //     .unwrap();
+
+                // // 1) Stage everything
+                // stage_all(repo.raw());
+
+                // ------ we got it until here ------ ------ ------ ------ ------
 
                 // // 2) Create the release commit
                 // let message = "chore: publish\n\n...details...";

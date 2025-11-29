@@ -23,39 +23,63 @@
 
 // ----------------------------------------------------------------------------
 
-//! Changeset error.
+//! Revision.
 
-use ctrl_z_repository as repository;
-use std::result;
-use thiserror::Error;
+use ctrl_z_repository::Commit;
+use std::collections::HashSet;
+use std::str::FromStr;
+
+use super::change::Change;
+use super::error::Result;
+use super::Changeset;
 
 // ----------------------------------------------------------------------------
-// Enums
+// Structs
 // ----------------------------------------------------------------------------
 
-/// Changeset error.
-#[derive(Debug, Error)]
-pub enum Error {
-    /// Globset error.
-    #[error(transparent)]
-    Glob(#[from] globset::Error),
-
-    /// Repository error.
-    #[error(transparent)]
-    Repository(#[from] repository::Error),
-
-    /// Invalid format.
-    #[error("invalid format")]
-    Format,
-
-    /// Invalid kind.
-    #[error("invalid kind")]
-    Kind,
+// Revision.
+#[derive(Debug, PartialEq, Eq)]
+pub struct Revision<'a> {
+    /// Original commit.
+    commit: Commit<'a>,
+    /// Computed change.
+    change: Change,
+    /// Affected scopes.
+    scopes: HashSet<usize>,
 }
 
 // ----------------------------------------------------------------------------
-// Type aliases
+// Implementations
 // ----------------------------------------------------------------------------
 
-/// Changeset result.
-pub type Result<T = ()> = result::Result<T, Error>;
+impl<'a> Changeset<'a> {
+    /// Adds a commit to the changeset.
+    ///
+    /// # Errors
+    ///
+    /// This methods returns [`Error::Repository`] if the commit's deltas can't
+    /// be retrieved, or [`Error::Format`] if the commit summary is invalid.
+    ///
+    /// [`Error::Format`]: crate::changeset::Error::Format
+    /// [`Error::Repository`]: crate::changeset::Error::Repository
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// todo!()
+    /// ```
+    #[allow(clippy::missing_panics_doc)]
+    pub fn add(&mut self, commit: Commit<'a>) -> Result {
+        let change = Change::from_str(commit.summary().expect("invariant"))?;
+
+        // Retrieve affected scopes from commit
+        let mut scopes = HashSet::new();
+        for delta in commit.deltas()? {
+            scopes.extend(self.scope.matches(delta.path()));
+        }
+
+        // Create revision and add to changeset
+        self.revisions.push(Revision { commit, change, scopes });
+        Ok(())
+    }
+}

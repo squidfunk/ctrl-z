@@ -252,8 +252,8 @@ version = "0.0.0"
 dependencies = [
  "clap",
  "ctrl-z-changeset",
- "ctrl-z-git",
  "ctrl-z-manifest",
+ "ctrl-z-repository",
  "git2",
  "globset",
  "inquire",
@@ -268,16 +268,9 @@ dependencies = [
 name = "ctrl-z-changeset"
 version = "0.0.0"
 dependencies = [
+ "ctrl-z-repository",
  "globset",
  "semver",
- "thiserror",
-]
-
-[[package]]
-name = "ctrl-z-git"
-version = "0.0.0"
-dependencies = [
- "git2",
  "thiserror",
 ]
 
@@ -305,6 +298,14 @@ dependencies = [
  "thiserror",
  "toml",
  "toml_edit",
+]
+
+[[package]]
+name = "ctrl-z-repository"
+version = "0.0.0"
+dependencies = [
+ "git2",
+ "thiserror",
 ]
 
 [[package]]

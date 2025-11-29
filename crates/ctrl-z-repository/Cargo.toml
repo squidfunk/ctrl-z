@@ -22,7 +22,7 @@
 # IN THE SOFTWARE.
 
 [package]
-name = "ctrl-z-git"
+name = "ctrl-z-repository"
 version = "0.0.0"
 description = "Git abstractions and utilities"
 edition.workspace = true

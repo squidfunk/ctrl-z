@@ -28,3 +28,8 @@
 #![allow(clippy::match_same_arms)]
 
 pub mod git;
+
+pub use git::commit::Commit;
+pub use git::reference::Reference;
+pub use git::repository::Repository;
+pub use git::{Error, Result};

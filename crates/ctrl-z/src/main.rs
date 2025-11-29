@@ -38,7 +38,7 @@ use semver::{Version, VersionReq};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
-use std::{env, fs, io};
+use std::{cmp, env, fs, io};
 use zrx::graph::Graph;
 
 use ctrl_z_manifest::{Cargo, Format, Manifest, PackageJson, Writer};
@@ -200,6 +200,7 @@ pub fn main() {
                 // we need to do. for this, we iterate all commits, and for each
                 // scope, collect the maximum bump necessary
                 let mut increments = vec![None; graph.len()];
+                // let mut transitive = vec![None; graph.len()];
                 for revision in &revisions {
                     let increment = match revision.change.kind {
                         Kind::Fix | Kind::Performance | Kind::Refactor => {
@@ -219,13 +220,30 @@ pub fn main() {
                     // next, determine scopes
                     for &scope in &revision.scopes {
                         increments[scope] =
-                            std::cmp::max(increments[scope], increment);
+                            cmp::max(increments[scope], increment);
                     }
-                    // increments.push(increment);
                 }
 
                 println!("Increments: {:#?}", increments);
                 // next, determine package versions and compute next ones
+                for i in 0..increments.len() {
+                    let manifest = &graph[i];
+                    if let Some(increment) = increments[i] {
+                        if let Some(current_version) = manifest.data.version() {
+                            let next_version = increment.apply(current_version);
+                            println!(
+                                "{}: {} -> {}",
+                                manifest.data.name().unwrap_or("<no name>"),
+                                current_version,
+                                next_version
+                            );
+                        }
+                    }
+                }
+
+                // start traversal from nodes.
+
+                // if it's a patch, we also patch.
 
                 // parse a config? for scopes + other settings...
                 // .ctrl-z.toml

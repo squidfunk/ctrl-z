@@ -56,6 +56,9 @@ pub struct Revision<'a> {
 impl<'a> Changeset<'a> {
     /// Adds a commit to the changeset.
     ///
+    /// This method adds the given commit to the changeset, associates it with
+    /// its affected scopes, and updates the increment for each affected scope.
+    ///
     /// # Errors
     ///
     /// This methods returns [`Error::Repository`][] if the commit deltas can't

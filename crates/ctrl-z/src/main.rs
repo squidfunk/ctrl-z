@@ -93,19 +93,19 @@ pub fn main() {
                     Repository::open(env::current_dir().unwrap()).unwrap();
 
                 // println!("FIND PACKAGES");
-                let packages = find_packages(repo.path());
-                println!(
-                    "Packages: {:#?}",
-                    packages.keys().collect::<Vec<_>>()
-                );
+                let graph = find_packages(repo.path());
+                // println!(
+                //     "Packages: {:#?}",
+                //     graph.into_iter().map(|x| x.path).collect::<Vec<_>>()
+                // );
 
                 // Build scope matcher
                 let mut builder = globset::GlobSetBuilder::new();
                 let root = repo.path();
                 // we skip the initial entry, since its a workspace and not a
                 // package. we need to do this cleanly later on.
-                for path in packages.keys().skip(1) {
-                    let path = path.strip_prefix(root).unwrap();
+                for meta in graph.into_iter().skip(1) {
+                    let path = meta.path.strip_prefix(root).unwrap();
                     // println!("Adding scope for path: {:?}", path);
                     let pattern = path.join("**");
                     builder.add(Glob::new(pattern.to_str().unwrap()).unwrap());
@@ -306,11 +306,12 @@ pub struct Revision<'a> {
 
 // hand over repository
 
-fn find_packages(repo_path: &Path) -> BTreeMap<PathBuf, Cargo> {
+fn find_packages(repo_path: &Path) -> Graph<Manifest<Cargo>> {
     let mut root_cargo = repo_path.join("Cargo.toml");
     // println!("Repo path: {:?}", root_cargo);
     if !root_cargo.exists() {
-        return BTreeMap::new();
+        // throw here rather than returning nothing...
+        return Graph::empty();
     }
 
     let root = Manifest::<Cargo>::read(&root_cargo).expect("parsing worked");
@@ -388,5 +389,5 @@ fn find_packages(repo_path: &Path) -> BTreeMap<PathBuf, Cargo> {
         }
     }
 
-    packages
+    graph
 }

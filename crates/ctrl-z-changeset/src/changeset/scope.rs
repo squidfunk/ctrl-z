@@ -106,6 +106,21 @@ impl Scope {
     }
 }
 
+#[allow(clippy::must_use_candidate)]
+impl Scope {
+    /// Returns the number of paths.
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.paths.len()
+    }
+
+    /// Returns whether there are any paths.
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.paths.is_empty()
+    }
+}
+
 // ----------------------------------------------------------------------------
 // Trait implementations
 // ----------------------------------------------------------------------------

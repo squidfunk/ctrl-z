@@ -26,6 +26,7 @@
 //! Revision.
 
 use ctrl_z_repository::Commit;
+use std::cmp;
 use std::collections::HashSet;
 use std::str::FromStr;
 
@@ -71,6 +72,13 @@ impl<'a> Changeset<'a> {
             let mut scopes = HashSet::new();
             for delta in commit.deltas()? {
                 scopes.extend(self.scope.matches(delta.path()));
+            }
+
+            // Update increments for affected scopes
+            let increment = change.as_increment();
+            for &index in &scopes {
+                self.increments[index] =
+                    cmp::max(self.increments[index], increment);
             }
 
             // Create revision and add to changeset

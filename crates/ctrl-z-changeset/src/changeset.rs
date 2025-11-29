@@ -36,6 +36,8 @@ pub use error::{Error, Result};
 use revision::Revision;
 use scope::Scope;
 
+use crate::Increment;
+
 // ----------------------------------------------------------------------------
 // Structs
 // ----------------------------------------------------------------------------
@@ -47,6 +49,8 @@ pub struct Changeset<'a> {
     scope: Scope,
     /// Revisions.
     revisions: Vec<Revision<'a>>,
+    /// Increments.
+    increments: Vec<Option<Increment>>,
 }
 
 // ----------------------------------------------------------------------------
@@ -62,9 +66,16 @@ impl Changeset<'_> {
     /// todo!()
     /// ```
     pub fn new(scope: Scope) -> Self {
-        Self { scope, revisions: Vec::new() }
+        let increments = vec![None; scope.len()];
+        Self {
+            scope,
+            revisions: Vec::new(),
+            increments,
+        }
     }
 }
+
+// this is a changeset builder! we then convert it into the FINAL changeset.
 
 // create a changeset fomr a scope, and then add commits to it to create revisions
 

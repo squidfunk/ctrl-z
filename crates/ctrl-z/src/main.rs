@@ -156,6 +156,8 @@ pub fn main() {
                 //     }
                 // }
 
+                // scopes - determine scopes, then determine grpah in next step
+
                 // // also do transitive bumps. can we do this by traversing a
                 // // graph upward? downward? we should define it downward.
 

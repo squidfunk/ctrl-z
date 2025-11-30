@@ -93,42 +93,22 @@ where
                     // println!("Members: stack={:#?}, x={:#?}", stack, path);
 
                     // Load and create next members iterator...
-                    let project = Project::<M>::read(path).unwrap(); // ltodo
+                    let project = match Project::<M>::read(path) {
+                        Ok(project) => project,
+                        Err(err) => return Some(Err(err)),
+                    };
 
-                    // println!("Members: project={:#?}", project);
-
+                    //
                     let members = project.members();
                     self.stack.extend(members.stack);
 
+                    // Return project
                     return Some(Ok(project));
                 }
             } else {
                 self.stack.pop();
             }
-
-            // add Cargo.toml here...
-
-            // this is a crate, so we now check
         }
-
-        // let data = &manifest.data;
-
-        // use path of manfiest as a base path!
-
-        // // here, we can now use the members
-
-        // // Collect paths and read manifests
-        // let iter = manifest.paths(path).map(|res| res.and_then(Manifest::read));
-        // let manifests = match iter.collect::<Result<Vec<_>>>() {
-        //     Ok(manifests) => manifests,
-        //     Err(err) => return Some(Err(err)),
-        // };
-
-        // // Add manifests to stack in pre-order
-        // self.stack.extend(manifests.into_iter().rev());
-
-        // // Return next manifest
-        // Some(Ok(manifest))
 
         None
     }

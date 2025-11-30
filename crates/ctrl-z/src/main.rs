@@ -437,7 +437,33 @@ fn create_tag(
 fn find_packages2(repo_path: &Path) {
     // loader... <- with manifest members, we can implement a GENERAL loader!
     let root_cargo = repo_path.join("Cargo.toml");
-    let cargo =
+    if !root_cargo.exists() {
+        let root_npm = repo_path.join("package.json");
+
+        let project =
+            ctrl_z_project::Project::<ctrl_z_project::Node>::read(root_npm)
+                .unwrap();
+
+        // println!("Project: {:#?}", cargo);
+        for res in project.into_iter() {
+            match res {
+                Ok(member) => {
+                    // println!("MEM {:#?}", member);
+                    // println!("- {:?}", member.path);
+                    if let (Some(name), Some(version)) =
+                        (member.data.name(), member.data.version())
+                    {
+                        println!("  - {} {}", name, version);
+                    }
+                }
+                Err(err) => println!("ERR {:#?}", err),
+            }
+        }
+        // throw here rather than returning nothing...
+        return;
+    }
+
+    let project =
         ctrl_z_project::Project::<ctrl_z_project::Cargo>::read(root_cargo)
             .unwrap();
 
@@ -446,7 +472,7 @@ fn find_packages2(repo_path: &Path) {
     // project iter should inclde tiself
 
     // println!("Project: {:#?}", cargo);
-    for member in cargo.into_iter().flatten() {
+    for member in project.into_iter().flatten() {
         println!("Member: {:?}", member.path);
         if let (Some(name), Some(version)) =
             (member.data.name(), member.data.version())

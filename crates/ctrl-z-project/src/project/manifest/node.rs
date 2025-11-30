@@ -23,9 +23,9 @@
 
 // ----------------------------------------------------------------------------
 
-//! Cargo manifest.
+//! Node manifest.
 
-use semver::Version;
+use semver::{Version, VersionReq};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::str::FromStr;
@@ -33,86 +33,68 @@ use std::str::FromStr;
 use crate::project::manifest::Manifest;
 use crate::project::{Error, Result};
 
-mod dependency;
-mod package;
-mod workspace;
-
-pub use dependency::Dependency;
-pub use package::Package;
-pub use workspace::Workspace;
-
 // ----------------------------------------------------------------------------
-// Enums
+// Structs
 // ----------------------------------------------------------------------------
 
-/// Cargo manifest.
+/// Node manifest.
 ///
 /// Note that we only read parts of the manifest relevant to our use case, as
 /// we're solely interested in identifying package name, version, and workspace
 /// members, in order to bumping versions. Other fields can be safely ignored,
 /// so we don't model them here.
 #[derive(Debug, Deserialize)]
-#[serde(untagged)]
-pub enum Cargo {
-    /// Cargo workspace.
-    Workspace {
-        /// Workspace information.
-        workspace: Workspace,
-    },
-    /// Cargo package.
-    Package {
-        /// Package information.
-        package: Package,
-        /// Package dependencies.
-        #[serde(default)]
-        dependencies: BTreeMap<String, Dependency>,
-    },
+#[serde(rename_all = "camelCase")]
+pub struct Node {
+    /// Package name.
+    pub name: String,
+    /// Package version.
+    pub version: Version,
+    /// Package private flag.
+    pub private: Option<bool>,
+    /// Package workspace members.
+    #[serde(default)]
+    pub workspaces: Vec<String>,
+    /// Package dependencies.
+    #[serde(default)]
+    pub dependencies: BTreeMap<String, VersionReq>,
+    /// Package development dependencies.
+    #[serde(default)]
+    pub dev_dependencies: BTreeMap<String, VersionReq>,
 }
 
 // ----------------------------------------------------------------------------
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl Manifest for Cargo {
+impl Manifest for Node {
     /// Returns the name.
     #[inline]
     fn name(&self) -> Option<&str> {
-        if let Cargo::Package { package, .. } = self {
-            Some(&package.name)
-        } else {
-            None
-        }
+        Some(&self.name)
     }
 
     /// Returns the version.
     #[inline]
     fn version(&self) -> Option<&Version> {
-        if let Cargo::Package { package, .. } = self {
-            Some(&package.version)
-        } else {
-            None
-        }
+        Some(&self.version)
     }
 
     /// Returns the members.
     #[inline]
     fn members(&self) -> &[String] {
-        if let Cargo::Workspace { workspace } = self {
-            &workspace.members
-        } else {
-            &[]
-        }
+        &self.workspaces
     }
 }
 
 // ----------------------------------------------------------------------------
 
-impl FromStr for Cargo {
+impl FromStr for Node {
     type Err = Error;
 
     /// Attempts to create a manifest from a string.
     #[inline]
     fn from_str(value: &str) -> Result<Self> {
-        toml::from_str(value).map_err(Into::into)
+        serde_json::from_str(value).map_err(Into::into)
     }
 }

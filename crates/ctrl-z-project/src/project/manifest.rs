@@ -32,6 +32,7 @@ use std::str::FromStr;
 use super::error::Error;
 
 pub mod cargo;
+pub mod node;
 
 // ----------------------------------------------------------------------------
 // Traits

@@ -23,49 +23,72 @@
 
 // ----------------------------------------------------------------------------
 
-//! Cargo dependency.
+//! Members iterator.
 
-use semver::VersionReq;
-use serde::Deserialize;
+use std::path::{Path, PathBuf};
 
-// ----------------------------------------------------------------------------
-// Enums
-// ----------------------------------------------------------------------------
+use crate::manifest::{Manifest, Result};
 
-/// Cargo dependency.
-#[derive(Debug, Deserialize)]
-#[serde(untagged)]
-pub enum Dependency {
-    /// Dependency with version requirement.
-    Version(VersionReq),
-    /// Dependency with information.
-    Info(DependencyInfo),
-}
+use super::Project;
 
 // ----------------------------------------------------------------------------
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Cargo dependency information.
-#[derive(Debug, Deserialize)]
-pub struct DependencyInfo {
-    /// Version.
-    pub version: Option<VersionReq>,
-    /// Inherit from workspace.
-    pub workspace: Option<bool>,
+/// Members iterator.
+pub struct Members<M>
+where
+    M: Manifest,
+{
+    /// Stack of manifests.
+    stack: Vec<(PathBuf, M)>,
 }
 
 // ----------------------------------------------------------------------------
-// Implementations
+// Implementation
 // ----------------------------------------------------------------------------
 
-impl Dependency {
-    /// Returns the version requirement, if any.
-    #[must_use]
-    pub fn version(&self) -> Option<&VersionReq> {
-        match self {
-            Dependency::Version(v) => Some(v),
-            Dependency::Info(info) => info.version.as_ref(),
-        }
+impl<M> Project<M>
+where
+    M: Manifest,
+{
+    /// Creates a members iterator.
+    #[inline]
+    pub(crate) fn members(&self, path: PathBuf, root: M) -> Members<M> {
+        Members { stack: vec![(path, root)] }
     }
 }
+
+// ----------------------------------------------------------------------------
+// Implementation
+// ----------------------------------------------------------------------------
+
+// impl<M> Iterator for Members<M>
+// where
+//     M: Manifest,
+// {
+//     type Item = Result<(PathBuf, M)>;
+
+//     /// Returns the next manifest.
+//     fn next(&mut self) -> Option<Self::Item> {
+//         let (path, manifest) = self.stack.pop()?;
+//         // let data = &manifest.data;
+
+//         // use path of manfiest as a base path!
+
+//         // here, we can now use the members
+
+//         // Collect paths and read manifests
+//         let iter = manifest.paths(path).map(|res| res.and_then(Manifest::read));
+//         let manifests = match iter.collect::<Result<Vec<_>>>() {
+//             Ok(manifests) => manifests,
+//             Err(err) => return Some(Err(err)),
+//         };
+
+//         // Add manifests to stack in pre-order
+//         self.stack.extend(manifests.into_iter().rev());
+
+//         // Return next manifest
+//         Some(Ok(manifest))
+//     }
+// }

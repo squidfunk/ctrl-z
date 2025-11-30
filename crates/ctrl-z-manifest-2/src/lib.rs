@@ -31,5 +31,5 @@ pub mod manifest;
 // pub use manifest::format::{self, Format};
 // pub use manifest::writer::{self, Writer};
 pub use manifest::platform::cargo::{self, Cargo};
-pub use manifest::platform::{Reader, Writer};
+pub use manifest::project::Project;
 pub use manifest::{Error, Manifest, Result};

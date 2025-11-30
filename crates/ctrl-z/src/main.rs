@@ -39,6 +39,7 @@ use zrx::graph::Graph;
 use ctrl_z_changeset::change::Kind;
 use ctrl_z_changeset::{Change, Changeset, Scope, VersionExt};
 use ctrl_z_manifest::{Cargo, Format, Manifest, PackageJson, Writer};
+use ctrl_z_manifest_2::Manifest as _;
 use ctrl_z_repository::Reference;
 use ctrl_z_repository::{Commit, Repository};
 
@@ -92,6 +93,9 @@ pub fn main() {
                     Repository::open(env::current_dir().unwrap()).unwrap();
 
                 let graph = find_packages(repo.path());
+                find_packages2(repo.path());
+
+                return;
 
                 // Build scope matcher
                 let mut builder = Scope::builder();
@@ -426,40 +430,24 @@ fn create_tag(
 
 // ctrl-z-revision?
 
-// pub trait Dependencies {
-//     type Iter: Iterator<Item = (String, Option<VersionReq>)>;
-//     fn dependencies(&self) -> Self::Iter;
-// }
-
-// impl Dependencies for Cargo {
-//     type Iter = Box<dyn Iterator<Item = (String, Option<VersionReq>)>>;
-
-//     fn dependencies(&self) -> Self::Iter {
-//         match self {
-//             Cargo::Package { dependencies, .. } => {
-//                 let iter = dependencies
-//                     .as_ref()
-//                     .into_iter()
-//                     .flat_map(|deps| deps.iter())
-//                     .map(|(name, dep)| {
-//                         let version_req = match dep {
-//                             ctrl_z_manifest::manifest::format::cargo::Dependency::Version(v) => {
-//                                 Some(v.clone())
-//                             }
-//                             _ => None,
-//                         };
-//                         (name.clone(), version_req)
-//                     });
-//                 Box::new(iter)
-//             }
-//             Cargo::Workspace { .. } => panic!("noes"),
-//         }
-//     }
-// }
-
 // call it project... wrap the repository
 
 // hand over repository
+
+fn find_packages2(repo_path: &Path) {
+    // loader... <- with manifest members, we can implement a GENERAL loader!
+    let root_cargo = repo_path.join("Cargo.toml");
+    let cargo = ctrl_z_manifest_2::Project::<ctrl_z_manifest_2::Cargo>::read(
+        root_cargo,
+    )
+    .unwrap();
+
+    // Resolver?!
+
+    // for member in cargo.members() {}
+
+    println!("Project: {:#?}", cargo);
+}
 
 fn find_packages(repo_path: &Path) -> Graph<Manifest<Cargo>> {
     let root_cargo = repo_path.join("Cargo.toml");

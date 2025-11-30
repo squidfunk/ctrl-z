@@ -36,7 +36,7 @@ use super::Scope;
 // ----------------------------------------------------------------------------
 
 /// Scope builder.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Builder {
     /// Registered paths.
     paths: Vec<PathBuf>,

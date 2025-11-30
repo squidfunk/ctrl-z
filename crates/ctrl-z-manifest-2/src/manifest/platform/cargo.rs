@@ -28,13 +28,9 @@
 use semver::Version;
 use serde::Deserialize;
 use std::collections::BTreeMap;
-use std::fs;
-use std::path::Path;
 use std::str::FromStr;
 
 use crate::manifest::{Error, Manifest, Result};
-
-use super::Reader;
 
 mod dependency;
 mod package;
@@ -53,7 +49,7 @@ pub use workspace::Workspace;
 /// Note that we only read parts of the Cargo manifest relevant to our use case,
 /// which is primarily about identifying package name, version, and workspace
 /// members, and bumping versions. Other fields can be safely ignored.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(untagged)]
 pub enum Cargo {
     /// Cargo package.
@@ -104,20 +100,6 @@ impl Manifest for Cargo {
         } else {
             &[]
         }
-    }
-}
-
-impl Reader for Cargo {
-    /// Reads a Cargo manifest from the given path.
-    ///
-    /// @todo
-    fn read<P>(path: P) -> Result<Self>
-    where
-        P: AsRef<Path>,
-    {
-        let path = path.as_ref();
-        let content = fs::read_to_string(path)?;
-        Cargo::from_str(&content)
     }
 }
 

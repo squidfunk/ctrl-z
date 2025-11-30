@@ -31,6 +31,7 @@ use std::str::FromStr;
 
 mod error;
 pub mod platform;
+pub mod project;
 
 pub use error::{Error, Result};
 
@@ -52,13 +53,3 @@ pub trait Manifest: Debug + FromStr<Err = Error> {
     /// Returns the members.
     fn members(&self) -> &[String];
 }
-
-// pub trait Reader {
-//     /// Reads a manifest from the given path.
-//     fn read(path: &Path) -> Result<Self>;
-// }
-
-// pub trait Writer {
-//     /// Writes the manifest to the given path.
-//     fn write(&self, path: &Path) -> Result<()>;
-// }

@@ -38,7 +38,7 @@ pub use kind::Kind;
 // ----------------------------------------------------------------------------
 
 /// Change.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Change {
     /// Change kind.
     pub kind: Kind,

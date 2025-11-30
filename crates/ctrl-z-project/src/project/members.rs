@@ -41,17 +41,20 @@ use paths::Paths;
 
 /// Members iterator.
 ///
-/// @todo document that this is recursive
+/// This iterator emits projects recursively. Although some ecosystems don't
+/// allow for deeply nested project hierachies, it's possible to have them.
 #[derive(Debug)]
 pub struct Members<M> {
     /// Stack of path iterators.
-    stack: Vec<Paths>,
+    paths: Vec<Paths>,
+    /// Manifest file name.
+    file: String,
     /// Type marker.
     marker: PhantomData<M>,
 }
 
 // ----------------------------------------------------------------------------
-// Implementation
+// Implementations
 // ----------------------------------------------------------------------------
 
 impl<M> Project<M>
@@ -60,19 +63,22 @@ where
 {
     /// Creates a members iterator.
     #[allow(clippy::missing_panics_doc)]
-    #[inline]
     pub fn members(&self) -> Members<M> {
         let root = self.path.parent().expect("invariant");
+        let file = self.path.file_name().expect("invariant");
+
+        // Create path iterator over members and initialize stack
         let iter = self.data.members().iter().map(|path| root.join(path));
         Members {
-            stack: vec![iter.rev().collect()],
+            paths: vec![iter.rev().collect()],
+            file: file.to_string_lossy().to_string(),
             marker: PhantomData,
         }
     }
 }
 
 // ----------------------------------------------------------------------------
-// Implementation
+// Trait implementations
 // ----------------------------------------------------------------------------
 
 impl<M> Iterator for Members<M>
@@ -81,35 +87,30 @@ where
 {
     type Item = Result<Project<M>>;
 
-    /// Returns the next manifest.
+    /// Returns the next member.
     fn next(&mut self) -> Option<Self::Item> {
-        // check if we still have paths in the topmost iterator, and print.
-        // otherw
-        while let Some(stack) = self.stack.last_mut() {
-            if let Some(res) = stack.next() {
-                if let Ok(path) = res {
-                    let path = path.join("Cargo.toml");
+        // Retrieve the top-most path iterator from the stack and try to draw
+        // another path from it, or if empty, continue with the next iterator
+        let stack = self.paths.last_mut()?;
+        let Some(res) = stack.next() else {
+            self.paths.pop();
+            return self.next();
+        };
 
-                    // println!("Members: stack={:#?}, x={:#?}", stack, path);
+        // Read project from path after joining with the name of the manifest
+        // file, and if successful, push nested paths iterator onto the stack
+        match res
+            .map(|path| path.join(&self.file))
+            .and_then(Project::<M>::read)
+        {
+            Err(err) => Some(Err(err)),
+            Ok(project) => {
+                let members = project.members();
+                self.paths.extend(members.paths);
 
-                    // Load and create next members iterator...
-                    let project = match Project::<M>::read(path) {
-                        Ok(project) => project,
-                        Err(err) => return Some(Err(err)),
-                    };
-
-                    //
-                    let members = project.members();
-                    self.stack.extend(members.stack);
-
-                    // Return project
-                    return Some(Ok(project));
-                }
-            } else {
-                self.stack.pop();
+                // Return next member
+                Some(Ok(project))
             }
         }
-
-        None
     }
 }

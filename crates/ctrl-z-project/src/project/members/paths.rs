@@ -23,7 +23,7 @@
 
 // ----------------------------------------------------------------------------
 
-//! Path iterator.
+//! Paths iterator.
 
 use glob::glob;
 use std::path::PathBuf;
@@ -34,7 +34,7 @@ use crate::project::Result;
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Path iterator.
+/// Paths iterator.
 #[derive(Debug, Default)]
 pub struct Paths {
     /// Stack of patterns.
@@ -44,7 +44,7 @@ pub struct Paths {
 }
 
 // ----------------------------------------------------------------------------
-// Trait implementation
+// Trait implementations
 // ----------------------------------------------------------------------------
 
 impl Iterator for Paths {

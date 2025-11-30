@@ -25,8 +25,9 @@
 
 //! Project.
 
-use std::fs;
+use std::iter::{Chain, Once};
 use std::path::{Path, PathBuf};
+use std::{fs, iter};
 
 mod error;
 pub mod manifest;
@@ -34,6 +35,7 @@ mod members;
 
 pub use error::{Error, Result};
 use manifest::Manifest;
+use members::Members;
 
 // ----------------------------------------------------------------------------
 // Structs
@@ -74,5 +76,24 @@ where
             path: path.canonicalize()?,
             data: M::from_str(&content)?,
         })
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Trait implementations
+// ----------------------------------------------------------------------------
+
+impl<M> IntoIterator for Project<M>
+where
+    M: Manifest,
+{
+    type Item = Result<Project<M>>;
+    type IntoIter = Chain<Once<Result<Project<M>>>, Members<M>>;
+
+    /// Creates an iterator over the project and its members.
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        let members = self.members();
+        iter::once(Ok(self)).chain(members)
     }
 }

@@ -39,10 +39,10 @@ pub mod cargo;
 
 /// Manifest.
 ///
-/// @todo document that this includes workspace and package manifests...,
-/// which is why things might not have names or versions (depending on ecosystem)
-/// - also explain why we use a mix here, since ecosystems are different, so
-/// tjhere's no clean cut between workspaces and members (e.g. in npm)
+/// Manifests are packages and workspaces – sometimes one or the other, and
+/// sometimes both at the same time, depending on the ecosystem. This is also
+/// why all methods of this trait return optional references. Ecosystems differ
+/// in how they implement these concepts (e.g. Rust and JavaScript).
 pub trait Manifest: Debug + FromStr<Err = Error> {
     /// Returns the name.
     fn name(&self) -> Option<&str>;

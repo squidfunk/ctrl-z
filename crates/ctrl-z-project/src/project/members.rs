@@ -62,6 +62,9 @@ where
     M: Manifest,
 {
     /// Creates a members iterator.
+    ///
+    /// This iterator only yields members, not the root project itself. In case
+    /// you want to include the root project, iterate over [`Project`] itself.
     #[allow(clippy::missing_panics_doc)]
     pub fn members(&self) -> Members<M> {
         let root = self.path.parent().expect("invariant");

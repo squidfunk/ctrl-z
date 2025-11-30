@@ -443,10 +443,19 @@ fn find_packages2(repo_path: &Path) {
 
     // Resolver?!
 
-    println!("Project: {:#?}", cargo);
-    for member in cargo.members().flatten() {
-        println!("Project.members: {:#?}", member);
+    // project iter should inclde tiself
+
+    // println!("Project: {:#?}", cargo);
+    for member in cargo.into_iter().flatten() {
+        println!("Member: {:?}", member.path);
+        if let (Some(name), Some(version)) =
+            (member.data.name(), member.data.version())
+        {
+            println!("  - {} {}", name, version);
+        }
     }
+
+    // Collect into a vector of packages... // graph from_iter!
 }
 
 fn find_packages(repo_path: &Path) -> Graph<Manifest<Cargo>> {

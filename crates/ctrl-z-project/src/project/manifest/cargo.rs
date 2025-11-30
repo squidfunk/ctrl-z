@@ -56,12 +56,12 @@ pub use workspace::Workspace;
 pub enum Cargo {
     /// Cargo workspace.
     Workspace {
-        /// Workspace information.
+        /// Workspace data.
         workspace: Workspace,
     },
     /// Cargo package.
     Package {
-        /// Package information.
+        /// Package data.
         package: Package,
         /// Package dependencies.
         #[serde(default)]

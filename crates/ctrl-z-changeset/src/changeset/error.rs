@@ -25,9 +25,10 @@
 
 //! Changeset error.
 
-use ctrl_z_repository as repository;
 use std::result;
 use thiserror::Error;
+
+use ctrl_z_repository as repository;
 
 use super::{change, scope};
 
@@ -41,11 +42,9 @@ pub enum Error {
     /// Repository error.
     #[error(transparent)]
     Repository(#[from] repository::Error),
-
     /// Change error.
     #[error(transparent)]
     Change(#[from] change::Error),
-
     /// Scope error.
     #[error(transparent)]
     Scope(#[from] scope::Error),

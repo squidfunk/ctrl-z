@@ -23,29 +23,38 @@
 
 // ----------------------------------------------------------------------------
 
-//! Change error.
+//! Platform.
 
-use std::result;
-use thiserror::Error;
+use std::path::Path;
+
+use super::error::Result;
+
+pub mod cargo;
 
 // ----------------------------------------------------------------------------
-// Enums
+// Traits
 // ----------------------------------------------------------------------------
 
-/// Change error.
-#[derive(Debug, Error)]
-pub enum Error {
-    /// Invalid format.
-    #[error("invalid format")]
-    Format,
-    /// Invalid kind.
-    #[error("invalid kind")]
-    Kind,
+/// Manifest reader.
+pub trait Reader: Sized {
+    /// Reads a manifest from the given path.
+    ///
+    /// # Errors
+    ///
+    /// This method should return errors encountered when reading a manifest.
+    fn read<P>(path: P) -> Result<Self>
+    where
+        P: AsRef<Path>;
 }
 
-// ----------------------------------------------------------------------------
-// Type aliases
-// ----------------------------------------------------------------------------
-
-/// Change result.
-pub type Result<T = ()> = result::Result<T, Error>;
+/// Manifest writer.
+pub trait Writer: Sized {
+    /// Writes the manifest to the given path.
+    ///
+    /// # Errors
+    ///
+    /// This method should return errors encountered when writing a manifest.
+    fn write<P>(&self, path: P) -> Result
+    where
+        P: AsRef<Path>;
+}

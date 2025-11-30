@@ -26,110 +26,39 @@
 //! Manifest.
 
 use semver::Version;
-use std::fs;
-use std::path::{Path, PathBuf};
+use std::fmt::Debug;
+use std::str::FromStr;
 
 mod error;
-pub mod format;
-// mod iter;
-// pub mod writer;
+pub mod platform;
 
 pub use error::{Error, Result};
-use format::Format;
-use iter::Iter;
 
 // ----------------------------------------------------------------------------
-// Structs
+// Traits
 // ----------------------------------------------------------------------------
 
 /// Manifest.
-#[derive(Debug)]
-pub struct Manifest<F>
-where
-    F: Format,
-{
-    /// Manifest path.
-    pub path: PathBuf,
-    /// Manifest data.
-    pub data: F,
-}
-
-// ----------------------------------------------------------------------------
-// Implementations
-// ----------------------------------------------------------------------------
-
-impl<F> Manifest<F>
-where
-    F: Format,
-{
-    /// Attempts to read a manifest from the given path.
-    ///
-    /// # Errors
-    ///
-    /// This method returns [`Error::Io`], if the manifest could not be read.
-    pub fn read<P>(path: P) -> Result<Self>
-    where
-        P: AsRef<Path>,
-    {
-        let path = path.as_ref();
-        let content = fs::read_to_string(path)?;
-        Ok(Self {
-            path: path.canonicalize()?,
-            data: F::from_str(&content)?,
-        })
-    }
-
-    /// Returns the manifest's name.
-    #[inline]
-    pub fn name(&self) -> Option<&str> {
-        self.data.name()
-    }
-
-    /// Returns the manifest's version.
-    #[inline]
-    pub fn version(&self) -> Option<&Version> {
-        self.data.version()
-    }
-}
-
-// paths should be iterated on manifest not on format... this is important
-// because the path must be correctly resolved...
-
-/// -----
-
-// Package, Workspace <- normalize,
-
-enum Manifest {
-    Package(Package),
-    Workspace(Workspace),
-}
-
-struct Package {
-    name: String,
-    version: Version,
-}
-
-struct Workspace {
-    members: Vec<Manifest>, // ??? or Package | Workspace?
-}
-
-/// -----
 ///
-/// move into an enum
-
-// ----------------------------------------------------------------------------
-// Trait implementations
-// ----------------------------------------------------------------------------
-
-impl<F> IntoIterator for Manifest<F>
-where
-    F: Format,
-{
-    type Item = Result<Manifest<F>>;
-    type IntoIter = Iter<F>;
-
-    /// Creates an iterator over the manifest.
-    fn into_iter(self) -> Self::IntoIter {
-        Iter::new(self)
-    }
+/// @todo document that this includes workspace and package manifests...,
+/// which is why things might not have names or versions (depending on ecosystem)
+/// - also explain why we use a mix here, since ecosystems are different, so
+/// tjhere's no clean cut between workspaces and members (e.g. in npm)
+pub trait Manifest: Debug + FromStr<Err = Error> {
+    /// Returns the name.
+    fn name(&self) -> Option<&str>;
+    /// Returns the version.
+    fn version(&self) -> Option<&Version>;
+    /// Returns the members.
+    fn members(&self) -> &[String];
 }
+
+// pub trait Reader {
+//     /// Reads a manifest from the given path.
+//     fn read(path: &Path) -> Result<Self>;
+// }
+
+// pub trait Writer {
+//     /// Writes the manifest to the given path.
+//     fn write(&self, path: &Path) -> Result<()>;
+// }

@@ -38,23 +38,18 @@ pub enum Error {
     /// I/O error.
     #[error(transparent)]
     Io(#[from] io::Error),
-
     /// Glob error.
     #[error(transparent)]
     Glob(#[from] glob::GlobError),
-
     /// Pattern error.
     #[error(transparent)]
     Pattern(#[from] glob::PatternError),
-
     /// TOML error.
     #[error(transparent)]
     Toml(#[from] toml::de::Error),
-
     /// TOML edit error.
     #[error(transparent)]
     TomlEdit(#[from] toml_edit::TomlError),
-
     /// JSON error.
     #[error(transparent)]
     Json(#[from] serde_json::Error),

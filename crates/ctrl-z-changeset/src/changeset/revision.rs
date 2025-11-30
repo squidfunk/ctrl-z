@@ -25,10 +25,11 @@
 
 //! Revision.
 
-use ctrl_z_repository::Commit;
 use std::cmp;
 use std::collections::HashSet;
 use std::str::FromStr;
+
+use ctrl_z_repository::Commit;
 
 use super::change::Change;
 use super::error::Result;
@@ -92,10 +93,10 @@ impl<'a> Changeset<'a> {
         Ok(())
     }
 
-    /// Extends the changeset with the given commits
+    /// Extends the changeset with the given commits.
     ///
-    /// Note that we can't just implement the [`Extend`] trait, since addition
-    /// of commits can fail due to parsing errors.
+    /// Note that we can't just implement the [`Extend`] trait, as this method
+    /// is fallible due to potential errors when adding commits.
     ///
     /// # Errors
     ///

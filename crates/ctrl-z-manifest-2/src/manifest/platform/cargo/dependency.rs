@@ -23,29 +23,49 @@
 
 // ----------------------------------------------------------------------------
 
-//! Change error.
+//! Cargo dependency.
 
-use std::result;
-use thiserror::Error;
+use semver::VersionReq;
+use serde::Deserialize;
 
 // ----------------------------------------------------------------------------
 // Enums
 // ----------------------------------------------------------------------------
 
-/// Change error.
-#[derive(Debug, Error)]
-pub enum Error {
-    /// Invalid format.
-    #[error("invalid format")]
-    Format,
-    /// Invalid kind.
-    #[error("invalid kind")]
-    Kind,
+/// Cargo dependency.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(untagged)]
+pub enum Dependency {
+    /// Dependency with version requirement.
+    Version(VersionReq),
+    /// Dependency with information.
+    Info(DependencyInfo),
 }
 
 // ----------------------------------------------------------------------------
-// Type aliases
+// Structs
 // ----------------------------------------------------------------------------
 
-/// Change result.
-pub type Result<T = ()> = result::Result<T, Error>;
+/// Cargo dependency information.
+#[derive(Clone, Debug, Deserialize)]
+pub struct DependencyInfo {
+    /// Version.
+    pub version: Option<VersionReq>,
+    /// Inherit from workspace.
+    pub workspace: Option<bool>,
+}
+
+// ----------------------------------------------------------------------------
+// Implementations
+// ----------------------------------------------------------------------------
+
+impl Dependency {
+    /// Returns the version requirement, if any.
+    #[must_use]
+    pub fn version(&self) -> Option<&VersionReq> {
+        match self {
+            Dependency::Version(v) => Some(v),
+            Dependency::Info(info) => info.version.as_ref(),
+        }
+    }
+}

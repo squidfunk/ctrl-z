@@ -23,29 +23,20 @@
 
 // ----------------------------------------------------------------------------
 
-//! Change error.
+//! Cargo package.
 
-use std::result;
-use thiserror::Error;
+use semver::Version;
+use serde::Deserialize;
 
 // ----------------------------------------------------------------------------
-// Enums
+// Structs
 // ----------------------------------------------------------------------------
 
-/// Change error.
-#[derive(Debug, Error)]
-pub enum Error {
-    /// Invalid format.
-    #[error("invalid format")]
-    Format,
-    /// Invalid kind.
-    #[error("invalid kind")]
-    Kind,
+/// Cargo package.
+#[derive(Clone, Debug, Deserialize)]
+pub struct Package {
+    /// Package name.
+    pub name: String,
+    /// Package version.
+    pub version: Version,
 }
-
-// ----------------------------------------------------------------------------
-// Type aliases
-// ----------------------------------------------------------------------------
-
-/// Change result.
-pub type Result<T = ()> = result::Result<T, Error>;

@@ -38,7 +38,6 @@ pub enum Error {
     /// Globset error.
     #[error(transparent)]
     Glob(#[from] globset::Error),
-
     /// Path must not start at '/'.
     #[error("path must not start at '/'")]
     RootDir,

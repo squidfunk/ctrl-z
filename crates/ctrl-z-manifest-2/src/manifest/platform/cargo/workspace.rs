@@ -23,29 +23,23 @@
 
 // ----------------------------------------------------------------------------
 
-//! Change error.
+//! Cargo workspace.
 
-use std::result;
-use thiserror::Error;
+use serde::Deserialize;
+use std::collections::BTreeMap;
+
+use super::dependency::Dependency;
 
 // ----------------------------------------------------------------------------
-// Enums
+// Structs
 // ----------------------------------------------------------------------------
 
-/// Change error.
-#[derive(Debug, Error)]
-pub enum Error {
-    /// Invalid format.
-    #[error("invalid format")]
-    Format,
-    /// Invalid kind.
-    #[error("invalid kind")]
-    Kind,
+/// Cargo workspace.
+#[derive(Clone, Debug, Deserialize)]
+pub struct Workspace {
+    /// Workspace members.
+    pub members: Vec<String>,
+    /// Workspace dependencies.
+    #[serde(default)]
+    pub dependencies: BTreeMap<String, Dependency>,
 }
-
-// ----------------------------------------------------------------------------
-// Type aliases
-// ----------------------------------------------------------------------------
-
-/// Change result.
-pub type Result<T = ()> = result::Result<T, Error>;

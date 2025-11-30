@@ -38,7 +38,6 @@ pub enum Error {
     /// I/O error.
     #[error(transparent)]
     Io(#[from] io::Error),
-
     /// Git error.
     #[error(transparent)]
     Git(#[from] git2::Error),

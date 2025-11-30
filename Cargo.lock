@@ -253,6 +253,7 @@ dependencies = [
  "clap",
  "ctrl-z-changeset",
  "ctrl-z-manifest",
+ "ctrl-z-manifest-2",
  "ctrl-z-repository",
  "git2",
  "globset",

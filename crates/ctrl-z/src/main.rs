@@ -26,10 +26,6 @@
 use clap::builder::styling::{AnsiColor, Effects};
 use clap::builder::Styles;
 use clap::{Parser, Subcommand};
-use ctrl_z_changeset::change::Kind;
-use ctrl_z_changeset::{Change, Changeset, Scope, VersionExt};
-use ctrl_z_repository::Reference;
-use ctrl_z_repository::{Commit, Repository};
 // @todo: remove the git indirection
 use globset::Glob;
 use inquire::Confirm;
@@ -40,7 +36,11 @@ use std::str::FromStr;
 use std::{cmp, env, fs, io};
 use zrx::graph::Graph;
 
+use ctrl_z_changeset::change::Kind;
+use ctrl_z_changeset::{Change, Changeset, Scope, VersionExt};
 use ctrl_z_manifest::{Cargo, Format, Manifest, PackageJson, Writer};
+use ctrl_z_repository::Reference;
+use ctrl_z_repository::{Commit, Repository};
 
 // ----------------------------------------------------------------------------
 // Constants

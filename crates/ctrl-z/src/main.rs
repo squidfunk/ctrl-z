@@ -39,7 +39,7 @@ use zrx::graph::Graph;
 use ctrl_z_changeset::change::Kind;
 use ctrl_z_changeset::{Change, Changeset, Scope, VersionExt};
 use ctrl_z_manifest::{Cargo, Format, Manifest, PackageJson, Writer};
-use ctrl_z_manifest_2::Manifest as _;
+use ctrl_z_project::Manifest as _;
 use ctrl_z_repository::Reference;
 use ctrl_z_repository::{Commit, Repository};
 
@@ -437,16 +437,16 @@ fn create_tag(
 fn find_packages2(repo_path: &Path) {
     // loader... <- with manifest members, we can implement a GENERAL loader!
     let root_cargo = repo_path.join("Cargo.toml");
-    let cargo = ctrl_z_manifest_2::Project::<ctrl_z_manifest_2::Cargo>::read(
-        root_cargo,
-    )
-    .unwrap();
+    let cargo =
+        ctrl_z_project::Project::<ctrl_z_project::Cargo>::read(root_cargo)
+            .unwrap();
 
     // Resolver?!
 
-    // for member in cargo.members() {}
-
     println!("Project: {:#?}", cargo);
+    for member in cargo.members().flatten() {
+        println!("Project.members: {:#?}", member);
+    }
 }
 
 fn find_packages(repo_path: &Path) -> Graph<Manifest<Cargo>> {

@@ -29,11 +29,9 @@ use semver::Version;
 use std::fmt::Debug;
 use std::str::FromStr;
 
-mod error;
-pub mod platform;
-pub mod project;
+use super::error::Error;
 
-pub use error::{Error, Result};
+pub mod cargo;
 
 // ----------------------------------------------------------------------------
 // Traits

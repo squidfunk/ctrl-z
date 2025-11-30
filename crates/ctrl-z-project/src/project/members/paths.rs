@@ -26,11 +26,9 @@
 //! Path iterator.
 
 use glob::glob;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
-use crate::manifest::{Manifest, Result};
-
-use super::Project;
+use crate::project::Result;
 
 // ----------------------------------------------------------------------------
 // Structs
@@ -41,33 +39,12 @@ use super::Project;
 pub struct Paths {
     /// Stack of patterns.
     patterns: Vec<PathBuf>,
-    /// Stack of packages.
-    packages: Vec<PathBuf>,
+    /// Stack of paths.
+    paths: Vec<PathBuf>,
 }
 
 // ----------------------------------------------------------------------------
-// Implementation
-// ----------------------------------------------------------------------------
-
-impl Paths {
-    /// Creates a path iterator.
-    ///
-    /// Note that the given patterns must be valid paths and resolvable from
-    /// the current working directory. It's recommended to use absolute paths.
-    pub fn new<P>(patterns: P) -> Self
-    where
-        P: IntoIterator<Item = PathBuf>,
-        P::IntoIter: DoubleEndedIterator,
-    {
-        Self {
-            patterns: patterns.into_iter().rev().collect(),
-            packages: Vec::new(),
-        }
-    }
-}
-
-// ----------------------------------------------------------------------------
-// Implementation
+// Trait implementation
 // ----------------------------------------------------------------------------
 
 impl Iterator for Paths {
@@ -75,7 +52,7 @@ impl Iterator for Paths {
 
     /// Returns the next path.
     fn next(&mut self) -> Option<Self::Item> {
-        if self.packages.is_empty() {
+        if self.paths.is_empty() {
             // Take next pattern from the stack, and expand it as a glob - if
             // the pattern is invalid, we propagate the error
             let paths = match glob(self.patterns.pop()?.to_str()?) {
@@ -83,16 +60,35 @@ impl Iterator for Paths {
                 Err(err) => return Some(Err(err.into())),
             };
 
-            // Collect packages and propagate errors - note that we need to
-            // know when an error occurs, so we don't just silence them
+            // Collect paths and propagate errors - note that we need to know
+            // when an error occurs, so we don't just silence them
             let iter = paths.into_iter().map(|res| res.map_err(Into::into));
             match iter.collect::<Result<Vec<_>>>() {
-                Ok(paths) => self.packages.extend(paths.into_iter().rev()),
+                Ok(paths) => self.paths.extend(paths.into_iter().rev()),
                 Err(err) => return Some(Err(err)),
             }
         }
 
         // Return next path
-        self.packages.pop().map(Ok)
+        self.paths.pop().map(Ok)
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+impl FromIterator<PathBuf> for Paths {
+    /// Creates a path iterator.
+    ///
+    /// Note that the given patterns must be valid paths and resolvable from
+    /// the current working directory. It's recommended to use absolute paths.
+    #[inline]
+    fn from_iter<T>(iter: T) -> Self
+    where
+        T: IntoIterator<Item = PathBuf>,
+    {
+        Self {
+            patterns: iter.into_iter().collect(),
+            paths: Vec::new(),
+        }
     }
 }

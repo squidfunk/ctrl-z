@@ -253,7 +253,7 @@ dependencies = [
  "clap",
  "ctrl-z-changeset",
  "ctrl-z-manifest",
- "ctrl-z-manifest-2",
+ "ctrl-z-project",
  "ctrl-z-repository",
  "git2",
  "globset",
@@ -289,7 +289,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "ctrl-z-manifest-2"
+name = "ctrl-z-project"
 version = "0.0.0"
 dependencies = [
  "glob",

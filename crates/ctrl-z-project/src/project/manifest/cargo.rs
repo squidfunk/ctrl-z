@@ -30,7 +30,8 @@ use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::str::FromStr;
 
-use crate::manifest::{Error, Manifest, Result};
+use crate::project::manifest::Manifest;
+use crate::project::{Error, Result};
 
 mod dependency;
 mod package;

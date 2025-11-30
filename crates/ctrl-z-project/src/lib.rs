@@ -23,29 +23,10 @@
 
 // ----------------------------------------------------------------------------
 
-//! Manifest loader.
+//! tbd
 
-use std::path::Path;
+pub mod project;
 
-use super::error::Result;
-
-pub mod cargo;
-
-// ----------------------------------------------------------------------------
-// Traits
-// ----------------------------------------------------------------------------
-
-// // maybe we call this entire thing Loader! and then impl Loader for Cargo!
-// // or we abstract loader as its the same for all and defined in from-str...
-
-// /// Manifest loader.
-// pub trait Loader: Sized {
-//     /// Reads a manifest from the given path.
-//     ///
-//     /// # Errors
-//     ///
-//     /// This method should return errors encountered when reading a manifest.
-//     fn load<P>(path: P) -> Result<Self>
-//     where
-//         P: AsRef<Path>;
-// }
+pub use project::manifest::cargo::{self, Cargo};
+pub use project::manifest::Manifest;
+pub use project::{Error, Project, Result};

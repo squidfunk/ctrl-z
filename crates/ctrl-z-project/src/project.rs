@@ -23,72 +23,56 @@
 
 // ----------------------------------------------------------------------------
 
-//! Members iterator.
+//! Project.
 
+use std::fs;
 use std::path::{Path, PathBuf};
 
-use crate::manifest::{Manifest, Result};
+mod error;
+pub mod manifest;
+mod members;
 
-use super::Project;
+pub use error::{Error, Result};
+use manifest::Manifest;
 
 // ----------------------------------------------------------------------------
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Members iterator.
-pub struct Members<M>
+/// Project.
+#[derive(Debug)]
+pub struct Project<M>
 where
     M: Manifest,
 {
-    /// Stack of manifests.
-    stack: Vec<(PathBuf, M)>,
+    /// Project path.
+    pub path: PathBuf,
+    /// Project manifest.
+    pub data: M,
 }
 
 // ----------------------------------------------------------------------------
-// Implementation
+// Implementations
 // ----------------------------------------------------------------------------
 
 impl<M> Project<M>
 where
     M: Manifest,
 {
-    /// Creates a members iterator.
-    #[inline]
-    pub(crate) fn members(&self, path: PathBuf, root: M) -> Members<M> {
-        Members { stack: vec![(path, root)] }
+    /// Attempts to read a project from the given path.
+    ///
+    /// # Errors
+    ///
+    /// This method returns [`Error::Io`], if the project could not be read.
+    pub fn read<P>(path: P) -> Result<Self>
+    where
+        P: AsRef<Path>,
+    {
+        let path = path.as_ref();
+        let content = fs::read_to_string(path)?;
+        Ok(Self {
+            path: path.canonicalize()?,
+            data: M::from_str(&content)?,
+        })
     }
 }
-
-// ----------------------------------------------------------------------------
-// Implementation
-// ----------------------------------------------------------------------------
-
-// impl<M> Iterator for Members<M>
-// where
-//     M: Manifest,
-// {
-//     type Item = Result<(PathBuf, M)>;
-
-//     /// Returns the next manifest.
-//     fn next(&mut self) -> Option<Self::Item> {
-//         let (path, manifest) = self.stack.pop()?;
-//         // let data = &manifest.data;
-
-//         // use path of manfiest as a base path!
-
-//         // here, we can now use the members
-
-//         // Collect paths and read manifests
-//         let iter = manifest.paths(path).map(|res| res.and_then(Manifest::read));
-//         let manifests = match iter.collect::<Result<Vec<_>>>() {
-//             Ok(manifests) => manifests,
-//             Err(err) => return Some(Err(err)),
-//         };
-
-//         // Add manifests to stack in pre-order
-//         self.stack.extend(manifests.into_iter().rev());
-
-//         // Return next manifest
-//         Some(Ok(manifest))
-//     }
-// }

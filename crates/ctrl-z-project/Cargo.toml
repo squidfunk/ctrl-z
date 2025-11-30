@@ -22,9 +22,9 @@
 # IN THE SOFTWARE.
 
 [package]
-name = "ctrl-z-manifest-2"
+name = "ctrl-z-project"
 version = "0.0.0"
-description = "Manifest reader and writer"
+description = "Project abstractions and utilities"
 edition.workspace = true
 rust-version.workspace = true
 homepage.workspace = true

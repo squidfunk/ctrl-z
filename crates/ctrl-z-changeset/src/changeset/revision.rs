@@ -38,7 +38,7 @@ use super::Changeset;
 // Structs
 // ----------------------------------------------------------------------------
 
-// Revision.
+/// Revision.
 #[derive(Debug, PartialEq, Eq)]
 pub struct Revision<'a> {
     /// Original commit.

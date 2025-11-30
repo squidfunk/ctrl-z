@@ -33,7 +33,7 @@ use super::error::{Error, Result};
 // Enums
 // ----------------------------------------------------------------------------
 
-// Change kind.
+/// Change kind.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Kind {
     /// Bugfix.

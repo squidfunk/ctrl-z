@@ -25,7 +25,7 @@
 
 //! Version extensions.
 
-use semver::Version;
+use semver::{BuildMetadata, Prerelease, Version};
 
 use super::increment::Increment;
 
@@ -103,9 +103,9 @@ impl VersionExt for Version {
             }
         }
 
-        // Reset pre-release and build metadata and return version
-        version.pre = semver::Prerelease::EMPTY;
-        version.build = semver::BuildMetadata::EMPTY;
+        // Always reset pre-release identifier and build metadata
+        version.pre = Prerelease::EMPTY;
+        version.build = BuildMetadata::EMPTY;
         version
     }
 }

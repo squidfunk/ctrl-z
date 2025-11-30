@@ -42,7 +42,12 @@ use crate::Increment;
 // Structs
 // ----------------------------------------------------------------------------
 
-// Changeset.
+/// Changeset.
+///
+/// Changesets extract information from commits, and associate them with a given
+/// set of scopes. For each [`Scope`], an [`Increment`] is derived from changes
+/// contained in the commits. This does not include transitive dependencies,
+/// which are handled outside of changesets. Changesets only describe.
 #[derive(Debug)]
 pub struct Changeset<'a> {
     /// List of scopes.
@@ -73,18 +78,13 @@ impl Changeset<'_> {
             increments,
         }
     }
+
+    // to_graph + to_changelog + to_plan?
 }
 
-// this is a changeset builder! we then convert it into the FINAL changeset.
-
-// create a changeset fomr a scope, and then add commits to it to create revisions
-
-// Revisions as changesets + scope builder?
-// ok, so we create a changset from a set of scopes, and then add commits to it!
-
-// a changeset - what is that? do we need this? can we rename this package to
-// revision and apply those to deduce the set of bumps?
-
-// scopes MUST come from outside...
-
-// revisions + scopes!
+// From the manifests, we extract all scopes.
+// What do we need to update all manifests?
+// - Scope -> Increment
+// - Package name -> Version (Graph)
+// - Apply increments to versions
+// - Then update all manifests

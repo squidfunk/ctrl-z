@@ -37,7 +37,7 @@ pub use kind::Kind;
 // Structs
 // ----------------------------------------------------------------------------
 
-// Change.
+/// Change.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Change {
     /// Change kind.
@@ -147,7 +147,7 @@ mod tests {
         fn errors_on_invalid_kind() {
             for format in [
                 " fix: description", // fmt
-                "fix : description", // fmt
+                "fix : description",
                 "fxi: description",
             ] {
                 let res = Change::from_str(format);

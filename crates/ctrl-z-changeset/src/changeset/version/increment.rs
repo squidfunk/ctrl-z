@@ -32,7 +32,7 @@ use crate::changeset::Change;
 // Enums
 // ----------------------------------------------------------------------------
 
-// Version increment.
+/// Version increment.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Increment {
     /// Patch increment.

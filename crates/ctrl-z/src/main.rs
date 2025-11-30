@@ -96,12 +96,11 @@ pub fn main() {
                 // Build scope matcher
                 let mut builder = Scope::builder();
                 let root = repo.path();
-                for meta in graph.into_iter() {
+                for meta in &graph {
                     let path =
                         meta.path.parent().unwrap().strip_prefix(root).unwrap();
                     println!("Adding scope for path: {:?}", path);
-                    let pattern = path.join("**");
-                    builder.add(pattern);
+                    builder.add(path);
                 }
                 let scopes = builder.build().unwrap();
 
@@ -117,8 +116,6 @@ pub fn main() {
                 } else {
                     return;
                 };
-
-                // fix/feat/perf/refactor/ci/build bump version
 
                 println!(
                     "Last reference: {:?}",
@@ -139,6 +136,8 @@ pub fn main() {
                 changeset.extend(commits).unwrap();
 
                 println!("Changeset: {:#?}", changeset);
+
+                // to_graph // to_changelog
 
                 // @todo: changeset now has all increments!
                 // we now need to compute the graph and propagate the increments
@@ -490,6 +489,7 @@ fn find_packages(repo_path: &Path) -> Graph<Manifest<Cargo>> {
         pkg_dir.pop(); // remove Cargo.toml, keep the folder
         packages.insert(pkg_dir, manifest.data.clone());
 
+        // @todo: note that this only includes packages, not the top-level manifest!
         if let (Some(name), Some(version)) =
             (manifest.name(), manifest.version())
         {

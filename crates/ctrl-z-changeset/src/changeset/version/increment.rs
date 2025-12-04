@@ -38,11 +38,11 @@ use crate::changeset::Change;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Increment {
     /// Patch increment.
-    Patch = 0,
+    Patch,
     /// Minor increment.
-    Minor = 1,
+    Minor,
     /// Major increment.
-    Major = 2,
+    Major,
 }
 
 // ----------------------------------------------------------------------------

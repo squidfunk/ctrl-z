@@ -27,6 +27,7 @@
 
 use globset::GlobSet;
 use std::fmt;
+use std::ops::Index;
 use std::path::{Path, PathBuf};
 
 mod builder;
@@ -39,15 +40,15 @@ pub use error::{Error, Result};
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Scope.
+/// Scope set.
 ///
 /// Scopes are used to associate changes with non-overlapping paths in a git
 /// repository, where a list of paths is matched through a [`GlobSet`]. When
-/// two paths overlap, one path must be the prefix of another path. Then, we
+/// two paths overlap, one path must be the prefix of another path. Thus, we
 /// return the longer path as the matching scope.
 #[derive(Clone)]
 pub struct Scope {
-    /// Registered paths.
+    /// Registered path-name pairs.
     paths: Vec<(PathBuf, String)>,
     /// Glob set.
     globs: GlobSet,
@@ -124,6 +125,18 @@ impl Scope {
 
 // ----------------------------------------------------------------------------
 // Trait implementations
+// ----------------------------------------------------------------------------
+
+impl Index<usize> for Scope {
+    type Output = (PathBuf, String);
+
+    /// Returns the path-name pair at the given index.
+    #[inline]
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.paths[index]
+    }
+}
+
 // ----------------------------------------------------------------------------
 
 impl fmt::Debug for Scope {

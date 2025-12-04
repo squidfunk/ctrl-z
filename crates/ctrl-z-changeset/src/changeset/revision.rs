@@ -54,6 +54,29 @@ pub struct Revision<'a> {
 // Implementations
 // ----------------------------------------------------------------------------
 
+#[allow(clippy::must_use_candidate)]
+impl Revision<'_> {
+    /// Returns the original commit.
+    #[inline]
+    pub fn commit(&self) -> &Commit<'_> {
+        &self.commit
+    }
+
+    /// Returns the computed change.
+    #[inline]
+    pub fn change(&self) -> &Change {
+        &self.change
+    }
+
+    /// Returns the affected scope indices.
+    #[inline]
+    pub fn scopes(&self) -> &BTreeSet<usize> {
+        &self.scopes
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 impl<'a> Changeset<'a> {
     /// Adds a commit to the changeset.
     ///
@@ -67,8 +90,7 @@ impl<'a> Changeset<'a> {
     /// [`Error::Repository`]: crate::changeset::Error::Repository
     #[allow(clippy::missing_panics_doc)]
     pub fn add(&mut self, commit: Commit<'a>) -> Result {
-        let summary = commit.summary().expect("invariant");
-        if let Ok(change) = Change::from_str(summary) {
+        if let Ok(change) = Change::from_str(commit.summary()) {
             // Retrieve affected scopes from commit
             let mut scopes = BTreeSet::new();
             for delta in commit.deltas()? {

@@ -36,22 +36,24 @@ use super::error::{Error, Result};
 /// Change kind.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Kind {
-    /// Bugfix.
-    Fix,
     /// Feature.
     Feature,
+    /// Bugfix.
+    Fix,
     /// Performance improvement.
     Performance,
     /// Refactor.
     Refactor,
+    /// Build.
+    Build,
     /// Documentation.
     Docs,
+    /// Formatting.
+    Style,
     /// Test.
     Test,
     /// Chore.
     Chore,
-    /// Build.
-    Build,
 }
 
 // ----------------------------------------------------------------------------
@@ -82,14 +84,15 @@ impl FromStr for Kind {
     /// ```
     fn from_str(value: &str) -> Result<Self> {
         match value {
-            "fix" => Ok(Kind::Fix),
             "feature" => Ok(Kind::Feature),
+            "fix" => Ok(Kind::Fix),
             "performance" => Ok(Kind::Performance),
             "refactor" => Ok(Kind::Refactor),
+            "build" => Ok(Kind::Build),
             "docs" => Ok(Kind::Docs),
+            "style" => Ok(Kind::Style),
             "test" => Ok(Kind::Test),
             "chore" => Ok(Kind::Chore),
-            "build" => Ok(Kind::Build),
             _ => Err(Error::Kind),
         }
     }
@@ -110,14 +113,15 @@ mod tests {
         #[test]
         fn handles_valid_variants() -> Result {
             for (value, kind) in [
-                ("fix", Kind::Fix),
                 ("feature", Kind::Feature),
+                ("fix", Kind::Fix),
                 ("performance", Kind::Performance),
                 ("refactor", Kind::Refactor),
+                ("build", Kind::Build),
                 ("docs", Kind::Docs),
+                ("style", Kind::Style),
                 ("test", Kind::Test),
                 ("chore", Kind::Chore),
-                ("build", Kind::Build),
             ] {
                 assert_eq!(Kind::from_str(value)?, kind);
             }
@@ -126,7 +130,7 @@ mod tests {
 
         #[test]
         fn errors_on_invalid_variant() {
-            for value in ["fi x", "feat", "perf", "doc", "testing"] {
+            for value in ["feat", "fi x", "perf", "doc", "testing"] {
                 let res = Kind::from_str(value);
                 assert!(matches!(res, Err(Error::Kind)));
             }
@@ -134,7 +138,7 @@ mod tests {
 
         #[test]
         fn errors_on_invalid_casing() {
-            for value in ["Fix", "FEATURE"] {
+            for value in ["FEATURE", "Fix"] {
                 let res = Kind::from_str(value);
                 assert!(matches!(res, Err(Error::Kind)));
             }

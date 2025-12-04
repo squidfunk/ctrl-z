@@ -39,7 +39,7 @@ use super::Scope;
 /// Scope builder.
 #[derive(Debug)]
 pub struct Builder {
-    /// Registered paths.
+    /// Registered path-name mapping.
     paths: BTreeMap<PathBuf, String>,
     /// Glob set builder.
     globs: GlobSetBuilder,

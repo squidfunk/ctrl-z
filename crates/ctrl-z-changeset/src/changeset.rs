@@ -50,9 +50,9 @@ use crate::Increment;
 /// which are handled outside of changesets. Changesets only describe.
 #[derive(Debug)]
 pub struct Changeset<'a> {
-    /// List of scopes.
+    /// Scope set.
     scope: Scope,
-    /// Derived revisions.
+    /// List of revisions.
     revisions: Vec<Revision<'a>>,
     /// Version increments.
     increments: Vec<Option<Increment>>,
@@ -85,6 +85,21 @@ impl Changeset<'_> {
     // @todo temp
     pub fn increments(&self) -> &[Option<Increment>] {
         &self.increments
+    }
+}
+
+#[allow(clippy::must_use_candidate)]
+impl Changeset<'_> {
+    /// Returns the scope set.
+    #[inline]
+    pub fn scope(&self) -> &Scope {
+        &self.scope
+    }
+
+    /// Returns the list of revisions.
+    #[inline]
+    pub fn revisions(&self) -> &[Revision<'_>] {
+        &self.revisions
     }
 }
 

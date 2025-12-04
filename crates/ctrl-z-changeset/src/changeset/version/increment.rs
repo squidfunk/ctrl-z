@@ -67,9 +67,9 @@ impl Change {
     /// ```
     #[must_use]
     pub fn as_increment(&self) -> Option<Increment> {
-        let increment = match self.kind {
-            Kind::Fix => Increment::Patch,
+        let increment = match self.kind() {
             Kind::Feature => Increment::Minor,
+            Kind::Fix => Increment::Patch,
             Kind::Performance => Increment::Patch,
             Kind::Refactor => Increment::Patch,
             _ => return None,
@@ -77,7 +77,7 @@ impl Change {
 
         // If a version increment is determined, check for breaking changes,
         // as they must always lead to a major version increment
-        if self.is_breaking {
+        if self.is_breaking() {
             Some(Increment::Major)
         } else {
             Some(increment)

@@ -41,11 +41,36 @@ pub use kind::Kind;
 #[derive(Debug, PartialEq, Eq)]
 pub struct Change {
     /// Change kind.
-    pub kind: Kind,
+    kind: Kind,
     /// Change description.
-    pub description: String,
+    description: String,
     /// Change is breaking.
-    pub is_breaking: bool,
+    is_breaking: bool,
+}
+
+// ----------------------------------------------------------------------------
+// Implementations
+// ----------------------------------------------------------------------------
+
+#[allow(clippy::must_use_candidate)]
+impl Change {
+    /// Returns the change kind.
+    #[inline]
+    pub fn kind(&self) -> Kind {
+        self.kind
+    }
+
+    /// Returns the change description.
+    #[inline]
+    pub fn description(&self) -> &str {
+        &self.description
+    }
+
+    /// Returns whether the change is breaking.
+    #[inline]
+    pub fn is_breaking(&self) -> bool {
+        self.is_breaking
+    }
 }
 
 // ----------------------------------------------------------------------------

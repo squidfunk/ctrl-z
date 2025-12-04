@@ -93,6 +93,8 @@ impl Changeset<'_> {
     pub fn increments(&self) -> &[Option<Increment>] {
         &self.increments
     }
+
+    // to_markdown <- render as string! formatter? display?
 }
 
 #[allow(clippy::must_use_candidate)]

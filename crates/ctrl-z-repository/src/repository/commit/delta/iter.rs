@@ -51,21 +51,22 @@ impl Commit<'_> {
     ///
     pub fn deltas(&self) -> Result<Deltas<'_>> {
         let tree = self.inner.tree()?;
+
         let parent_tree = if self.inner.parent_count() > 0 {
             Some(self.inner.parent(0)?.tree()?)
         } else {
             None
         };
 
-        let mut diff_opts = git2::DiffOptions::new();
-        let diff = self.repository.diff_tree_to_tree(
+        let mut options = git2::DiffOptions::new();
+        let inner = self.repository.diff_tree_to_tree(
             parent_tree.as_ref(),
             Some(&tree),
-            Some(&mut diff_opts),
+            Some(&mut options),
         )?;
 
         Ok(Deltas {
-            inner: diff,
+            inner,
             index: 0, // Start at the first delta
         })
     }

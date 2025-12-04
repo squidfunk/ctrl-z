@@ -59,7 +59,7 @@ pub struct Scope {
 // ----------------------------------------------------------------------------
 
 impl Scope {
-    /// Creates a scope builder.
+    /// Creates a scope set builder.
     ///
     /// # Examples
     ///

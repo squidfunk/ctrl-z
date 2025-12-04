@@ -23,7 +23,7 @@
 
 // ----------------------------------------------------------------------------
 
-//! Scope builder.
+//! Scope set builder.
 
 use globset::{Glob, GlobSetBuilder};
 use std::collections::BTreeMap;
@@ -36,7 +36,7 @@ use super::Scope;
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Scope builder.
+/// Scope set builder.
 #[derive(Debug)]
 pub struct Builder {
     /// Registered path-name mapping.
@@ -50,7 +50,7 @@ pub struct Builder {
 // ----------------------------------------------------------------------------
 
 impl Builder {
-    /// Creates a scope builder.
+    /// Creates a scope set builder.
     ///
     /// Note that the canonical way to create a [`Scope`] is to invoke the
     /// [`Scope::builder`] method, which creates an instance of [`Builder`].
@@ -60,7 +60,7 @@ impl Builder {
     /// ```
     /// use ctrl_z_changeset::scope::Builder;
     ///
-    /// // Create scope builder
+    /// // Create scope set builder
     /// let mut builder = Builder::new();
     /// ```
     #[must_use]
@@ -84,7 +84,7 @@ impl Builder {
     /// # fn main() -> Result<(), Box<dyn Error>> {
     /// use ctrl_z_changeset::Scope;
     ///
-    /// // Create scope builder and add path
+    /// // Create scope set builder and add path
     /// let mut builder = Scope::builder();
     /// builder.add("crates/ctrl-z", "ctrl-z")?;
     /// # Ok(())
@@ -119,7 +119,7 @@ impl Builder {
         }
     }
 
-    /// Builds the scope.
+    /// Builds the scope set.
     ///
     /// # Errors
     ///
@@ -134,11 +134,11 @@ impl Builder {
     /// # fn main() -> Result<(), Box<dyn Error>> {
     /// use ctrl_z_changeset::Scope;
     ///
-    /// // Create scope builder and add path
+    /// // Create scope set builder and add path
     /// let mut builder = Scope::builder();
     /// builder.add("crates/ctrl-z", "ctrl-z")?;
     ///
-    /// // Create scope from builder
+    /// // Create scope set from builder
     /// let scope = builder.build()?;
     /// # Ok(())
     /// # }
@@ -156,14 +156,14 @@ impl Builder {
 // ----------------------------------------------------------------------------
 
 impl Default for Builder {
-    /// Creates a scope builder.
+    /// Creates a scope set builder.
     ///
     /// # Examples
     ///
     /// ```
     /// use ctrl_z_changeset::scope::Builder;
     ///
-    /// // Create scope builder
+    /// // Create scope set builder
     /// let mut builder = Builder::default();
     /// ```
     #[inline]

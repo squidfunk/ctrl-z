@@ -24,7 +24,7 @@
 [package]
 name = "ctrl-z-project"
 version = "0.0.0"
-description = "Project abstractions and utilities"
+description = "Project utilities"
 edition.workspace = true
 rust-version.workspace = true
 homepage.workspace = true

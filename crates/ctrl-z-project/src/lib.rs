@@ -23,9 +23,9 @@
 
 // ----------------------------------------------------------------------------
 
-//! tbd
+//! Project utilities.
 
-pub mod project;
+mod project;
 
 pub use project::manifest::cargo::{self, Cargo};
 pub use project::manifest::Manifest;

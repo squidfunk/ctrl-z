@@ -110,13 +110,13 @@ impl Scope {
 
 #[allow(clippy::must_use_candidate)]
 impl Scope {
-    /// Returns the number of paths.
+    /// Returns the number of scopes.
     #[inline]
     pub fn len(&self) -> usize {
         self.paths.len()
     }
 
-    /// Returns whether there are any paths.
+    /// Returns whether there are any scopes.
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.paths.is_empty()
@@ -130,7 +130,7 @@ impl Scope {
 impl Index<usize> for Scope {
     type Output = (PathBuf, String);
 
-    /// Returns the path-name pair at the given index.
+    /// Returns the scope at the given index.
     #[inline]
     fn index(&self, index: usize) -> &Self::Output {
         &self.paths[index]
@@ -140,7 +140,7 @@ impl Index<usize> for Scope {
 // ----------------------------------------------------------------------------
 
 impl fmt::Debug for Scope {
-    /// Formats the scope for debugging.
+    /// Formats the scope set for debugging.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Scope")
             .field("paths", &self.paths)

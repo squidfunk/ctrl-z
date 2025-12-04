@@ -23,7 +23,7 @@
 
 // ----------------------------------------------------------------------------
 
-//! Members iterator.
+//! Iterator over members of a project.
 
 use std::marker::PhantomData;
 
@@ -39,7 +39,7 @@ use paths::Paths;
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Members iterator.
+/// Iterator over members of a project.
 ///
 /// This iterator emits projects recursively. Although some ecosystems don't
 /// allow for deeply nested project hierachies, it's possible to have them.
@@ -61,7 +61,7 @@ impl<M> Project<M>
 where
     M: Manifest,
 {
-    /// Creates a members iterator.
+    /// Creates an iterator over the members of a project.
     ///
     /// This iterator only yields members, not the root project itself. In case
     /// you want to include the root project, iterate over [`Project`] itself.

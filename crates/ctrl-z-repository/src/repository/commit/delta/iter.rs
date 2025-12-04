@@ -33,8 +33,10 @@ use crate::repository::Result;
 // ----------------------------------------------------------------------------
 
 /// Iterator over deltas in a commit.
+///
+///
 pub struct Deltas<'a> {
-    /// Inner difference.
+    /// Inner diff object.
     inner: git2::Diff<'a>,
     /// Current index.
     index: usize,

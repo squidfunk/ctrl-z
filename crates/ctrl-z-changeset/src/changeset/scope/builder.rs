@@ -99,11 +99,11 @@ impl Builder {
         }
 
         // Create pattern matching all files under the given path
-        let glob = format!("{}/**", path.to_string_lossy());
+        let glob = path.join("**");
 
         // Create glob and add to builder
         self.paths.push(path.to_path_buf());
-        self.globs.add(Glob::new(&glob)?);
+        self.globs.add(Glob::new(&glob.to_string_lossy())?);
 
         // Return builder for chaining
         Ok(self)

@@ -64,7 +64,12 @@ impl Iterator for Paths {
             // when an error occurs, so we don't just silence them
             let iter = paths.into_iter().map(|res| res.map_err(Into::into));
             match iter.collect::<Result<Vec<_>>>() {
-                Ok(paths) => self.paths.extend(paths.into_iter().rev()),
+                Ok(paths) => {
+                    // We must make sure that every path is a directory, as we
+                    // append the manifest file name later on
+                    let iter = paths.into_iter().filter(|path| path.is_dir());
+                    self.paths.extend(iter.rev());
+                }
                 Err(err) => return Some(Err(err)),
             }
         }

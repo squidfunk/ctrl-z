@@ -41,7 +41,6 @@ pedantic = { level = "warn", priority = -1 }
 
 [workspace.dependencies]
 ctrl-z-changeset = { version = "0.0.0", path = "crates/ctrl-z-changeset" }
-ctrl-z-manifest = { version = "0.0.0", path = "crates/ctrl-z-manifest" }
 ctrl-z-project = { version = "0.0.0", path = "crates/ctrl-z-project" }
 ctrl-z-repository = { version = "0.0.0", path = "crates/ctrl-z-repository" }
 

@@ -38,8 +38,7 @@ use zrx::graph::Graph;
 
 use ctrl_z_changeset::change::Kind;
 use ctrl_z_changeset::{Change, Changeset, Scope, VersionExt};
-use ctrl_z_manifest::{Cargo, Format, Manifest, PackageJson, Writer};
-use ctrl_z_project::Manifest as _;
+use ctrl_z_project::{Cargo, Error, Manifest as _, Project};
 use ctrl_z_repository::Reference;
 use ctrl_z_repository::{Commit, Repository};
 
@@ -92,11 +91,16 @@ pub fn main() {
                 let repo =
                     Repository::open(env::current_dir().unwrap()).unwrap();
 
-                let graph = find_packages(repo.path());
-                find_packages2(repo.path());
+                let projects = find_packages2(repo.path()).unwrap();
+                // in the graph, we now determine all actually versioned packages
+                // and their deps
+                let graph = create_graph(&projects);
 
-                return;
+                println!("Graph: {:#?}", graph);
 
+                // return;
+
+                // let graph = find_packages(repo.path());
                 // Build scope matcher
                 let mut builder = Scope::builder();
                 let root = repo.path();
@@ -107,6 +111,8 @@ pub fn main() {
                     builder.add(path);
                 }
                 let scopes = builder.build().unwrap();
+
+                // Create scope from Path iter!
 
                 // Determine LAST version that we released = last tag.
                 let last_ref = if let Some(last) = repo
@@ -434,93 +440,43 @@ fn create_tag(
 
 // hand over repository
 
-fn find_packages2(repo_path: &Path) {
+fn find_packages2(
+    repo_path: &Path,
+) -> Result<BTreeMap<PathBuf, Project<Cargo>>, Error> {
     // loader... <- with manifest members, we can implement a GENERAL loader!
     let root_cargo = repo_path.join("Cargo.toml");
-    if !root_cargo.exists() {
-        let root_npm = repo_path.join("package.json");
-
-        let project =
-            ctrl_z_project::Project::<ctrl_z_project::Node>::read(root_npm)
-                .unwrap();
-
-        // println!("Project: {:#?}", cargo);
-        for res in project.into_iter() {
-            match res {
-                Ok(member) => {
-                    // println!("MEM {:#?}", member);
-                    // println!("- {:?}", member.path);
-                    if let (Some(name), Some(version)) =
-                        (member.data.name(), member.data.version())
-                    {
-                        println!("  - {} {}", name, version);
-                    }
-                }
-                Err(err) => println!("ERR {:#?}", err),
-            }
-        }
-        // throw here rather than returning nothing...
-        return;
-    }
-
-    let project =
-        ctrl_z_project::Project::<ctrl_z_project::Cargo>::read(root_cargo)
-            .unwrap();
-
-    // Resolver?!
-
-    // project iter should inclde tiself
-
-    // println!("Project: {:#?}", cargo);
-    for member in project.into_iter().flatten() {
-        println!("Member: {:?}", member.path);
-        if let (Some(name), Some(version)) =
-            (member.data.name(), member.data.version())
-        {
-            println!("  - {} {}", name, version);
-        }
-    }
-
-    // Collect into a vector of packages... // graph from_iter!
+    let project = Project::<Cargo>::read(root_cargo)?;
+    project
+        .into_iter()
+        .map(|res| {
+            res.map(|member| {
+                let dir = member
+                    .path
+                    .parent()
+                    .expect("manifest has parent")
+                    .to_path_buf();
+                (dir, member)
+            })
+        })
+        .collect()
 }
 
-fn find_packages(repo_path: &Path) -> Graph<Manifest<Cargo>> {
-    let root_cargo = repo_path.join("Cargo.toml");
-    if !root_cargo.exists() {
-        // throw here rather than returning nothing...
-        return Graph::empty();
-    }
-
-    let root = Manifest::<Cargo>::read(&root_cargo).expect("parsing worked");
-
-    // println!("Manifest: {:#?}", root);
-
-    let mut packages = BTreeMap::new();
-
-    let mut builder = Graph::builder();
-
-    for res in root {
-        let manifest = match res {
-            Ok(manifest) => manifest,
-            Err(err) => {
-                eprintln!("Error reading manifest: {}", err);
-                continue;
-            }
-        };
-
-        let mut pkg_dir = manifest.path.clone();
-        pkg_dir.pop(); // remove Cargo.toml, keep the folder
-        packages.insert(pkg_dir, manifest.data.clone());
-
-        // @todo: note that this only includes packages, not the top-level manifest!
-        if let (Some(name), Some(version)) =
-            (manifest.name(), manifest.version())
-        {
-            println!("{name} {version}");
-            builder.add_node(manifest);
+// we should create a graph of scopes, so the scopes are the nodes!
+// we should check what we need from the project and only use that, and then
+// from the project create the scopes...?
+fn create_graph(
+    projects: &BTreeMap<PathBuf, Project<Cargo>>,
+) -> Graph<&Project<Cargo>> {
+    // so this is  a graph fo refs...
+    let mut builder = Graph::builder::<()>();
+    for (path, project) in projects {
+        if project.data.version().is_none() {
+            continue;
         }
+        builder.add_node(project);
     }
 
+    // add edges...
     let mut edges = Vec::new();
     for (n, manifest) in builder.nodes().iter().enumerate() {
         // Extract and enumerate dependencies
@@ -540,13 +496,6 @@ fn find_packages(repo_path: &Path) -> Graph<Manifest<Cargo>> {
             if let Some(m) = m {
                 edges.push((n, m));
             }
-
-            match dependency.version() {
-                Some(version) => println!("    - {} {}", dep_name, version),
-                None => {
-                    // println!("    - {} (no version specified)", dep_name)
-                }
-            }
         }
     }
 
@@ -554,18 +503,6 @@ fn find_packages(repo_path: &Path) -> Graph<Manifest<Cargo>> {
         builder.add_edge(m, n, ()).unwrap();
     }
 
-    // println!("Builder: {:#?}", builder);
-    let graph = builder.build();
-    let adj = graph.topology().outgoing();
-    for n in adj {
-        for &m in &adj[n] {
-            println!(
-                "{:?} -> {:?}",
-                graph[n].data.name().unwrap(),
-                graph[m].data.name().unwrap()
-            );
-        }
-    }
-
-    graph
+    builder.build()
+    // Here, we collect all versions
 }

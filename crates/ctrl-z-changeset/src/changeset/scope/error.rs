@@ -40,7 +40,10 @@ pub enum Error {
     Glob(#[from] globset::Error),
     /// Path must not start at '/'.
     #[error("path must not start at '/'")]
-    RootDir,
+    PathAbsolute,
+    /// Path already exists.
+    #[error("path already exists")]
+    PathExists,
 }
 
 // ----------------------------------------------------------------------------

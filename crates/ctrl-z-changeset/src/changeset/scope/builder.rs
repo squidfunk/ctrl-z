@@ -26,6 +26,7 @@
 //! Scope builder.
 
 use globset::{Glob, GlobSetBuilder};
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use super::error::{Error, Result};
@@ -39,7 +40,7 @@ use super::Scope;
 #[derive(Debug)]
 pub struct Builder {
     /// Registered paths.
-    paths: Vec<PathBuf>,
+    paths: BTreeMap<PathBuf, String>,
     /// Glob set builder.
     globs: GlobSetBuilder,
 }
@@ -65,7 +66,7 @@ impl Builder {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            paths: Vec::new(),
+            paths: BTreeMap::new(),
             globs: GlobSetBuilder::new(),
         }
     }
@@ -85,28 +86,37 @@ impl Builder {
     ///
     /// // Create scope builder and add path
     /// let mut builder = Scope::builder();
-    /// builder.add("crates/ctrl-z")?;
+    /// builder.add("crates/ctrl-z", "ctrl-z")?;
     /// # Ok(())
     /// # }
     /// ```
-    pub fn add<P>(&mut self, path: P) -> Result<&mut Self>
+    pub fn add<P, N>(&mut self, path: P, name: N) -> Result<&mut Self>
     where
         P: AsRef<Path>,
+        N: Into<String>,
     {
         let path = path.as_ref();
         if !path.is_relative() {
-            return Err(Error::RootDir);
+            return Err(Error::PathAbsolute);
         }
 
+        // Ensure path does not already exist, as scopes can't overlap
+        if self.paths.contains_key(path) {
+            Err(Error::PathExists)
+
         // Create pattern matching all files under the given path
-        let glob = path.join("**");
+        } else {
+            let glob = path.join("**");
 
-        // Create glob and add to builder
-        self.paths.push(path.to_path_buf());
-        self.globs.add(Glob::new(&glob.to_string_lossy())?);
-
-        // Return builder for chaining
-        Ok(self)
+            // Create glob and add to builder
+            self.paths.insert(path.to_path_buf(), name.into());
+            Glob::new(&glob.to_string_lossy())
+                .map_err(Into::into)
+                .map(|glob| {
+                    self.globs.add(glob);
+                    self
+                })
+        }
     }
 
     /// Builds the scope.
@@ -126,7 +136,7 @@ impl Builder {
     ///
     /// // Create scope builder and add path
     /// let mut builder = Scope::builder();
-    /// builder.add("crates/ctrl-z")?;
+    /// builder.add("crates/ctrl-z", "ctrl-z")?;
     ///
     /// // Create scope from builder
     /// let scope = builder.build()?;
@@ -135,7 +145,7 @@ impl Builder {
     /// ```
     pub fn build(self) -> Result<Scope> {
         Ok(Scope {
-            paths: self.paths,
+            paths: self.paths.into_iter().collect(),
             globs: self.globs.build()?,
         })
     }

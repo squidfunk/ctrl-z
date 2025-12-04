@@ -48,7 +48,7 @@ pub use error::{Error, Result};
 #[derive(Clone)]
 pub struct Scope {
     /// Registered paths.
-    paths: Vec<PathBuf>,
+    paths: Vec<(PathBuf, String)>,
     /// Glob set.
     globs: GlobSet,
 }
@@ -85,15 +85,14 @@ impl Scope {
     ///
     /// // Create scope builder and add path
     /// let mut builder = Scope::builder();
-    /// builder.add(".")?;
-    /// builder.add("crates/ctrl-z")?;
+    /// builder.add("crates/ctrl-z", "ctrl-z")?;
     ///
     /// // Create scope from builder
     /// let scope = builder.build()?;
     ///
     /// // Create path and obtain longest matching scope
     /// let path = Path::new("crates/ctrl-z/Cargo.toml");
-    /// assert_eq!(scope.matches(&path), Some(1));
+    /// assert_eq!(scope.matches(&path), Some(0));
     /// # Ok(())
     /// # }
     /// ```
@@ -101,8 +100,10 @@ impl Scope {
     where
         P: AsRef<Path>,
     {
-        let iter = self.globs.matches(path).into_iter();
-        iter.max_by_key(|&index| self.paths[index].components().count())
+        self.globs.matches(path).into_iter().max_by_key(|&index| {
+            let (path, _) = &self.paths[index];
+            path.components().count()
+        })
     }
 }
 

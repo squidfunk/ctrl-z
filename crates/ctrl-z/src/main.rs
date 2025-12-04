@@ -105,8 +105,11 @@ pub fn main() {
                 for meta in &graph {
                     let path =
                         meta.path.parent().unwrap().strip_prefix(root).unwrap();
-                    println!("Adding scope for path: {:?}", path);
-                    builder.add(path);
+                    let name = meta.data.name().unwrap(); //
+                    println!("Adding scope for path: {:?} -> {:?}", path, name);
+                    builder.add(path, name);
+
+                    // changeset might get dependent on project? or ... not?
                 }
                 let scopes = builder.build().unwrap();
 
@@ -153,6 +156,14 @@ pub fn main() {
                     .collect::<Vec<_>>();
 
                 // to_graph // to_changelog
+
+                // @todo: directly map the scopes in Scopes! We can then generate
+                // everything from them immediately...
+
+                // changeset - function to group by scope
+                // group by kind
+                // or: retrieve changes for a cetain scope - the general filter
+                // method... - changeset iterate revisions...
 
                 println!(
                     "Increments needed for scopes at indexes: {:#?}",

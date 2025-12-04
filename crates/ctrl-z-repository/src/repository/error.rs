@@ -23,12 +23,29 @@
 
 // ----------------------------------------------------------------------------
 
-//! Repository utilities.
+//! Repository error.
 
-#![allow(clippy::match_same_arms)]
+use std::{io, result};
+use thiserror::Error;
 
-mod repository;
+// ----------------------------------------------------------------------------
+// Enums
+// ----------------------------------------------------------------------------
 
-pub use repository::commit::{self, Commit};
-pub use repository::reference::{self, Reference};
-pub use repository::{Error, Repository, Result};
+/// Repository error.
+#[derive(Debug, Error)]
+pub enum Error {
+    /// I/O error.
+    #[error(transparent)]
+    Io(#[from] io::Error),
+    /// Git error.
+    #[error(transparent)]
+    Git(#[from] git2::Error),
+}
+
+// ----------------------------------------------------------------------------
+// Type aliases
+// ----------------------------------------------------------------------------
+
+/// Repository result.
+pub type Result<T = ()> = result::Result<T, Error>;

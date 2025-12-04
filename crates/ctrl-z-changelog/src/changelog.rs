@@ -23,51 +23,66 @@
 
 // ----------------------------------------------------------------------------
 
-//! Repository.
+//! Changelog.
 
-use std::path::Path;
+use std::collections::BTreeMap;
 
-use super::error::{Error, Result};
+use ctrl_z_changeset::change;
+use ctrl_z_changeset::Changeset;
 
-mod commits;
-mod references;
+mod section;
 
-// pub use commits::Commits;
-// pub use references::References;
+use section::{Kind, Section};
 
 // ----------------------------------------------------------------------------
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Repository.
-pub struct Repository {
-    /// Git repository.
-    git_repository: git2::Repository,
+/// Changelog.
+pub struct Changelog<'a> {
+    /// Sections indexed by kind.
+    sections: BTreeMap<Kind, Section<'a>>,
 }
 
 // ----------------------------------------------------------------------------
-// Implementations
+// Trait implementations
 // ----------------------------------------------------------------------------
 
-impl Repository {
+// @todo also add version bumps...
+
+impl<'a> From<&'a Changeset<'a>> for Changelog<'a> {
     ///
-    pub fn open<P>(path: P) -> Result<Self>
-    where
-        P: AsRef<Path>,
-    {
-        let repository = git2::Repository::discover(path)?;
-        Ok(Self { git_repository: repository })
-    }
+    fn from(changeset: &'a Changeset<'a>) -> Self {
+        let mut sections = BTreeMap::new();
 
-    // @todo temp
-    pub fn raw(&self) -> &git2::Repository {
-        &self.git_repository
-    }
+        //
+        for revision in changeset.revisions() {
+            let change = revision.change();
 
-    pub fn path(&self) -> &Path {
-        let path = self.git_repository.path();
-        path.parent().expect("invariant")
-    }
+            // Determine section kind - not all types of changes are featured
+            // in the changelog, so we skip those that are not relevant
+            let kind = if change.is_breaking() {
+                Kind::Breaking
+            } else {
+                match change.kind() {
+                    change::Kind::Feature => Kind::Feature,
+                    change::Kind::Fix => Kind::Fix,
+                    change::Kind::Performance => Kind::Performance,
+                    change::Kind::Refactor => Kind::Refactor,
+                    _ => continue,
+                }
+            };
 
-    // pub fn commits<P>
+            // section from revisions?
+
+            // Determine relevant section
+            println!("{:?}", change.kind());
+            let section =
+                sections.entry(kind).or_insert_with(|| Section::new(kind));
+
+            println!("{:?}", section);
+        }
+
+        Changelog { sections }
+    }
 }

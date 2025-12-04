@@ -23,72 +23,72 @@
 
 // ----------------------------------------------------------------------------
 
-//! Commit.
+//! Section item.
 
-use git2::{Oid, Repository};
-use std::fmt;
-use std::path::Path;
+use std::fmt::{self, Write};
 
-mod changes;
-
-use super::{Error, Result};
+use ctrl_z_changeset::{Revision, Scope};
 
 // ----------------------------------------------------------------------------
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Commit.
-pub struct Commit<'a> {
-    /// Repository.
-    git_repo: &'a Repository,
-    /// Inner commit.
-    git_commit: git2::Commit<'a>, // rather ref a commit?
+/// Section item.
+#[derive(Debug, PartialEq, Eq)]
+pub struct Item<'a> {
+    /// Commit identifier (short).
+    id: &'a str,
+    /// Affected scopes.
+    scopes: Vec<&'a str>,
+    /// Description.
+    description: &'a str,
 }
 
 // ----------------------------------------------------------------------------
 // Implementations
 // ----------------------------------------------------------------------------
 
-impl<'a> Commit<'a> {
-    // @todo construct this with out ::new
-    /// Loads the commit associated with the given object identifier.
-    /// // @todo rather say repo.commit(oid?)
-    pub fn new(repo: &'a Repository, oid: Oid) -> Result<Self> {
-        let git_commit = repo.find_commit(oid)?; // is this a good abstraction?
-        Ok(Self { git_repo: repo, git_commit })
-    }
+impl<'a> Item<'a> {
+    // pub fn new(revision: &'a Revision<'a>, scope: &'a Scope) {
+    //     let id = revision.commit().id().as_bytes();
+    //     let id = &id[0..7];
 
-    #[inline]
-    pub fn id(&self) -> Oid {
-        self.git_commit.id()
-    }
+    //     // there ... must be a description?
+    //     revision.commit().summary();
+    //     // x.
+    //     // let scopes = scope.scopes().iter().map(|s| s.as_str()).collect();
+    //     // let description = revision.description();
 
-    #[inline]
-    pub fn summary(&self) -> Option<&str> {
-        self.git_commit.summary()
-    }
-
-    // fn is_merge
-
-    // pub fn author(&self) -> Option<&str> {
-    //     // provide an author struct here as well!
-    //     // self.git_commit.author().name()
+    //     Self { id, scopes, description }
     // }
 }
 
-impl PartialEq for Commit<'_> {
-    fn eq(&self, other: &Self) -> bool {
-        self.git_commit.id() == other.git_commit.id()
-    }
-}
+// ----------------------------------------------------------------------------
+// Trait implementations
+// ----------------------------------------------------------------------------
 
-impl Eq for Commit<'_> {}
-
-impl fmt::Debug for Commit<'_> {
+impl fmt::Display for Item<'_> {
+    /// Formats the section kind for display.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("Commit")
-            .field("id", &self.git_commit.id())
-            .field("summary", &self.git_commit.summary())
-            .finish()
+        f.write_str(self.id)?;
+
+        // Write scopes, if any
+        if !self.scopes.is_empty() {
+            f.write_char(' ')?;
+            for (i, scope) in self.scopes.iter().enumerate() {
+                f.write_str("__")?;
+                f.write_str(scope)?;
+                f.write_str("__")?;
+
+                // Write comma if not last
+                if i < self.scopes.len() - 1 {
+                    f.write_str(", ")?;
+                }
+            }
+        }
+
+        // Write description
+        f.write_str(" – ")?;
+        f.write_str(self.description)
     }
 }

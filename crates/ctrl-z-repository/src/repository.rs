@@ -23,12 +23,49 @@
 
 // ----------------------------------------------------------------------------
 
-//! Repository utilities.
+//! Repository.
 
-#![allow(clippy::match_same_arms)]
+use std::path::Path;
 
-mod repository;
+pub mod commit;
+mod error;
+pub mod reference;
 
-pub use repository::commit::{self, Commit};
-pub use repository::reference::{self, Reference};
-pub use repository::{Error, Repository, Result};
+pub use error::{Error, Result};
+
+// ----------------------------------------------------------------------------
+// Structs
+// ----------------------------------------------------------------------------
+
+/// Repository.
+pub struct Repository {
+    /// Git repository.
+    git_repository: git2::Repository,
+}
+
+// ----------------------------------------------------------------------------
+// Implementations
+// ----------------------------------------------------------------------------
+
+impl Repository {
+    ///
+    pub fn open<P>(path: P) -> Result<Self>
+    where
+        P: AsRef<Path>,
+    {
+        let repository = git2::Repository::discover(path)?;
+        Ok(Self { git_repository: repository })
+    }
+
+    // @todo temp
+    pub fn raw(&self) -> &git2::Repository {
+        &self.git_repository
+    }
+
+    pub fn path(&self) -> &Path {
+        let path = self.git_repository.path();
+        path.parent().expect("invariant")
+    }
+
+    // pub fn commits<P>
+}

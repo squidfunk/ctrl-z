@@ -23,24 +23,24 @@
 
 // ----------------------------------------------------------------------------
 
+//! todo
+
 use clap::builder::styling::{AnsiColor, Effects};
 use clap::builder::Styles;
 use clap::{Parser, Subcommand};
+use ctrl_z_changelog::Changelog;
 // @todo: remove the git indirection
-use globset::Glob;
-use inquire::{Confirm, Select};
-use semver::{Version, VersionReq};
-use std::collections::{BTreeMap, HashMap, HashSet};
+use inquire::Select;
+use semver::Version;
+use std::collections::{BTreeMap, HashSet};
+use std::env;
 use std::path::{Path, PathBuf};
-use std::str::FromStr;
-use std::{cmp, env, fs, io};
 use zrx::graph::Graph;
 
-use ctrl_z_changeset::change::Kind;
-use ctrl_z_changeset::{Change, Changeset, Increment, Scope, VersionExt};
+use ctrl_z_changeset::{Changeset, Increment, Scope, VersionExt};
 use ctrl_z_project::{Cargo, Error, Manifest as _, Project};
 use ctrl_z_repository::Reference;
-use ctrl_z_repository::{Commit, Repository};
+use ctrl_z_repository::Repository;
 
 // ----------------------------------------------------------------------------
 // Constants
@@ -147,6 +147,8 @@ pub fn main() {
                 // changeset: collect for scope!
 
                 println!("Changeset: {:#?}", changeset);
+
+                let changelog = Changelog::from(&changeset);
 
                 let mut increments = changeset.increments().to_vec();
                 let incr = increments

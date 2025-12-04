@@ -23,29 +23,42 @@
 
 // ----------------------------------------------------------------------------
 
-//! Project error.
+//! Section kind.
 
-use std::{io, result};
-use thiserror::Error;
+use std::fmt;
 
 // ----------------------------------------------------------------------------
 // Enums
 // ----------------------------------------------------------------------------
 
-/// Project error.
-#[derive(Debug, Error)]
-pub enum Error {
-    /// I/O error.
-    #[error(transparent)]
-    Io(#[from] io::Error),
-    /// Git error.
-    #[error(transparent)]
-    Git(#[from] git2::Error),
+/// Section kind.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Kind {
+    /// Breaking changes.
+    Breaking,
+    /// Features.
+    Feature,
+    /// Bugfixes.
+    Fix,
+    /// Performance improvements.
+    Performance,
+    /// Refactorings.
+    Refactor,
 }
 
 // ----------------------------------------------------------------------------
-// Type aliases
+// Trait implementations
 // ----------------------------------------------------------------------------
 
-/// Project result.
-pub type Result<T = ()> = result::Result<T, Error>;
+impl fmt::Display for Kind {
+    /// Formats the section kind for display.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Kind::Breaking => f.write_str("Breaking changes"),
+            Kind::Feature => f.write_str("Features"),
+            Kind::Fix => f.write_str("Bugfixes"),
+            Kind::Performance => f.write_str("Performance improvements"),
+            Kind::Refactor => f.write_str("Refactorings"),
+        }
+    }
+}

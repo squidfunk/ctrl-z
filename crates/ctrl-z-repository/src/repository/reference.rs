@@ -4,8 +4,10 @@
 
 use git2::{ObjectType, Oid, Reference as GitReference};
 
-use crate::git::Result;
-use crate::git::commit::Commit;
+use crate::repository::commit::Commit;
+use crate::repository::Result;
+
+mod iter;
 
 /// Kind of git reference.
 #[derive(Debug, Clone, PartialEq, Eq)]

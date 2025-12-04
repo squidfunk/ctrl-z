@@ -23,21 +23,19 @@
 
 // ----------------------------------------------------------------------------
 
-//! Iterator over changes in a commit.
+//! Iterator over deltas in a commit.
 
-use crate::git::change::Delta;
-use crate::git::Result;
-
-use super::Commit;
+use crate::repository::commit::{Commit, Delta};
+use crate::repository::Result;
 
 // ----------------------------------------------------------------------------
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Iterator over changes in a commit.
-pub struct Changes<'a> {
-    /// Git diff object.
-    git_diff: git2::Diff<'a>,
+/// Iterator over deltas in a commit.
+pub struct Deltas<'a> {
+    /// Inner difference.
+    inner: git2::Diff<'a>,
     /// Current index.
     index: usize,
 }
@@ -49,23 +47,23 @@ pub struct Changes<'a> {
 // @todo rename this into Deltas? + Delta? not an event but a delta
 impl Commit<'_> {
     ///
-    pub fn deltas(&self) -> Result<Changes<'_>> {
-        let tree = self.git_commit.tree()?;
-        let parent_tree = if self.git_commit.parent_count() > 0 {
-            Some(self.git_commit.parent(0)?.tree()?)
+    pub fn deltas(&self) -> Result<Deltas<'_>> {
+        let tree = self.inner.tree()?;
+        let parent_tree = if self.inner.parent_count() > 0 {
+            Some(self.inner.parent(0)?.tree()?)
         } else {
             None
         };
 
         let mut diff_opts = git2::DiffOptions::new();
-        let diff = self.git_repo.diff_tree_to_tree(
+        let diff = self.repository.diff_tree_to_tree(
             parent_tree.as_ref(),
             Some(&tree),
             Some(&mut diff_opts),
         )?;
 
-        Ok(Changes {
-            git_diff: diff,
+        Ok(Deltas {
+            inner: diff,
             index: 0, // Start at the first delta
         })
     }
@@ -75,40 +73,39 @@ impl Commit<'_> {
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl Iterator for Changes<'_> {
+impl Iterator for Deltas<'_> {
     type Item = Delta;
 
     ///
     fn next(&mut self) -> Option<Self::Item> {
         // Get the next delta from the diff
-        let delta = self.git_diff.get_delta(self.index)?;
+        let delta = self.inner.get_delta(self.index)?;
         self.index += 1; // Increment the delta index
+
+        //
+        let from = delta.old_file().path()?;
+        let path = delta.new_file().path()?;
 
         // Determine the type of change
         match delta.status() {
             git2::Delta::Added => {
-                // A new file was added
-                let new_path = delta.new_file().path()?.to_path_buf();
-                Some(Delta::Create { path: new_path })
+                Some(Delta::Create { path: path.to_path_buf() })
             }
+            // A file was deleted
             git2::Delta::Deleted => {
-                // A file was deleted
-                let old_path = delta.old_file().path()?.to_path_buf();
-                Some(Delta::Delete { path: old_path })
+                Some(Delta::Delete { path: from.to_path_buf() })
             }
+            // A file was modified
             git2::Delta::Modified
             | git2::Delta::Copied
             | git2::Delta::Typechange => {
-                // A file was modified
-                let new_path = delta.new_file().path()?.to_path_buf();
-                Some(Delta::Modify { path: new_path })
+                Some(Delta::Modify { path: path.to_path_buf() })
             }
-            git2::Delta::Renamed => {
-                // A file was renamed
-                let old_path = delta.old_file().path()?.to_path_buf();
-                let new_path = delta.new_file().path()?.to_path_buf();
-                Some(Delta::Rename { from: old_path, path: new_path })
-            }
+            // A file was renamed
+            git2::Delta::Renamed => Some(Delta::Rename {
+                from: from.to_path_buf(),
+                path: path.to_path_buf(),
+            }),
             // Ignore other statuses (e.g., Unmodified, Ignored, Untracked)
             _ => self.next(),
         }

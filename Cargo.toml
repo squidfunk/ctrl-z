@@ -40,6 +40,7 @@ all = { level = "warn", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
 
 [workspace.dependencies]
+ctrl-z-changelog = { version = "0.0.0", path = "crates/ctrl-z-changelog" }
 ctrl-z-changeset = { version = "0.0.0", path = "crates/ctrl-z-changeset" }
 ctrl-z-project = { version = "0.0.0", path = "crates/ctrl-z-project" }
 ctrl-z-repository = { version = "0.0.0", path = "crates/ctrl-z-repository" }

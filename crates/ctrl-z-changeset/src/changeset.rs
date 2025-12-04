@@ -82,6 +82,13 @@ impl Changeset<'_> {
 
     // to_graph + to_changelog + to_plan?
 
+    // From the manifests, we extract all scopes.
+    // What do we need to update all manifests?
+    // - Scope -> Increment
+    // - Package name -> Version (Graph)
+    // - Apply increments to versions
+    // - Then update all manifests
+
     // @todo temp
     pub fn increments(&self) -> &[Option<Increment>] {
         &self.increments
@@ -102,10 +109,3 @@ impl Changeset<'_> {
         &self.revisions
     }
 }
-
-// From the manifests, we extract all scopes.
-// What do we need to update all manifests?
-// - Scope -> Increment
-// - Package name -> Version (Graph)
-// - Apply increments to versions
-// - Then update all manifests

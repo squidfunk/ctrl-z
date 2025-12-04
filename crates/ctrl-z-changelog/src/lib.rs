@@ -23,41 +23,8 @@
 
 // ----------------------------------------------------------------------------
 
-//! Delta.
+//! Changelog generator.
 
-use std::path::PathBuf;
+mod changelog;
 
-// ----------------------------------------------------------------------------
-// Enums
-// ----------------------------------------------------------------------------
-
-/// Delta.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum Delta {
-    /// Path was created.
-    Create { path: PathBuf },
-    /// Path was modified.
-    Modify { path: PathBuf },
-    /// Path was renamed.
-    Rename { from: PathBuf, path: PathBuf },
-    /// Path was deleted
-    Delete { path: PathBuf },
-}
-
-// ----------------------------------------------------------------------------
-// Trait implementations
-// ----------------------------------------------------------------------------
-
-impl Delta {
-    /// Returns the path of the delta.
-    #[inline]
-    #[must_use]
-    pub fn path(&self) -> &PathBuf {
-        match self {
-            Delta::Create { path, .. } => path,
-            Delta::Modify { path, .. } => path,
-            Delta::Rename { path, .. } => path,
-            Delta::Delete { path, .. } => path,
-        }
-    }
-}
+pub use changelog::Changelog;

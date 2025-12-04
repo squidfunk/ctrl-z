@@ -23,14 +23,43 @@
 
 // ----------------------------------------------------------------------------
 
-//! Project.
+//! Delta.
 
-use std::path::Path;
+use std::path::PathBuf;
 
-pub mod change;
-pub mod commit;
-mod error;
-pub mod reference;
-pub mod repository;
+mod iter;
 
-pub use error::{Error, Result};
+// ----------------------------------------------------------------------------
+// Enums
+// ----------------------------------------------------------------------------
+
+/// Delta.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Delta {
+    /// Path was created.
+    Create { path: PathBuf },
+    /// Path was modified.
+    Modify { path: PathBuf },
+    /// Path was renamed.
+    Rename { from: PathBuf, path: PathBuf },
+    /// Path was deleted.
+    Delete { path: PathBuf },
+}
+
+// ----------------------------------------------------------------------------
+// Trait implementations
+// ----------------------------------------------------------------------------
+
+#[allow(clippy::must_use_candidate)]
+impl Delta {
+    /// Returns the path of the delta.
+    #[inline]
+    pub fn path(&self) -> &PathBuf {
+        match self {
+            Delta::Create { path, .. } => path,
+            Delta::Modify { path, .. } => path,
+            Delta::Rename { path, .. } => path,
+            Delta::Delete { path, .. } => path,
+        }
+    }
+}

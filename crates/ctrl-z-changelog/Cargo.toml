@@ -22,9 +22,9 @@
 # IN THE SOFTWARE.
 
 [package]
-name = "ctrl-z-repository"
+name = "ctrl-z-changelog"
 version = "0.0.0"
-description = "Repository utilities"
+description = "Changelog generator"
 edition.workspace = true
 rust-version.workspace = true
 homepage.workspace = true
@@ -38,5 +38,6 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
-git2.workspace = true
+ctrl-z-changeset.workspace = true
+
 thiserror.workspace = true

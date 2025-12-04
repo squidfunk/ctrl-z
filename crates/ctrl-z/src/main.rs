@@ -28,7 +28,7 @@ use clap::builder::Styles;
 use clap::{Parser, Subcommand};
 // @todo: remove the git indirection
 use globset::Glob;
-use inquire::Confirm;
+use inquire::{Confirm, Select};
 use semver::{Version, VersionReq};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -37,7 +37,7 @@ use std::{cmp, env, fs, io};
 use zrx::graph::Graph;
 
 use ctrl_z_changeset::change::Kind;
-use ctrl_z_changeset::{Change, Changeset, Scope, VersionExt};
+use ctrl_z_changeset::{Change, Changeset, Increment, Scope, VersionExt};
 use ctrl_z_project::{Cargo, Error, Manifest as _, Project};
 use ctrl_z_repository::Reference;
 use ctrl_z_repository::{Commit, Repository};
@@ -98,8 +98,6 @@ pub fn main() {
 
                 println!("Graph: {:#?}", graph);
 
-                // return;
-
                 // let graph = find_packages(repo.path());
                 // Build scope matcher
                 let mut builder = Scope::builder();
@@ -111,8 +109,6 @@ pub fn main() {
                     builder.add(path);
                 }
                 let scopes = builder.build().unwrap();
-
-                // Create scope from Path iter!
 
                 // Determine LAST version that we released = last tag.
                 let last_ref = if let Some(last) = repo
@@ -145,9 +141,55 @@ pub fn main() {
 
                 changeset.extend(commits).unwrap();
 
+                // changeset: collect for scope!
+
                 println!("Changeset: {:#?}", changeset);
 
+                let mut increments = changeset.increments().to_vec();
+                let incr = increments
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(i, inc)| inc.map(|_| i))
+                    .collect::<Vec<_>>();
+
                 // to_graph // to_changelog
+
+                println!(
+                    "Increments needed for scopes at indexes: {:#?}",
+                    incr
+                );
+
+                // can we also impl an iterator over the traversal that auto-completes?
+                let mut traversal = graph.traverse(incr);
+                let inc = graph.topology().incoming();
+                while let Some(node) = traversal.take() {
+                    println!("Traversed node: {:?} - {:?}", node, &inc[node]);
+
+                    let x = prompt_increment(
+                        graph[node].data.name().unwrap(),
+                        graph[node].data.version().expect("versioned package"),
+                        increments[node],
+                        &[],
+                    );
+
+                    match x {
+                        Ok(x) => {
+                            println!("User selected increment: {:?}", x);
+                        }
+                        Err(err) => {
+                            eprintln!("Error prompting for increment: {}", err);
+                            break;
+                        }
+                    }
+
+                    traversal.complete(node);
+                }
+
+                // traversal!
+
+                // get node indexes
+
+                // graph.traverse(initial)
 
                 // @todo: changeset now has all increments!
                 // we now need to compute the graph and propagate the increments
@@ -326,6 +368,42 @@ pub fn main() {
     }
 }
 
+fn prompt_increment(
+    package_name: &str,
+    current_version: &Version,
+    suggested: Option<Increment>,
+    changes: &[(String, String)], // (hash, message)
+) -> Result<Option<Increment>, inquire::InquireError> {
+    println!("\n{} (currently {})", package_name, current_version);
+
+    if let Some(inc) = suggested {
+        let next = current_version.clone().bump(inc);
+        println!("  Suggested: {:?} → {}\n", inc, next);
+    }
+
+    if !changes.is_empty() {
+        println!("  Changes:");
+        for (hash, msg) in changes {
+            println!("  ✓ {} ({})", msg, &hash[..7]);
+        }
+        println!();
+    }
+
+    let options = vec![
+        ("Accept", suggested),
+        ("Patch", Some(Increment::Patch)),
+        ("Minor", Some(Increment::Minor)),
+        ("Major", Some(Increment::Major)),
+        ("Skip", None),
+    ];
+
+    let choice =
+        Select::new("Select bump:", options.iter().map(|x| x.0).collect())
+            .prompt()?;
+
+    Ok(options.into_iter().find(|x| x.0 == choice).unwrap().1)
+}
+
 fn ensure_clean_workdir(
     repo: &git2::Repository, allowed: &[PathBuf],
 ) -> Result<(), git2::Error> {
@@ -454,6 +532,8 @@ fn find_packages2(
                     .path
                     .parent()
                     .expect("manifest has parent")
+                    // .strip_prefix(repo_path)
+                    // .expect("strip_prefix")
                     .to_path_buf();
                 (dir, member)
             })

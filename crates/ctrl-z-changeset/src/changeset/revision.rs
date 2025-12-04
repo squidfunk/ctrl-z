@@ -26,7 +26,7 @@
 //! Revision.
 
 use std::cmp;
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 use std::str::FromStr;
 
 use ctrl_z_repository::Commit;
@@ -47,7 +47,7 @@ pub struct Revision<'a> {
     /// Computed change.
     change: Change,
     /// Affected scopes.
-    scopes: HashSet<usize>,
+    scopes: BTreeSet<usize>,
 }
 
 // ----------------------------------------------------------------------------
@@ -57,12 +57,9 @@ pub struct Revision<'a> {
 impl<'a> Changeset<'a> {
     /// Adds a commit to the changeset.
     ///
-    /// This method adds the given commit to the changeset, associates it with
-    /// its affected scopes, and updates the increment for each affected scope.
-    ///
     /// # Errors
     ///
-    /// This methods returns [`Error::Repository`][] if the commit deltas can't
+    /// This method returns [`Error::Repository`][] if the commit deltas can't
     /// be retrieved. If the commit message couldn't be parsed, it will just be
     /// ignored, since there are several types of commits that will not make it
     /// into the changeset, e.g., merge commits.
@@ -73,7 +70,7 @@ impl<'a> Changeset<'a> {
         let summary = commit.summary().expect("invariant");
         if let Ok(change) = Change::from_str(summary) {
             // Retrieve affected scopes from commit
-            let mut scopes = HashSet::new();
+            let mut scopes = BTreeSet::new();
             for delta in commit.deltas()? {
                 scopes.extend(self.scope.matches(delta.path()));
             }
@@ -100,7 +97,7 @@ impl<'a> Changeset<'a> {
     ///
     /// # Errors
     ///
-    /// This methods returns [`Error::Repository`][] if a commit's deltas can't
+    /// This method returns [`Error::Repository`][] if a commit's deltas can't
     /// be retrieved. If a commit's message couldn't be parsed, it will just be
     /// ignored, since there are several types of commits that will not make it
     /// into the changset, e.g., merge commits.

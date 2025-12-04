@@ -25,6 +25,8 @@
 
 //! Version increment.
 
+use std::fmt;
+
 use crate::changeset::change::Kind;
 use crate::changeset::Change;
 
@@ -79,6 +81,21 @@ impl Change {
             Some(Increment::Major)
         } else {
             Some(increment)
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Trait implementations
+// ----------------------------------------------------------------------------
+
+impl fmt::Display for Increment {
+    /// Formats the increment for display.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Increment::Patch => f.write_str("patch"),
+            Increment::Minor => f.write_str("minor"),
+            Increment::Major => f.write_str("major"),
         }
     }
 }

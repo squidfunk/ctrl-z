@@ -70,6 +70,7 @@ impl Changeset<'_> {
     /// ```
     /// todo!()
     /// ```
+    #[must_use]
     pub fn new(scope: Scope) -> Self {
         let increments = vec![None; scope.len()];
         Self {
@@ -80,6 +81,11 @@ impl Changeset<'_> {
     }
 
     // to_graph + to_changelog + to_plan?
+
+    // @todo temp
+    pub fn increments(&self) -> &[Option<Increment>] {
+        &self.increments
+    }
 }
 
 // From the manifests, we extract all scopes.

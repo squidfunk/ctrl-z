@@ -94,7 +94,8 @@ pub fn main() {
                 let path = repo.path().join("Cargo.toml");
                 let workspace = Workspace::<Cargo>::read(path).unwrap();
 
-                println!("Workspace: {:#?}", workspace);
+                // Scopr try_from
+                let scope = Scope::try_from(&workspace).unwrap();
 
                 // @todo remove when we can build the graph and scope from it.
                 let projects = find_packages2(repo.path()).unwrap();
@@ -103,23 +104,6 @@ pub fn main() {
                 let graph = create_graph(&projects);
 
                 // Project Collection?
-
-                println!("Graph: {:#?}", graph);
-
-                // let graph = find_packages(repo.path());
-                // Build scope matcher
-                let mut builder = Scope::builder();
-                let root = repo.path();
-                for meta in &graph {
-                    let path =
-                        meta.path.parent().unwrap().strip_prefix(root).unwrap();
-                    let name = meta.manifest.name().unwrap(); //
-                    println!("Adding scope for path: {:?} -> {:?}", path, name);
-                    builder.add(path, name);
-
-                    // changeset might get dependent on project? or ... not?
-                }
-                let scopes = builder.build().unwrap();
 
                 // Determine LAST version that we released = last tag.
                 let last_ref = if let Some(last) = repo
@@ -143,7 +127,7 @@ pub fn main() {
 
                 // @todo changeset... - we can just create this from scopes!
                 // Changeset::from(...)?
-                let mut changeset = Changeset::new(scopes);
+                let mut changeset = Changeset::new(scope);
                 let commits = repo
                     .commits()
                     .unwrap()

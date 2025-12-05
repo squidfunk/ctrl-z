@@ -23,9 +23,9 @@
 
 // ----------------------------------------------------------------------------
 
-//! Dependency graph.
+//! Iterator over dependents in a workspace.
 
-use zrx::graph;
+use zrx::graph::Graph;
 
 use crate::project::manifest::Manifest;
 use crate::project::Project;
@@ -36,13 +36,13 @@ use super::Workspace;
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Dependency graph.
-pub struct Graph<T>
+/// Iterator over dependents in a workspace.
+pub struct Dependents<T>
 where
     T: Manifest,
 {
-    /// Inner graph.
-    inner: graph::Graph<Project<T>>,
+    /// Workspace graph.
+    inner: Graph<Project<T>>,
 }
 
 // ----------------------------------------------------------------------------
@@ -57,7 +57,9 @@ impl<T> Workspace<T>
 where
     T: Manifest,
 {
-    pub fn to_graph(&self) -> Graph<T> {
+    pub fn dependents(&self) -> Dependents<T> {
+        // this is only necessary for propagation of versions...
+        // let builder = Graph::builder();
         todo!()
     }
 }

@@ -33,9 +33,8 @@ use super::error::Result;
 use super::manifest::Manifest;
 use super::Project;
 
-mod graph;
-
-pub use graph::Graph;
+mod dependents;
+mod packages;
 
 // ----------------------------------------------------------------------------
 // Structs
@@ -101,6 +100,13 @@ where
         // Collect packages and return workspace
         let packages = iter.collect::<BTreeMap<_, _>>();
         Ok(Self { path: root, projects, packages })
+    }
+
+    /// Returns a reference to the project with the given name.
+    #[inline]
+    #[must_use]
+    pub fn get(&self, name: &str) -> Option<&Project<T>> {
+        self.projects.get(self.packages.get(name)?)
     }
 
     /// Creates an iterator over the workspace.

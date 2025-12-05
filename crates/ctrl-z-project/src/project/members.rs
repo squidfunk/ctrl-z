@@ -61,9 +61,9 @@ impl<T> Project<T>
 where
     T: Manifest,
 {
-    /// Creates an iterator over the members of a project.
+    /// Creates an iterator over the members of the project.
     ///
-    /// This iterator only yields members, not the root project itself. In case
+    /// This iterator only emits members, not the root project itself. In case
     /// you want to include the root project, iterate over [`Project`] itself.
     #[allow(clippy::missing_panics_doc)]
     pub fn members(&self) -> Members<T> {

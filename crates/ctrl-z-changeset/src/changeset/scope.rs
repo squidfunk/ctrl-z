@@ -30,6 +30,8 @@ use std::fmt;
 use std::ops::Index;
 use std::path::{Path, PathBuf};
 
+use ctrl_z_project::{Manifest, Workspace};
+
 mod builder;
 mod error;
 
@@ -133,6 +135,24 @@ impl Index<usize> for Scope {
     #[inline]
     fn index(&self, index: usize) -> &Self::Output {
         &self.paths[index]
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+impl<T> TryFrom<&Workspace<T>> for Scope
+where
+    T: Manifest,
+{
+    type Error = Error;
+
+    /// Attempts to create a scope set from the given workspace.
+    fn try_from(workspace: &Workspace<T>) -> Result<Self> {
+        let mut builder = Scope::builder();
+        for (path, name) in workspace.packages() {
+            builder.add(path, name)?;
+        }
+        builder.build()
     }
 }
 

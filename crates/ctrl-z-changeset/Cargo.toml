@@ -38,6 +38,7 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+ctrl-z-project.workspace = true
 ctrl-z-repository.workspace = true
 
 globset.workspace = true

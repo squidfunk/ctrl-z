@@ -25,13 +25,17 @@
 
 //! Workspace.
 
-use std::collections::btree_map::Values;
+use std::collections::btree_map::Iter;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use super::error::Result;
 use super::manifest::Manifest;
 use super::Project;
+
+mod graph;
+
+pub use graph::Graph;
 
 // ----------------------------------------------------------------------------
 // Structs
@@ -43,8 +47,12 @@ pub struct Workspace<T>
 where
     T: Manifest,
 {
-    /// All projects in the workspace.
+    /// Workspace path.
+    path: PathBuf,
+    /// Workspace projects.
     projects: BTreeMap<PathBuf, Project<T>>,
+    /// Workspace packages.
+    packages: BTreeMap<String, PathBuf>,
 }
 
 // ----------------------------------------------------------------------------
@@ -65,11 +73,16 @@ where
     /// This method returns [`Error::Io`][], if the workspace could not be read.
     ///
     /// [`Error::Io`]: crate::project::Error::Io
+    #[allow(clippy::missing_panics_doc)]
     pub fn read<P>(path: P) -> Result<Self>
     where
         P: AsRef<Path>,
     {
-        let project = Project::read(path.as_ref())?;
+        let project = Project::<T>::read(path.as_ref())?;
+
+        // Extract root path of workspace, so we can make paths relative when
+        // necessary (e.g. for scopes), and create iterator over projects
+        let root = project.path.parent().expect("invariant").to_path_buf();
         let iter = project.into_iter().map(|res| {
             res.map(|package| {
                 let base = package.path.parent().expect("invariant");
@@ -77,14 +90,22 @@ where
             })
         });
 
-        // Collect projects and return workspace
-        iter.collect::<Result<_>>()
-            .map(|projects| Self { projects })
+        // Collect projects and extract packages, so we can map package names
+        // to their paths in order to resolve projects by package name
+        let projects = iter.collect::<Result<BTreeMap<_, _>>>()?;
+        let iter = projects.iter().filter_map(|(path, project)| {
+            let option = project.manifest.name();
+            option.map(|name| (name.to_string(), path.clone()))
+        });
+
+        // Collect packages and return workspace
+        let packages = iter.collect::<BTreeMap<_, _>>();
+        Ok(Self { path: root, projects, packages })
     }
 
     /// Creates an iterator over the workspace.
     #[inline]
-    pub fn iter(&self) -> Values<'_, PathBuf, Project<T>> {
+    pub fn iter(&self) -> Iter<'_, PathBuf, Project<T>> {
         self.into_iter()
     }
 }
@@ -97,12 +118,12 @@ impl<'a, T> IntoIterator for &'a Workspace<T>
 where
     T: Manifest,
 {
-    type Item = &'a Project<T>;
-    type IntoIter = Values<'a, PathBuf, Project<T>>;
+    type Item = (&'a PathBuf, &'a Project<T>);
+    type IntoIter = Iter<'a, PathBuf, Project<T>>;
 
     /// Creates an iterator over the workspace.
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
-        self.projects.values()
+        self.projects.iter()
     }
 }

@@ -37,6 +37,7 @@ pub mod workspace;
 pub use error::{Error, Result};
 use manifest::Manifest;
 use members::Members;
+use semver::Version;
 
 // ----------------------------------------------------------------------------
 // Structs
@@ -51,7 +52,7 @@ where
     /// Project path.
     pub path: PathBuf,
     /// Project manifest.
-    pub data: T,
+    pub manifest: T,
 }
 
 // ----------------------------------------------------------------------------
@@ -75,8 +76,21 @@ where
         let content = fs::read_to_string(path)?;
         Ok(Self {
             path: path.canonicalize()?,
-            data: T::from_str(&content)?,
+            manifest: T::from_str(&content)?,
         })
+    }
+
+    /// Returns the name and version of the project, if any.
+    ///
+    /// This method is provided for convenience, in order to extract the name
+    /// and version of a project with one method call. Some projects that are
+    /// part of a [`Workspace`] might not define those fields, since they are
+    /// solely hosts of further projects, e.g. Cargo workspaces.
+    ///
+    /// [`Workspace`]: crate::project::workspace::Workspace
+    #[inline]
+    pub fn info(&self) -> Option<(&str, &Version)> {
+        Some((self.manifest.name()?, self.manifest.version()?))
     }
 }
 

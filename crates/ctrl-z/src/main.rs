@@ -94,8 +94,9 @@ pub fn main() {
                 let path = repo.path().join("Cargo.toml");
                 let workspace = Workspace::<Cargo>::read(path).unwrap();
 
-                println!("Workspace has {:#?}", workspace);
+                println!("Workspace: {:#?}", workspace);
 
+                // @todo remove when we can build the graph and scope from it.
                 let projects = find_packages2(repo.path()).unwrap();
                 // in the graph, we now determine all actually versioned packages
                 // and their deps
@@ -112,7 +113,7 @@ pub fn main() {
                 for meta in &graph {
                     let path =
                         meta.path.parent().unwrap().strip_prefix(root).unwrap();
-                    let name = meta.data.name().unwrap(); //
+                    let name = meta.manifest.name().unwrap(); //
                     println!("Adding scope for path: {:?} -> {:?}", path, name);
                     builder.add(path, name);
 
@@ -178,6 +179,9 @@ pub fn main() {
                     incr
                 );
 
+                // move prompt outside - provide a callback function that receives
+                // the recommended version bump and can return one as well.
+
                 // can we also impl an iterator over the traversal that auto-completes?
                 let mut traversal = graph.traverse(incr);
                 let inc = graph.topology().incoming();
@@ -185,8 +189,11 @@ pub fn main() {
                     println!("Traversed node: {:?} - {:?}", node, &inc[node]);
 
                     let x = prompt_increment(
-                        graph[node].data.name().unwrap(),
-                        graph[node].data.version().expect("versioned package"),
+                        graph[node].manifest.name().unwrap(),
+                        graph[node]
+                            .manifest
+                            .version()
+                            .expect("versioned package"),
                         increments[node],
                         &[],
                     );
@@ -569,7 +576,7 @@ fn create_graph(
     // so this is  a graph fo refs...
     let mut builder = Graph::builder::<()>();
     for (path, project) in projects {
-        if project.data.version().is_none() {
+        if project.manifest.version().is_none() {
             continue;
         }
         builder.add_node(project);
@@ -579,7 +586,7 @@ fn create_graph(
     let mut edges = Vec::new();
     for (n, manifest) in builder.nodes().iter().enumerate() {
         // Extract and enumerate dependencies
-        let dependencies = match &manifest.data {
+        let dependencies = match &manifest.manifest {
             Cargo::Package { dependencies, .. } => dependencies,
             Cargo::Workspace { workspace } => &workspace.dependencies,
         };
@@ -590,7 +597,9 @@ fn create_graph(
             let m = builder
                 .nodes()
                 .iter() // @todo impl eq
-                .position(|candidate| candidate.data.name() == Some(dep_name));
+                .position(|candidate| {
+                    candidate.manifest.name() == Some(dep_name)
+                });
 
             if let Some(m) = m {
                 edges.push((n, m));

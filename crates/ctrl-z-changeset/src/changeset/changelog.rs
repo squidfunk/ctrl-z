@@ -42,7 +42,7 @@ use section::{Category, Section};
 
 /// Changelog.
 pub struct Changelog<'a> {
-    /// Changes grouped by category.
+    /// Sections grouped by category.
     sections: BTreeMap<Category, Section<'a>>,
 }
 

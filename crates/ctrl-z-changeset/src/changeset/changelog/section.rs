@@ -51,7 +51,7 @@ pub struct Section<'a> {
 // ----------------------------------------------------------------------------
 
 impl From<Category> for Section<'_> {
-    /// Creates a section from a given title.
+    /// Creates a section from a category.
     #[inline]
     fn from(category: Category) -> Self {
         Self { category, items: Vec::new() }

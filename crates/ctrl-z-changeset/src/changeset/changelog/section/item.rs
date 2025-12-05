@@ -51,16 +51,16 @@ pub struct Item<'a> {
 // ----------------------------------------------------------------------------
 
 impl<'a> Section<'a> {
-    ///
+    /// Adds a revision to the section item.
     pub fn add(&mut self, revision: &'a Revision, scope: &'a Scope) {
-        // Determine affected scopes
+        // Obtain names of affected scopes
         let mut scopes = Vec::new();
         for &index in revision.scopes() {
             let (_, name) = &scope[index];
             scopes.push(name.as_str());
         }
 
-        // Revision id
+        // Create item and add to section
         self.items.push(Item { revision, scopes });
     }
 }
@@ -70,7 +70,7 @@ impl<'a> Section<'a> {
 // ----------------------------------------------------------------------------
 
 impl fmt::Display for Item<'_> {
-    /// Formats the section kind for display.
+    /// Formats the section item for display.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let id = self.revision.commit().id().to_string();
         f.write_str(&id[0..7])?;

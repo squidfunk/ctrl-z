@@ -4,7 +4,7 @@ use crate::{Cargo, Project, Result};
 use semver::Version;
 use std::collections::BTreeMap;
 use std::str::FromStr;
-use toml_edit::DocumentMut;
+use toml_edit::{DocumentMut, Item, TableLike};
 
 pub type Versions<'a> = BTreeMap<&'a str, Version>;
 
@@ -12,107 +12,86 @@ pub trait Updater {
     fn update(&mut self, versions: &Versions) -> Result;
 }
 
-// ## Changelog
-
-// ### Features
-
-// - 0e83ba3 __foo-utils__ – always subtract 10
-
-// ### Bugfixes
-
-// - 8aa576b __foo-core__ – something was wrong
-
 impl Updater for Project<Cargo> {
     fn update(&mut self, versions: &Versions) -> Result {
         let content = std::fs::read_to_string(&self.path)?;
-
-        let mut doc: DocumentMut = content.parse::<DocumentMut>()?;
+        let mut doc = content.parse::<DocumentMut>()?;
 
         match &self.manifest {
             Cargo::Workspace { .. } => {
-                // Update [workspace.dependencies]
-                if let Some(workspace) = doc
-                    .get_mut("workspace")
-                    .and_then(|item| item.as_table_mut())
-                {
-                    println!("Updating workspace at {:?}", self.path);
-                    if let Some(dependencies) = workspace
-                        .get_mut("dependencies")
-                        .and_then(|item| item.as_table_mut())
-                    {
-                        for (dep_name, dep_item) in dependencies.iter_mut() {
-                            if let Some(new_version) =
-                                versions.get(dep_name.to_string().as_str())
-                            {
-                                println!("  Checking dependency {}", dep_name);
-                                if dep_item.is_str() {
-                                    println!("is a string");
-                                    *dep_item = toml_edit::value(
-                                        new_version.to_string(),
-                                    );
-                                } else if let Some(dep_table) =
-                                    dep_item.as_table_like_mut()
-                                {
-                                    println!("is a table");
-                                    dep_table.insert(
-                                        "version",
-                                        toml_edit::value(
-                                            new_version.to_string(),
-                                        ),
-                                    );
-                                } else {
-                                    println!("nothing {:?}", dep_item);
-                                }
-                            }
-                        }
-                    }
-                }
+                update_workspace_dependencies(&mut doc, versions);
             }
             Cargo::Package { .. } => {
-                // Update [package].version
-                if let Some(package) =
-                    doc.get_mut("package").and_then(|item| item.as_table_mut())
-                {
-                    if let Some(name) = package["name"].as_str() {
-                        if let Some(new_version) = versions.get(name) {
-                            package["version"] =
-                                toml_edit::value(new_version.to_string());
-                        }
-                    }
-                }
-
-                if let Some(dependencies) = doc
-                    .get_mut("dependencies")
-                    .and_then(|item| item.as_table_mut())
-                {
-                    for (dep_name, dep_item) in dependencies.iter_mut() {
-                        let str2 = dep_name.to_string();
-                        if let Some(new_version) = versions.get(str2.as_str()) {
-                            if dep_item.is_str() {
-                                // Simple version string
-                                *dep_item =
-                                    toml_edit::value(new_version.to_string());
-                            } else if let Some(dep_table) =
-                                dep_item.as_table_mut()
-                            {
-                                // Dependency table
-                                dep_table["version"] =
-                                    toml_edit::value(new_version.to_string());
-                            }
-                        }
-                    }
-                }
+                update_package_version(&mut doc, versions);
+                update_dependencies(&mut doc, "dependencies", versions);
             }
         }
 
         std::fs::write(&self.path, doc.to_string())?;
-
-        // println!("Updating project at {:?}", d);
-
-        // now, determine package
-
         Ok(())
     }
 }
 
-// Also impl for Workspace<T>?
+/// Updates [workspace.dependencies] with new versions.
+fn update_workspace_dependencies(doc: &mut DocumentMut, versions: &Versions) {
+    if let Some(deps) = doc
+        .get_mut("workspace")
+        .and_then(|w| w.get_mut("dependencies"))
+        .and_then(|d| d.as_table_like_mut())
+    {
+        update_dependency_table(deps, versions);
+    }
+}
+
+/// Updates [package].version if the package name matches.
+fn update_package_version(doc: &mut DocumentMut, versions: &Versions) {
+    if let Some(package) = doc.get_mut("package").and_then(|p| p.as_table_mut())
+    {
+        if let Some(name) = package.get("name").and_then(|n| n.as_str()) {
+            if let Some(new_version) = versions.get(name) {
+                package["version"] = toml_edit::value(new_version.to_string());
+            }
+        }
+    }
+}
+
+/// Updates a dependency section (e.g., [dependencies], [dev-dependencies]).
+fn update_dependencies(
+    doc: &mut DocumentMut, section: &str, versions: &Versions,
+) {
+    if let Some(deps) = doc.get_mut(section).and_then(|d| d.as_table_like_mut())
+    {
+        update_dependency_table(deps, versions);
+    }
+}
+
+/// Updates all entries in a dependency table (handles both string and inline table).
+fn update_dependency_table(deps: &mut dyn TableLike, versions: &Versions) {
+    for (dep_name, dep_item) in deps.iter_mut() {
+        if let Some(new_version) = versions.get(dep_name.get()) {
+            update_dependency_item(dep_item, new_version);
+        }
+    }
+}
+
+/// Updates a single dependency item (string or inline table).
+fn update_dependency_item(item: &mut Item, version: &Version) {
+    // Skip if dependency uses workspace = true
+    if let Some(table) = item.as_table_like() {
+        if let Some(workspace_val) = table.get("workspace") {
+            if workspace_val.as_bool() == Some(true) {
+                return; // Don't update workspace-inherited dependencies
+            }
+        }
+    }
+
+    let version_str = version.to_string();
+
+    if item.is_str() {
+        // Simple version string: foo = "1.0.0"
+        *item = toml_edit::value(version_str);
+    } else if let Some(table) = item.as_table_like_mut() {
+        // Inline table: foo = { version = "1.0.0", features = [...] }
+        table.insert("version", toml_edit::value(version_str));
+    }
+}

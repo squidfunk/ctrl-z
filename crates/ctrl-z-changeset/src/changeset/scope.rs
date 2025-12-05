@@ -46,7 +46,6 @@ pub use error::{Error, Result};
 /// repository, where a list of paths is matched through a [`GlobSet`]. When
 /// two paths overlap, one path must be the prefix of another path. Thus, we
 /// return the longer path as the matching scope.
-#[derive(Clone)]
 pub struct Scope {
     /// Registered path-name pairs.
     paths: Vec<(PathBuf, String)>,

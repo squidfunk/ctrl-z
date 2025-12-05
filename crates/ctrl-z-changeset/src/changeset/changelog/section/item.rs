@@ -26,7 +26,6 @@
 //! Section item.
 
 use std::fmt::{self, Write};
-use std::str;
 
 use crate::changeset::revision::Revision;
 use crate::changeset::scope::Scope;
@@ -38,7 +37,7 @@ use super::Section;
 // ----------------------------------------------------------------------------
 
 /// Section item.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug)]
 pub struct Item<'a> {
     /// Revision.
     revision: &'a Revision<'a>,

@@ -23,58 +23,23 @@
 
 // ----------------------------------------------------------------------------
 
-//! Section.
+//! Workspace.
 
-use std::fmt::{self, Write};
+use std::collections::BTreeMap;
+use std::path::PathBuf;
 
-mod category;
-mod item;
-
-pub use category::Category;
-pub use item::Item;
+use super::manifest::Manifest;
+use super::Project;
 
 // ----------------------------------------------------------------------------
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Section.
-#[derive(Debug)]
-pub struct Section<'a> {
-    /// Section category.
-    category: Category,
-    /// Section items.
-    items: Vec<Item<'a>>,
-}
-
-// ----------------------------------------------------------------------------
-// Trait implementations
-// ----------------------------------------------------------------------------
-
-impl From<Category> for Section<'_> {
-    /// Creates a section from a category.
-    #[inline]
-    fn from(category: Category) -> Self {
-        Self { category, items: Vec::new() }
-    }
-}
-
-// ----------------------------------------------------------------------------
-
-impl fmt::Display for Section<'_> {
-    /// Formats the section for display.
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str("### ")?;
-        self.category.fmt(f)?;
-        f.write_str("\n\n")?;
-
-        // Write all items, each on a new line
-        for item in &self.items {
-            f.write_str("- ")?;
-            item.fmt(f)?;
-            f.write_char('\n')?;
-        }
-
-        // Add empty line after items
-        f.write_char('\n')
-    }
+/// Workspace.
+pub struct Workspace<T>
+where
+    T: Manifest,
+{
+    /// All projects in the workspace.
+    projects: BTreeMap<PathBuf, Project<T>>,
 }

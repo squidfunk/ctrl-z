@@ -44,29 +44,29 @@ use paths::Paths;
 /// This iterator emits projects recursively. Although some ecosystems don't
 /// allow for deeply nested project hierachies, it's possible to have them.
 #[derive(Debug)]
-pub struct Members<M> {
+pub struct Members<T> {
     /// Stack of path iterators.
     paths: Vec<Paths>,
     /// Manifest file name.
     file: String,
     /// Type marker.
-    marker: PhantomData<M>,
+    marker: PhantomData<T>,
 }
 
 // ----------------------------------------------------------------------------
 // Implementations
 // ----------------------------------------------------------------------------
 
-impl<M> Project<M>
+impl<T> Project<T>
 where
-    M: Manifest,
+    T: Manifest,
 {
     /// Creates an iterator over the members of a project.
     ///
     /// This iterator only yields members, not the root project itself. In case
     /// you want to include the root project, iterate over [`Project`] itself.
     #[allow(clippy::missing_panics_doc)]
-    pub fn members(&self) -> Members<M> {
+    pub fn members(&self) -> Members<T> {
         let root = self.path.parent().expect("invariant");
         let file = self.path.file_name().expect("invariant");
 
@@ -84,11 +84,11 @@ where
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl<M> Iterator for Members<M>
+impl<T> Iterator for Members<T>
 where
-    M: Manifest,
+    T: Manifest,
 {
-    type Item = Result<Project<M>>;
+    type Item = Result<Project<T>>;
 
     /// Returns the next member.
     fn next(&mut self) -> Option<Self::Item> {
@@ -104,7 +104,7 @@ where
         // file, and if successful, push nested paths iterator onto the stack
         match res
             .map(|path| path.join(&self.file))
-            .and_then(Project::<M>::read)
+            .and_then(Project::<T>::read)
         {
             Err(err) => Some(Err(err)),
             Ok(project) => {

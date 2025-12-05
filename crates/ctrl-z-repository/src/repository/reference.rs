@@ -10,7 +10,7 @@ use crate::repository::Result;
 mod iter;
 
 /// Kind of git reference.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ReferenceKind {
     /// refs/tags/<name>
     Tag { name: String },

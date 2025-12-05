@@ -32,6 +32,7 @@ use std::{fs, iter};
 mod error;
 pub mod manifest;
 mod members;
+pub mod workspace;
 
 pub use error::{Error, Result};
 use manifest::Manifest;
@@ -43,23 +44,23 @@ use members::Members;
 
 /// Project.
 #[derive(Debug)]
-pub struct Project<M>
+pub struct Project<T>
 where
-    M: Manifest,
+    T: Manifest,
 {
     /// Project path.
     pub path: PathBuf,
     /// Project manifest.
-    pub data: M,
+    pub data: T,
 }
 
 // ----------------------------------------------------------------------------
 // Implementations
 // ----------------------------------------------------------------------------
 
-impl<M> Project<M>
+impl<T> Project<T>
 where
-    M: Manifest,
+    T: Manifest,
 {
     /// Attempts to read a project from the given path.
     ///
@@ -74,7 +75,7 @@ where
         let content = fs::read_to_string(path)?;
         Ok(Self {
             path: path.canonicalize()?,
-            data: M::from_str(&content)?,
+            data: T::from_str(&content)?,
         })
     }
 }
@@ -83,12 +84,12 @@ where
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl<M> IntoIterator for Project<M>
+impl<T> IntoIterator for Project<T>
 where
-    M: Manifest,
+    T: Manifest,
 {
-    type Item = Result<Project<M>>;
-    type IntoIter = Chain<Once<Result<Project<M>>>, Members<M>>;
+    type Item = Result<Project<T>>;
+    type IntoIter = Chain<Once<Result<Project<T>>>, Members<T>>;
 
     /// Creates an iterator over the project and its members.
     #[inline]

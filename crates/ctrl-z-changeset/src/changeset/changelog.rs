@@ -48,6 +48,7 @@ use section::{Category, Section};
 /// into their own section, which comes first.
 ///
 /// [`Changeset`]: crate::changeset::Changeset
+#[derive(Debug)]
 pub struct Changelog<'a> {
     /// Scope set.
     scope: &'a Scope,

@@ -40,7 +40,7 @@ use super::Changeset;
 // ----------------------------------------------------------------------------
 
 /// Revision.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug)]
 pub struct Revision<'a> {
     /// Original commit.
     commit: Commit<'a>,

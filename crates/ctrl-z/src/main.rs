@@ -137,7 +137,6 @@ pub fn main() {
                 let mut workspace = Workspace::<Cargo>::read(path).unwrap();
 
                 let deps = workspace.dependents();
-                println!("Workspace: {:#?}", deps);
 
                 let scopes = Scopes::try_from(&workspace).unwrap();
 
@@ -168,8 +167,6 @@ pub fn main() {
 
                 let last_commit = last_ref.commit().unwrap().unwrap();
 
-                // @todo changeset... - we can just create this from scopes!
-                // Changeset::from(...)?
                 let mut changeset = Changeset::new(scopes);
                 let commits = repo
                     .commits()
@@ -181,7 +178,6 @@ pub fn main() {
 
                 // changeset: collect for scope!
 
-                println!("Changeset: {:#?}", changeset);
                 println!("{}", changeset.to_changelog());
 
                 // we should impl a partial revision iterator?

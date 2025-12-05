@@ -23,7 +23,7 @@
 
 // ----------------------------------------------------------------------------
 
-//! Section kind.
+//! Section title.
 
 use std::fmt;
 
@@ -31,9 +31,9 @@ use std::fmt;
 // Enums
 // ----------------------------------------------------------------------------
 
-/// Section kind.
+/// Section title.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Kind {
+pub enum Title {
     /// Breaking changes.
     Breaking,
     /// Features.
@@ -50,15 +50,15 @@ pub enum Kind {
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl fmt::Display for Kind {
-    /// Formats the section kind for display.
+impl fmt::Display for Title {
+    /// Formats the section title for display.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Kind::Breaking => f.write_str("Breaking changes"),
-            Kind::Feature => f.write_str("Features"),
-            Kind::Fix => f.write_str("Bugfixes"),
-            Kind::Performance => f.write_str("Performance improvements"),
-            Kind::Refactor => f.write_str("Refactorings"),
+            Title::Breaking => f.write_str("Breaking changes"),
+            Title::Feature => f.write_str("Features"),
+            Title::Fix => f.write_str("Bugfixes"),
+            Title::Performance => f.write_str("Performance improvements"),
+            Title::Refactor => f.write_str("Refactorings"),
         }
     }
 }

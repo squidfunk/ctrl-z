@@ -26,13 +26,14 @@
 //! Changelog.
 
 use std::collections::BTreeMap;
+use std::fmt;
 
 use ctrl_z_changeset::change;
 use ctrl_z_changeset::Changeset;
 
 mod section;
 
-use section::{Kind, Section};
+use section::{Section, Title};
 
 // ----------------------------------------------------------------------------
 // Structs
@@ -41,48 +42,62 @@ use section::{Kind, Section};
 /// Changelog.
 pub struct Changelog<'a> {
     /// Sections indexed by kind.
-    sections: BTreeMap<Kind, Section<'a>>,
+    sections: BTreeMap<Title, Section<'a>>,
 }
 
 // ----------------------------------------------------------------------------
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-// @todo also add version bumps...
-
 impl<'a> From<&'a Changeset<'a>> for Changelog<'a> {
+    /// Creates a changelog from a changeset.
     ///
+    /// Note that only relevant changes are included in the changelog, which
+    /// includes features, fixes, performance improvements and refactorings. In
+    /// case the changeset does not include such changes, the changelog will be
+    /// empty, which is expected, since no release is necessary.
     fn from(changeset: &'a Changeset<'a>) -> Self {
         let mut sections = BTreeMap::new();
-
-        //
         for revision in changeset.revisions() {
             let change = revision.change();
 
-            // Determine section kind - not all types of changes are featured
+            // Determine section title - not all types of changes are featured
             // in the changelog, so we skip those that are not relevant
-            let kind = if change.is_breaking() {
-                Kind::Breaking
+            let title = if change.is_breaking() {
+                Title::Breaking
             } else {
                 match change.kind() {
-                    change::Kind::Feature => Kind::Feature,
-                    change::Kind::Fix => Kind::Fix,
-                    change::Kind::Performance => Kind::Performance,
-                    change::Kind::Refactor => Kind::Refactor,
+                    change::Kind::Feature => Title::Feature,
+                    change::Kind::Fix => Title::Fix,
+                    change::Kind::Performance => Title::Performance,
+                    change::Kind::Refactor => Title::Refactor,
                     _ => continue,
                 }
             };
 
-            // section from revisions?
-
-            // Determine relevant section
-            println!("{:?}", change.kind());
-            let section =
-                sections.entry(kind).or_insert_with(|| Section::new(kind));
-
-            println!("{:?}", section);
+            // Determine relevant section and add revision - note that we need
+            // to pass the scopes for rendering, as only indices are stored
+            sections
+                .entry(title)
+                .or_insert_with(|| Section::from(title))
+                .add(revision, changeset.scope());
         }
 
+        // Return changelog
         Changelog { sections }
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+impl fmt::Display for Changelog<'_> {
+    /// Formats the changelog for display.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for section in self.sections.values() {
+            section.fmt(f)?;
+        }
+
+        // No errors occurred
+        Ok(())
     }
 }

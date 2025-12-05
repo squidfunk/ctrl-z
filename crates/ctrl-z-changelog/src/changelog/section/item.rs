@@ -26,8 +26,11 @@
 //! Section item.
 
 use std::fmt::{self, Write};
+use std::str;
 
 use ctrl_z_changeset::{Revision, Scope};
+
+use super::Section;
 
 // ----------------------------------------------------------------------------
 // Structs
@@ -36,31 +39,29 @@ use ctrl_z_changeset::{Revision, Scope};
 /// Section item.
 #[derive(Debug, PartialEq, Eq)]
 pub struct Item<'a> {
-    /// Commit identifier (short).
-    id: &'a str,
+    /// Revision.
+    revision: &'a Revision<'a>,
     /// Affected scopes.
     scopes: Vec<&'a str>,
-    /// Description.
-    description: &'a str,
 }
 
 // ----------------------------------------------------------------------------
 // Implementations
 // ----------------------------------------------------------------------------
 
-impl<'a> Item<'a> {
-    // pub fn new(revision: &'a Revision<'a>, scope: &'a Scope) {
-    //     let id = revision.commit().id().as_bytes();
-    //     let id = &id[0..7];
+impl<'a> Section<'a> {
+    ///
+    pub fn add(&mut self, revision: &'a Revision, scope: &'a Scope) {
+        // Determine affected scopes
+        let mut scopes = Vec::new();
+        for &index in revision.scopes() {
+            let (_, name) = &scope[index];
+            scopes.push(name.as_str());
+        }
 
-    //     // there ... must be a description?
-    //     revision.commit().summary();
-    //     // x.
-    //     // let scopes = scope.scopes().iter().map(|s| s.as_str()).collect();
-    //     // let description = revision.description();
-
-    //     Self { id, scopes, description }
-    // }
+        // Revision id
+        self.items.push(Item { revision, scopes });
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -70,7 +71,8 @@ impl<'a> Item<'a> {
 impl fmt::Display for Item<'_> {
     /// Formats the section kind for display.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(self.id)?;
+        let id = self.revision.commit().id().to_string();
+        f.write_str(&id[0..7])?;
 
         // Write scopes, if any
         if !self.scopes.is_empty() {
@@ -87,8 +89,9 @@ impl fmt::Display for Item<'_> {
             }
         }
 
-        // Write description
+        // Retrieve change and write description
+        let change = self.revision.change();
         f.write_str(" – ")?;
-        f.write_str(self.description)
+        f.write_str(change.description())
     }
 }

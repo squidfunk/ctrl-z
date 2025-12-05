@@ -150,6 +150,8 @@ pub fn main() {
 
                 let changelog = Changelog::from(&changeset);
 
+                println!("{changelog}");
+
                 let mut increments = changeset.increments().to_vec();
                 let incr = increments
                     .iter()

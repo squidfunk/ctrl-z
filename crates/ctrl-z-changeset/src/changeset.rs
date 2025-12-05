@@ -89,6 +89,9 @@ impl Changeset<'_> {
     // - Apply increments to versions
     // - Then update all manifests
 
+    // use a revision iterator again that uses the scopes? and this is then
+    // used inside of the template?
+
     // @todo temp
     pub fn increments(&self) -> &[Option<Increment>] {
         &self.increments

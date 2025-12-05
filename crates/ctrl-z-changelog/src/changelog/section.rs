@@ -28,10 +28,10 @@
 use std::fmt::{self, Write};
 
 mod item;
-mod kind;
+mod title;
 
 pub use item::Item;
-pub use kind::Kind;
+pub use title::Title;
 
 // ----------------------------------------------------------------------------
 // Structs
@@ -40,32 +40,31 @@ pub use kind::Kind;
 /// Section.
 #[derive(Debug, PartialEq, Eq)]
 pub struct Section<'a> {
-    /// Section kind.
-    kind: Kind,
+    /// Section title.
+    title: Title,
     /// Section items.
     items: Vec<Item<'a>>,
-}
-
-// ----------------------------------------------------------------------------
-// Implementations
-// ----------------------------------------------------------------------------
-
-impl Section<'_> {
-    /// Creates a section.
-    pub fn new(kind: Kind) -> Self {
-        Self { kind, items: Vec::new() }
-    }
 }
 
 // ----------------------------------------------------------------------------
 // Trait implementations
 // ----------------------------------------------------------------------------
 
+impl From<Title> for Section<'_> {
+    /// Creates a section from a given title.
+    #[inline]
+    fn from(title: Title) -> Self {
+        Self { title, items: Vec::new() }
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 impl fmt::Display for Section<'_> {
     /// Formats the section for display.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str("### ")?;
-        self.kind.fmt(f)?;
+        self.title.fmt(f)?;
         f.write_str("\n\n")?;
 
         // Write all items, each on a new line

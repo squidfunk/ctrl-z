@@ -28,7 +28,7 @@
 use clap::builder::styling::{AnsiColor, Effects};
 use clap::builder::Styles;
 use clap::{Parser, Subcommand};
-use ctrl_z_project::workspace::updater::Updater;
+use ctrl_z_project::workspace::updater::Updatable;
 // @todo: remove the git indirection
 use inquire::Select;
 use semver::Version;
@@ -37,7 +37,7 @@ use std::env;
 use std::path::{Path, PathBuf};
 
 use ctrl_z_changeset::{Changeset, Increment, Scopes, VersionExt};
-use ctrl_z_project::{Cargo, Workspace};
+use ctrl_z_project::{Cargo, Node, Workspace};
 use ctrl_z_repository::Reference;
 use ctrl_z_repository::Repository;
 
@@ -89,6 +89,24 @@ pub fn main() {
 
                 let repo =
                     Repository::open(env::current_dir().unwrap()).unwrap();
+
+                let path = repo.path().join("package.json");
+                if path.exists() {
+                    let mut workspace = Workspace::<Node>::read(path).unwrap();
+
+                    let versions = BTreeMap::from_iter([
+                        (
+                            "@zensical/disco-engine",
+                            Version::parse("0.1.0").unwrap(),
+                        ),
+                        ("@zensical/disco", Version::parse("0.0.1").unwrap()),
+                    ]);
+
+                    for project in &mut workspace {
+                        project.update(&versions).unwrap();
+                    }
+                    return;
+                }
 
                 //
                 let path = repo.path().join("Cargo.toml");
@@ -619,4 +637,39 @@ fn create_tag(
 
 //     builder.build()
 //     // Here, we collect all versions
+// }
+
+// /// Updates a package.json manifest string with new versions.
+// fn update_npm_manifest(content: &str, versions: &Versions) -> Result<String> {
+//     let mut doc: Value = serde_json::from_str(content)?;
+
+//     // Update package version if name matches
+//     if let Some(obj) = doc.as_object_mut() {
+//         if let Some(name) = obj.get("name").and_then(|n| n.as_str()) {
+//             if let Some(new_version) = versions.get(name) {
+//                 obj.insert("version".to_string(), Value::String(new_version.to_string()));
+//             }
+//         }
+
+//         // Update dependencies sections
+//         for section in ["dependencies", "devDependencies", "peerDependencies"] {
+//             if let Some(deps) = obj.get_mut(section).and_then(|d| d.as_object_mut()) {
+//                 update_npm_dependency_table(deps, versions);
+//             }
+//         }
+//     }
+
+//     // Pretty-print with 2-space indentation
+//     Ok(serde_json::to_string_pretty(&doc)?)
+// }
+
+// fn update_npm_dependency_table(
+//     deps: &mut serde_json::Map<String, Value>,
+//     versions: &Versions,
+// ) {
+//     for (dep_name, dep_value) in deps.iter_mut() {
+//         if let Some(new_version) = versions.get(dep_name.as_str()) {
+//             *dep_value = Value::String(new_version.to_string());
+//         }
+//     }
 // }

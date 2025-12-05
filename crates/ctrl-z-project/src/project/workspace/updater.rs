@@ -1,37 +1,91 @@
 // a trait? that needs to be implemented by manifest?
 
-use crate::{Cargo, Project, Result};
-use semver::Version;
+use crate::{Cargo, Manifest, Node, Project, Result};
+use semver::{Version, VersionReq};
+use serde_json::Value;
 use std::collections::BTreeMap;
 use std::fs;
 use toml_edit::{value, DocumentMut, Item, TableLike};
 
-pub type Versions<'a> = BTreeMap<&'a str, Version>;
-
-pub trait Updater {
-    fn update(&mut self, versions: &Versions) -> Result;
+impl<T> Project<T>
+where
+    T: Manifest,
+{
+    pub fn update(&mut self, versions: &BTreeMap<&str, Version>) -> Result
+    where
+        T: Updatable,
+    {
+        let content = fs::read_to_string(&self.path)?;
+        let updated = T::update(&content, versions)?;
+        fs::write(&self.path, updated)?;
+        Ok(())
+    }
 }
 
-impl Updater for Project<Cargo> {
-    fn update(&mut self, versions: &Versions) -> Result {
-        // @todo: move writing in and out? that way we can safe the path! no need!
-        let content = fs::read_to_string(&self.path)?;
-        let mut doc = content.parse::<DocumentMut>()?;
+pub type Versions<'a> = BTreeMap<&'a str, Version>;
 
-        match &self.manifest {
-            // Handle workspace manifest
-            Cargo::Workspace { .. } => {
-                update_workspace_dependencies(&mut doc, versions);
+pub trait Updatable {
+    fn update(content: &str, versions: &Versions) -> Result<String>;
+}
+
+impl Updatable for Cargo {
+    fn update(content: &str, versions: &Versions) -> Result<String> {
+        // @todo: move writing in and out? that way we can safe the path! no need!
+        // we might just parse this from string? again?
+        let mut doc = content.parse::<DocumentMut>()?;
+        update_workspace_dependencies(&mut doc, versions);
+        update_package_version(&mut doc, versions);
+        update_dependencies(&mut doc, versions);
+
+        Ok(doc.to_string())
+    }
+}
+
+impl Updatable for Node {
+    fn update(content: &str, versions: &Versions) -> Result<String> {
+        // @todo: move writing in and out? that way we can safe the path! no need!
+        // we might just parse this from string? again?
+        let mut doc = serde_json::from_str::<Value>(content)?;
+        // update_workspace_dependencies(&mut doc, versions);
+        // NPM_update_package_version(&mut doc, versions);
+
+        // Update package version if name matches
+        if let Some(obj) = doc.as_object_mut() {
+            if let Some(name) = obj.get("name").and_then(|n| n.as_str()) {
+                if let Some(new_version) = versions.get(name) {
+                    obj.insert(
+                        "version".to_string(),
+                        Value::String(new_version.to_string()),
+                    );
+                }
             }
-            // Handle package manifest
-            Cargo::Package { .. } => {
-                update_package_version(&mut doc, versions);
-                update_dependencies(&mut doc, versions);
+
+            // Update dependencies sections
+            for section in
+                ["dependencies", "devDependencies", "peerDependencies"]
+            {
+                if let Some(deps) =
+                    obj.get_mut(section).and_then(|d| d.as_object_mut())
+                {
+                    update_npm_dependency_table(deps, versions);
+                }
             }
         }
 
-        fs::write(&self.path, doc.to_string())?;
-        Ok(())
+        let mut content = serde_json::to_string_pretty(&doc)?;
+        content.push('\n');
+        Ok(content)
+    }
+}
+
+fn update_npm_dependency_table(
+    deps: &mut serde_json::Map<String, Value>, versions: &Versions,
+) {
+    for (name, value) in deps.iter_mut() {
+        // must use version req! ^
+        if let Some(version) = versions.get(name.as_str()) {
+            *value = Value::String(format!("^{version}"));
+        }
     }
 }
 

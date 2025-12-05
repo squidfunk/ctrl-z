@@ -25,9 +25,11 @@
 
 //! Workspace.
 
+use std::collections::btree_map::Values;
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
+use super::error::Result;
 use super::manifest::Manifest;
 use super::Project;
 
@@ -36,10 +38,71 @@ use super::Project;
 // ----------------------------------------------------------------------------
 
 /// Workspace.
+#[derive(Debug)]
 pub struct Workspace<T>
 where
     T: Manifest,
 {
     /// All projects in the workspace.
     projects: BTreeMap<PathBuf, Project<T>>,
+}
+
+// ----------------------------------------------------------------------------
+// Implementations
+// ----------------------------------------------------------------------------
+
+impl<T> Workspace<T>
+where
+    T: Manifest,
+{
+    /// Attempts to read a workspace from the given path.
+    ///
+    /// This method attempts to read the top-level project at the given path,
+    /// and then discovers all member projects defined in the workspace.
+    ///
+    /// # Errors
+    ///
+    /// This method returns [`Error::Io`][], if the workspace could not be read.
+    ///
+    /// [`Error::Io`]: crate::project::Error::Io
+    pub fn read<P>(path: P) -> Result<Self>
+    where
+        P: AsRef<Path>,
+    {
+        let project = Project::read(path.as_ref())?;
+        let iter = project.into_iter().map(|res| {
+            res.map(|package| {
+                let base = package.path.parent().expect("invariant");
+                (base.to_path_buf(), package)
+            })
+        });
+
+        // Collect projects and return workspace
+        iter.collect::<Result<_>>()
+            .map(|projects| Self { projects })
+    }
+
+    /// Creates an iterator over the workspace.
+    #[inline]
+    pub fn iter(&self) -> Values<'_, PathBuf, Project<T>> {
+        self.into_iter()
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Trait implementations
+// ----------------------------------------------------------------------------
+
+impl<'a, T> IntoIterator for &'a Workspace<T>
+where
+    T: Manifest,
+{
+    type Item = &'a Project<T>;
+    type IntoIter = Values<'a, PathBuf, Project<T>>;
+
+    /// Creates an iterator over the workspace.
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.projects.values()
+    }
 }

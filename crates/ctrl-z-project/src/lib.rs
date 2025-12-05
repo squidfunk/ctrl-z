@@ -29,4 +29,5 @@ mod project;
 
 pub use project::manifest::cargo::{self, Cargo};
 pub use project::manifest::Manifest;
+pub use project::workspace::{self, Workspace};
 pub use project::{Error, Project, Result};

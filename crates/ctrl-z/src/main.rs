@@ -37,7 +37,7 @@ use std::path::{Path, PathBuf};
 use zrx::graph::Graph;
 
 use ctrl_z_changeset::{Changeset, Increment, Scope, VersionExt};
-use ctrl_z_project::{Cargo, Error, Manifest as _, Project};
+use ctrl_z_project::{Cargo, Error, Manifest as _, Project, Workspace};
 use ctrl_z_repository::Reference;
 use ctrl_z_repository::Repository;
 
@@ -90,10 +90,18 @@ pub fn main() {
                 let repo =
                     Repository::open(env::current_dir().unwrap()).unwrap();
 
+                //
+                let path = repo.path().join("Cargo.toml");
+                let workspace = Workspace::<Cargo>::read(path).unwrap();
+
+                println!("Workspace has {:#?}", workspace);
+
                 let projects = find_packages2(repo.path()).unwrap();
                 // in the graph, we now determine all actually versioned packages
                 // and their deps
                 let graph = create_graph(&projects);
+
+                // Project Collection?
 
                 println!("Graph: {:#?}", graph);
 

@@ -58,12 +58,7 @@ impl<T> Workspace<T>
 where
     T: Manifest + Dependencies,
 {
-    /// @todo
-    ///
-    /// # Errors
-    ///
-    /// @todo
-    #[must_use]
+    /// @todo cleanup
     pub fn dependents(&self) -> Result<Dependents<'_, T>> {
         let mut builder = Graph::builder();
         for project in self.projects.values() {
@@ -98,4 +93,7 @@ where
         let graph = builder.build();
         Ok(Dependents { graph })
     }
+
+    // now, a function that emits a project and a version bump, and
+    // expects to return another version bump, then returns all bumps?
 }

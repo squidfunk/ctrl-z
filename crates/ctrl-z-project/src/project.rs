@@ -50,9 +50,9 @@ where
     T: Manifest,
 {
     /// Project path.
-    pub path: PathBuf,
+    path: PathBuf,
     /// Project manifest.
-    pub manifest: T,
+    manifest: T,
 }
 
 // ----------------------------------------------------------------------------

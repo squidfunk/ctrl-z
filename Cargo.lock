@@ -261,7 +261,6 @@ dependencies = [
  "serde",
  "toml",
  "toml_edit",
- "zrx",
 ]
 
 [[package]]

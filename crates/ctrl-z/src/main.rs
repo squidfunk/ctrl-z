@@ -31,13 +31,12 @@ use clap::{Parser, Subcommand};
 // @todo: remove the git indirection
 use inquire::Select;
 use semver::Version;
-use std::collections::{BTreeMap, HashSet};
+use std::collections::HashSet;
 use std::env;
 use std::path::{Path, PathBuf};
-use zrx::graph::Graph;
 
 use ctrl_z_changeset::{Changeset, Increment, Scope, VersionExt};
-use ctrl_z_project::{Cargo, Error, Manifest as _, Project, Workspace};
+use ctrl_z_project::{Cargo, Workspace};
 use ctrl_z_repository::Reference;
 use ctrl_z_repository::Repository;
 
@@ -143,7 +142,7 @@ pub fn main() {
                 println!("Changeset: {:#?}", changeset);
                 println!("{}", changeset.to_changelog());
 
-                let mut increments = changeset.increments().to_vec();
+                let increments = changeset.increments().to_vec();
                 let incr = increments
                     .iter()
                     .enumerate()
@@ -530,73 +529,73 @@ fn create_tag(
 
 // hand over repository
 
-fn find_packages2(
-    repo_path: &Path,
-) -> Result<BTreeMap<PathBuf, Project<Cargo>>, Error> {
-    // loader... <- with manifest members, we can implement a GENERAL loader!
-    let root_cargo = repo_path.join("Cargo.toml");
-    let project = Project::<Cargo>::read(root_cargo)?;
-    project
-        .into_iter()
-        .map(|res| {
-            res.map(|member| {
-                let dir = member
-                    .path
-                    .parent()
-                    .expect("manifest has parent")
-                    // .strip_prefix(repo_path)
-                    // .expect("strip_prefix")
-                    .to_path_buf();
-                (dir, member)
-            })
-        })
-        .collect()
-}
+// fn find_packages2(
+//     repo_path: &Path,
+// ) -> Result<BTreeMap<PathBuf, Project<Cargo>>, Error> {
+//     // loader... <- with manifest members, we can implement a GENERAL loader!
+//     let root_cargo = repo_path.join("Cargo.toml");
+//     let project = Project::<Cargo>::read(root_cargo)?;
+//     project
+//         .into_iter()
+//         .map(|res| {
+//             res.map(|member| {
+//                 let dir = member
+//                     .path
+//                     .parent()
+//                     .expect("manifest has parent")
+//                     // .strip_prefix(repo_path)
+//                     // .expect("strip_prefix")
+//                     .to_path_buf();
+//                 (dir, member)
+//             })
+//         })
+//         .collect()
+// }
 
-// we should create a graph of scopes, so the scopes are the nodes!
-// we should check what we need from the project and only use that, and then
-// from the project create the scopes...?
-fn create_graph(
-    projects: &BTreeMap<PathBuf, Project<Cargo>>,
-) -> Graph<&Project<Cargo>> {
-    // so this is  a graph fo refs...
-    let mut builder = Graph::builder::<()>();
-    for (path, project) in projects {
-        if project.manifest.version().is_none() {
-            continue;
-        }
-        builder.add_node(project);
-    }
+// // we should create a graph of scopes, so the scopes are the nodes!
+// // we should check what we need from the project and only use that, and then
+// // from the project create the scopes...?
+// fn create_graph(
+//     projects: &BTreeMap<PathBuf, Project<Cargo>>,
+// ) -> Graph<&Project<Cargo>> {
+//     // so this is  a graph fo refs...
+//     let mut builder = Graph::builder::<()>();
+//     for (path, project) in projects {
+//         if project.manifest.version().is_none() {
+//             continue;
+//         }
+//         builder.add_node(project);
+//     }
 
-    // add edges...
-    let mut edges = Vec::new();
-    for (n, manifest) in builder.nodes().iter().enumerate() {
-        // Extract and enumerate dependencies
-        let dependencies = match &manifest.manifest {
-            Cargo::Package { dependencies, .. } => dependencies,
-            Cargo::Workspace { workspace } => &workspace.dependencies,
-        };
+//     // add edges...
+//     let mut edges = Vec::new();
+//     for (n, manifest) in builder.nodes().iter().enumerate() {
+//         // Extract and enumerate dependencies
+//         let dependencies = match &manifest.manifest {
+//             Cargo::Package { dependencies, .. } => dependencies,
+//             Cargo::Workspace { workspace } => &workspace.dependencies,
+//         };
 
-        // Add to dependencies
-        for (dep_name, dependency) in dependencies {
-            // if a dependency version is set, ensure that it matches!
-            let m = builder
-                .nodes()
-                .iter() // @todo impl eq
-                .position(|candidate| {
-                    candidate.manifest.name() == Some(dep_name)
-                });
+//         // Add to dependencies
+//         for (dep_name, dependency) in dependencies {
+//             // if a dependency version is set, ensure that it matches!
+//             let m = builder
+//                 .nodes()
+//                 .iter() // @todo impl eq
+//                 .position(|candidate| {
+//                     candidate.manifest.name() == Some(dep_name)
+//                 });
 
-            if let Some(m) = m {
-                edges.push((n, m));
-            }
-        }
-    }
+//             if let Some(m) = m {
+//                 edges.push((n, m));
+//             }
+//         }
+//     }
 
-    for (n, m) in edges {
-        builder.add_edge(m, n, ()).unwrap();
-    }
+//     for (n, m) in edges {
+//         builder.add_edge(m, n, ()).unwrap();
+//     }
 
-    builder.build()
-    // Here, we collect all versions
-}
+//     builder.build()
+//     // Here, we collect all versions
+// }

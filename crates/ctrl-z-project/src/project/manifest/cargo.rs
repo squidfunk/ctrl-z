@@ -25,12 +25,12 @@
 
 //! Cargo manifest.
 
-use semver::Version;
+use semver::{Version, VersionReq};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::str::FromStr;
 
-use crate::project::manifest::Manifest;
+use crate::project::manifest::{Dependencies, Manifest};
 use crate::project::{Error, Result};
 
 mod dependency;
@@ -102,6 +102,25 @@ impl Manifest for Cargo {
         } else {
             &[]
         }
+    }
+}
+
+impl Dependencies for Cargo {
+    fn dependencies(
+        &self,
+    ) -> impl Iterator<Item = (&String, Option<&VersionReq>)> {
+        let dependencies = match self {
+            Cargo::Package { dependencies, .. } => dependencies,
+            Cargo::Workspace { workspace } => &workspace.dependencies,
+        };
+
+        dependencies.iter().map(|(name, dependency)| {
+            let version = match dependency {
+                Dependency::Version(version) => Some(version),
+                Dependency::Info(info) => info.version.as_ref(),
+            };
+            (name, version)
+        })
     }
 }
 

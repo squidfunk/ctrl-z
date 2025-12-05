@@ -25,7 +25,7 @@
 
 //! Manifest.
 
-use semver::Version;
+use semver::{Version, VersionReq};
 use std::fmt::Debug;
 use std::str::FromStr;
 
@@ -51,3 +51,10 @@ pub trait Manifest: Debug + FromStr<Err = Error> {
     /// Returns the members.
     fn members(&self) -> &[String];
 }
+
+// @todo
+pub trait Dependencies {
+    fn dependencies(&self) -> impl Iterator<Item = Item<'_>>;
+}
+
+pub type Item<'a> = (&'a String, Option<&'a VersionReq>);

@@ -44,6 +44,9 @@ pub enum Error {
     /// Pattern error.
     #[error(transparent)]
     Pattern(#[from] glob::PatternError),
+    /// Graph error.
+    #[error(transparent)]
+    Graph(#[from] zrx::graph::Error),
     /// TOML error.
     #[error(transparent)]
     Toml(#[from] toml::de::Error),

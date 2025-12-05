@@ -27,8 +27,8 @@
 
 use zrx::graph::Graph;
 
-use crate::project::manifest::Manifest;
-use crate::project::Project;
+use crate::project::manifest::{Dependencies, Manifest};
+use crate::project::{Project, Result};
 
 use super::Workspace;
 
@@ -37,12 +37,13 @@ use super::Workspace;
 // ----------------------------------------------------------------------------
 
 /// Iterator over dependents in a workspace.
-pub struct Dependents<T>
+#[derive(Debug)]
+pub struct Dependents<'a, T>
 where
     T: Manifest,
 {
     /// Workspace graph.
-    inner: Graph<Project<T>>,
+    graph: Graph<&'a Project<T>>,
 }
 
 // ----------------------------------------------------------------------------
@@ -55,11 +56,46 @@ where
 
 impl<T> Workspace<T>
 where
-    T: Manifest,
+    T: Manifest + Dependencies,
 {
-    pub fn dependents(&self) -> Dependents<T> {
+    /// @todo
+    ///
+    /// # Errors
+    ///
+    /// @todo
+    #[must_use]
+    pub fn dependents(&self) -> Result<Dependents<'_, T>> {
+        let mut builder = Graph::builder();
+        for project in self.projects.values() {
+            // If the project's manifest includes a name, we must treat it as a
+            // dedicated package. This does not hold for workspaces in Rust.
+            if project.manifest.name().is_some() {
+                builder.add_node(project);
+            }
+        }
+
+        let mut edges = Vec::new();
+        let projects = builder.nodes();
+        for (n, project) in projects.iter().enumerate() {
+            for (name, _) in project.manifest.dependencies() {
+                // find the dependency in the workspace
+                if let Some(dependency) = self.get(name) {
+                    if let Some(m) = projects.iter().position(|candidate| {
+                        candidate.manifest.name() == dependency.manifest.name()
+                    }) {
+                        edges.push((n, m));
+                    }
+                }
+            }
+        }
+
+        for (n, m) in edges {
+            builder.add_edge(m, n, ())?;
+        }
+
         // this is only necessary for propagation of versions...
         // let builder = Graph::builder();
-        todo!()
+        let graph = builder.build();
+        Ok(Dependents { graph })
     }
 }

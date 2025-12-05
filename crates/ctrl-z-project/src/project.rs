@@ -25,6 +25,7 @@
 
 //! Project.
 
+use semver::Version;
 use std::iter::{Chain, Once};
 use std::path::{Path, PathBuf};
 use std::{fs, iter};
@@ -37,7 +38,6 @@ pub mod workspace;
 pub use error::{Error, Result};
 use manifest::Manifest;
 use members::Members;
-use semver::Version;
 
 // ----------------------------------------------------------------------------
 // Structs

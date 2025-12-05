@@ -28,10 +28,7 @@
 use std::collections::btree_map::Iter;
 use std::path::PathBuf;
 
-use zrx::graph::Graph;
-
 use crate::project::manifest::Manifest;
-use crate::project::Project;
 
 use super::Workspace;
 
@@ -59,6 +56,13 @@ where
     T: Manifest,
 {
     /// Creates an iterator over the packages in the workspace.
+    ///
+    /// Note that packages are represented as a tuple of path and name, since
+    /// this is what is needed to determine the scopes of a commit. In order to
+    /// obtain the [`Project`][] for a package by its name, [`Workspace::get`]
+    /// can be used.
+    ///
+    /// [`Project`]: crate::project::Project
     #[inline]
     #[must_use]
     pub fn packages(&self) -> Packages<'_> {

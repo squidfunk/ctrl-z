@@ -94,14 +94,16 @@ pub fn main() {
                 let path = repo.path().join("Cargo.toml");
                 let workspace = Workspace::<Cargo>::read(path).unwrap();
 
-                // Scopr try_from
+                let deps = workspace.dependents();
+
+                println!("Workspace: {:#?}", deps);
+
                 let scope = Scope::try_from(&workspace).unwrap();
 
                 // @todo remove when we can build the graph and scope from it.
-                let projects = find_packages2(repo.path()).unwrap();
                 // in the graph, we now determine all actually versioned packages
                 // and their deps
-                let graph = create_graph(&projects);
+                // let graph = create_graph(&projects);
 
                 // Project Collection?
 
@@ -166,34 +168,34 @@ pub fn main() {
                 // move prompt outside - provide a callback function that receives
                 // the recommended version bump and can return one as well.
 
-                // can we also impl an iterator over the traversal that auto-completes?
-                let mut traversal = graph.traverse(incr);
-                let inc = graph.topology().incoming();
-                while let Some(node) = traversal.take() {
-                    println!("Traversed node: {:?} - {:?}", node, &inc[node]);
+                // // can we also impl an iterator over the traversal that auto-completes?
+                // let mut traversal = graph.traverse(incr);
+                // let inc = graph.topology().incoming();
+                // while let Some(node) = traversal.take() {
+                //     println!("Traversed node: {:?} - {:?}", node, &inc[node]);
 
-                    let x = prompt_increment(
-                        graph[node].manifest.name().unwrap(),
-                        graph[node]
-                            .manifest
-                            .version()
-                            .expect("versioned package"),
-                        increments[node],
-                        &[],
-                    );
+                //     let x = prompt_increment(
+                //         graph[node].manifest.name().unwrap(),
+                //         graph[node]
+                //             .manifest
+                //             .version()
+                //             .expect("versioned package"),
+                //         increments[node],
+                //         &[],
+                //     );
 
-                    match x {
-                        Ok(x) => {
-                            println!("User selected increment: {:?}", x);
-                        }
-                        Err(err) => {
-                            eprintln!("Error prompting for increment: {}", err);
-                            break;
-                        }
-                    }
+                //     match x {
+                //         Ok(x) => {
+                //             println!("User selected increment: {:?}", x);
+                //         }
+                //         Err(err) => {
+                //             eprintln!("Error prompting for increment: {}", err);
+                //             break;
+                //         }
+                //     }
 
-                    traversal.complete(node);
-                }
+                //     traversal.complete(node);
+                // }
 
                 // traversal!
 

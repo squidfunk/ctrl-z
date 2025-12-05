@@ -70,7 +70,7 @@ impl<'a> Changeset<'a> {
         let increments = vec![None; scopes.len()];
         Self {
             scopes,
-            revisions: Vec::default(),
+            revisions: Vec::new(),
             increments,
         }
     }

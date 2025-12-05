@@ -42,7 +42,9 @@ pub struct Item<'a> {
     /// Revision.
     revision: &'a Revision<'a>,
     /// Affected scopes.
-    affected: Vec<&'a str>,
+    scopes: Vec<&'a str>,
+    /// Affected issues.
+    issues: Vec<u32>,
 }
 
 // ----------------------------------------------------------------------------
@@ -60,7 +62,11 @@ impl<'a> Section<'a> {
         }
 
         // Create item and add to section
-        self.items.push(Item { revision, affected });
+        self.items.push(Item {
+            revision,
+            scopes: affected,
+            issues: revision.issues().to_vec(),
+        });
     }
 }
 
@@ -75,15 +81,15 @@ impl fmt::Display for Item<'_> {
         f.write_str(&id[0..7])?;
 
         // Write affected scopes, if any
-        if !self.affected.is_empty() {
+        if !self.scopes.is_empty() {
             f.write_char(' ')?;
-            for (i, scope) in self.affected.iter().enumerate() {
+            for (i, scope) in self.scopes.iter().enumerate() {
                 f.write_str("__")?;
                 f.write_str(scope)?;
                 f.write_str("__")?;
 
                 // Write comma if not last
-                if i < self.affected.len() - 1 {
+                if i < self.scopes.len() - 1 {
                     f.write_str(", ")?;
                 }
             }
@@ -92,6 +98,24 @@ impl fmt::Display for Item<'_> {
         // Retrieve change and write description
         let change = self.revision.change();
         f.write_str(" – ")?;
-        f.write_str(change.description())
+        f.write_str(change.description())?;
+
+        // Write affected issues, if any
+        if !self.issues.is_empty() {
+            f.write_str(" (")?;
+            for (i, issue) in self.issues.iter().enumerate() {
+                f.write_char('#')?;
+                issue.fmt(f)?;
+
+                // Write comma if not last
+                if i < self.issues.len() - 1 {
+                    f.write_str(", ")?;
+                }
+            }
+            f.write_char(')')?;
+        }
+
+        // No errors occurred
+        Ok(())
     }
 }

@@ -7,11 +7,13 @@ use std::collections::BTreeMap;
 use std::fs;
 use toml_edit::{value, DocumentMut, Item, TableLike};
 
+// add to workspace as well! - compute all versions, then bump everything.
+
 impl<T> Project<T>
 where
     T: Manifest,
 {
-    pub fn update(&mut self, versions: &BTreeMap<&str, Version>) -> Result
+    pub fn update(&mut self, versions: &Versions) -> Result
     where
         T: Updatable,
     {

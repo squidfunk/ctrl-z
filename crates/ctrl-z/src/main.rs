@@ -74,12 +74,36 @@ enum Commands {
         #[arg(long)]
         dry_run: bool,
     },
+    /// Git hooks
+    Hook {
+        #[command(subcommand)]
+        hook_type: HookCommands,
+    },
+}
+
+#[derive(Subcommand)]
+enum HookCommands {
+    /// Validate commit message format
+    CommitMsg {
+        /// Path to commit message file
+        #[arg(default_value = ".git/COMMIT_EDITMSG")]
+        message_file: PathBuf,
+    },
+    Install,
 }
 
 pub fn main() {
     let cli = Cli::parse();
 
     match cli.command {
+        Commands::Hook { hook_type } => match hook_type {
+            HookCommands::CommitMsg { message_file } => {
+                handle_commit_msg_hook(&message_file);
+            }
+            HookCommands::Install => {
+                install_git_hooks();
+            }
+        },
         Commands::Tag { dry_run } => {
             if dry_run {
                 println!("Dry run: no changes will be made");
@@ -673,3 +697,79 @@ fn create_tag(
 //         }
 //     }
 // }
+
+fn handle_commit_msg_hook(message_file: &Path) {
+    use ctrl_z_changeset::Change;
+    use std::fs;
+    use std::str::FromStr;
+
+    // Read commit message
+    let content = match fs::read_to_string(message_file) {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("Error reading commit message: {}", e);
+            std::process::exit(1);
+        }
+    };
+
+    // Get first non-comment line
+    let message = content
+        .lines()
+        .find(|line| {
+            !line.trim().is_empty() && !line.trim_start().starts_with('#')
+        })
+        .unwrap_or("");
+
+    // @todo also check for refs... can we use inquire here?
+
+    // Validate using Change parser
+    match Change::from_str(message) {
+        Ok(change) => {
+            println!("✓ Valid commit message: {:?}", change.kind());
+            std::process::exit(0);
+        }
+        Err(e) => {
+            eprintln!("✗ Invalid commit message format");
+            eprintln!("  {}", e);
+            eprintln!("\nExpected format:");
+            eprintln!("  <type>[!]: <description>");
+            eprintln!("\nValid types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert");
+            eprintln!("Add '!' for breaking changes");
+            std::process::exit(1);
+        }
+    }
+}
+
+// @todo: check if already installed
+fn install_git_hooks() {
+    use std::fs;
+    use std::os::unix::fs::PermissionsExt;
+
+    let hook_path = Path::new(".git/hooks/commit-msg");
+
+    // Get the current binary path
+    let binary_path =
+        env::current_exe().expect("Failed to get current executable path");
+
+    let hook_content = format!(
+        "#!/bin/sh\n{} hook commit-msg \"$1\"\n",
+        binary_path.display()
+    );
+
+    // Write hook file
+    fs::write(hook_path, hook_content)
+        .expect("Failed to write commit-msg hook");
+
+    // Make executable (Unix only)
+    #[cfg(unix)]
+    {
+        let mut perms = fs::metadata(hook_path)
+            .expect("Failed to get hook metadata")
+            .permissions();
+        perms.set_mode(0o755);
+        fs::set_permissions(hook_path, perms)
+            .expect("Failed to set hook permissions");
+    }
+
+    println!("✓ Installed commit-msg hook at {}", hook_path.display());
+}

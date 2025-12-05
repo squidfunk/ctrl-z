@@ -72,6 +72,11 @@ impl<'a> Commit<'a> {
     pub fn summary(&self) -> &str {
         self.inner.summary().expect("invariant")
     }
+
+    #[inline]
+    pub fn body(&self) -> Option<&str> {
+        self.inner.body().filter(|body| !body.is_empty())
+    }
 }
 
 impl PartialEq for Commit<'_> {

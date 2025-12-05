@@ -48,6 +48,8 @@ pub struct Revision<'a> {
     change: Change,
     /// Affected scopes.
     scopes: BTreeSet<usize>,
+    /// Affected issues.
+    issues: Vec<u32>,
 }
 
 // ----------------------------------------------------------------------------
@@ -72,6 +74,12 @@ impl Revision<'_> {
     #[inline]
     pub fn scopes(&self) -> &BTreeSet<usize> {
         &self.scopes
+    }
+
+    /// Returns the affected issues.
+    #[inline]
+    pub fn issues(&self) -> &[u32] {
+        &self.issues
     }
 }
 
@@ -104,8 +112,13 @@ impl<'a> Changeset<'a> {
                     cmp::max(self.increments[index], increment);
             }
 
+            // Next, try to find issue references in the description, denoted
+            // by a hash sign followed by a number, e.g., "#123"
+            let issues = commit.body().map(parse_issues).unwrap_or_default();
+
             // Create revision and add to changeset
-            self.revisions.push(Revision { commit, change, scopes });
+            self.revisions
+                .push(Revision { commit, change, scopes, issues });
         }
 
         // No errors occurred
@@ -136,4 +149,19 @@ impl<'a> Changeset<'a> {
         // No errors occurred
         Ok(())
     }
+}
+
+// ----------------------------------------------------------------------------
+// Functions
+// ----------------------------------------------------------------------------
+
+/// Parses issue references (#123) from body.
+fn parse_issues(body: &str) -> Vec<u32> {
+    body.split_whitespace()
+        .filter_map(|word| {
+            word.trim_matches(|c: char| !c.is_ascii_digit() && c != '#')
+                .strip_prefix('#')
+                .and_then(|n| n.parse().ok())
+        })
+        .collect()
 }

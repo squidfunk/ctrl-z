@@ -43,7 +43,7 @@ pub struct Item<'a> {
     revision: &'a Revision<'a>,
     /// Affected scopes.
     scopes: Vec<&'a str>,
-    /// Affected issues.
+    /// Relevant issues.
     issues: Vec<u32>,
 }
 

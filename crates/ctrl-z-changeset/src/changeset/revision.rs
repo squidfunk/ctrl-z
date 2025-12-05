@@ -48,7 +48,7 @@ pub struct Revision<'a> {
     change: Change,
     /// Affected scopes.
     scopes: BTreeSet<usize>,
-    /// Affected issues.
+    /// Relevant issues.
     issues: Vec<u32>,
 }
 
@@ -76,7 +76,7 @@ impl Revision<'_> {
         &self.scopes
     }
 
-    /// Returns the affected issues.
+    /// Returns the relevant issues.
     #[inline]
     pub fn issues(&self) -> &[u32] {
         &self.issues
@@ -155,7 +155,7 @@ impl<'a> Changeset<'a> {
 // Functions
 // ----------------------------------------------------------------------------
 
-/// Parses issue references (#123) from body.
+/// Parses issue references, e.g., `#123` from body.
 fn parse_issues(body: &str) -> Vec<u32> {
     body.split_whitespace()
         .filter_map(|word| {

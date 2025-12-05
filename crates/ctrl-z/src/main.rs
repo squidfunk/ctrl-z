@@ -35,7 +35,7 @@ use std::collections::HashSet;
 use std::env;
 use std::path::{Path, PathBuf};
 
-use ctrl_z_changeset::{Changeset, Increment, Scope, VersionExt};
+use ctrl_z_changeset::{Changeset, Increment, Scopes, VersionExt};
 use ctrl_z_project::{Cargo, Workspace};
 use ctrl_z_repository::Reference;
 use ctrl_z_repository::Repository;
@@ -94,10 +94,9 @@ pub fn main() {
                 let workspace = Workspace::<Cargo>::read(path).unwrap();
 
                 let deps = workspace.dependents();
-
                 println!("Workspace: {:#?}", deps);
 
-                let scope = Scope::try_from(&workspace).unwrap();
+                let scopes = Scopes::try_from(&workspace).unwrap();
 
                 // @todo remove when we can build the graph and scope from it.
                 // in the graph, we now determine all actually versioned packages
@@ -128,7 +127,7 @@ pub fn main() {
 
                 // @todo changeset... - we can just create this from scopes!
                 // Changeset::from(...)?
-                let mut changeset = Changeset::new(scope);
+                let mut changeset = Changeset::new(scopes);
                 let commits = repo
                     .commits()
                     .unwrap()
@@ -141,6 +140,8 @@ pub fn main() {
 
                 println!("Changeset: {:#?}", changeset);
                 println!("{}", changeset.to_changelog());
+
+                // we should impl a partial revision iterator?
 
                 let increments = changeset.increments().to_vec();
                 let incr = increments
@@ -172,6 +173,10 @@ pub fn main() {
                 // let inc = graph.topology().incoming();
                 // while let Some(node) = traversal.take() {
                 //     println!("Traversed node: {:?} - {:?}", node, &inc[node]);
+
+                //     // we just need to list:
+                //     // - the dependent package name and its version
+                //     // - all commits related to the package (= scope)
 
                 //     let x = prompt_increment(
                 //         graph[node].manifest.name().unwrap(),

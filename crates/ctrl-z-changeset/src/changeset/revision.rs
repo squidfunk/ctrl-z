@@ -94,7 +94,7 @@ impl<'a> Changeset<'a> {
             // Retrieve affected scopes from commit
             let mut scopes = BTreeSet::new();
             for delta in commit.deltas()? {
-                scopes.extend(self.scope.matches(delta.path()));
+                scopes.extend(self.scope.get(delta.path()));
             }
 
             // Update increments for affected scopes

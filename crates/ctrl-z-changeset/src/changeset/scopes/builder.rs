@@ -30,7 +30,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use super::error::{Error, Result};
-use super::Scope;
+use super::Scopes;
 
 // ----------------------------------------------------------------------------
 // Structs
@@ -52,13 +52,13 @@ pub struct Builder {
 impl Builder {
     /// Creates a scope set builder.
     ///
-    /// Note that the canonical way to create a [`Scope`] is to invoke the
-    /// [`Scope::builder`] method, which creates an instance of [`Builder`].
+    /// Note that the canonical way to create [`Scopes`] is to invoke the
+    /// [`Scopes::builder`] method, which creates an instance of [`Builder`].
     ///
     /// # Examples
     ///
     /// ```
-    /// use ctrl_z_changeset::scope::Builder;
+    /// use ctrl_z_changeset::scopes::Builder;
     ///
     /// // Create scope set builder
     /// let mut builder = Builder::new();
@@ -82,10 +82,10 @@ impl Builder {
     /// ```
     /// # use std::error::Error;
     /// # fn main() -> Result<(), Box<dyn Error>> {
-    /// use ctrl_z_changeset::Scope;
+    /// use ctrl_z_changeset::Scopes;
     ///
     /// // Create scope set builder and add path
-    /// let mut builder = Scope::builder();
+    /// let mut builder = Scopes::builder();
     /// builder.add("crates/ctrl-z", "ctrl-z")?;
     /// # Ok(())
     /// # }
@@ -132,19 +132,19 @@ impl Builder {
     /// ```
     /// # use std::error::Error;
     /// # fn main() -> Result<(), Box<dyn Error>> {
-    /// use ctrl_z_changeset::Scope;
+    /// use ctrl_z_changeset::Scopes;
     ///
     /// // Create scope set builder and add path
-    /// let mut builder = Scope::builder();
+    /// let mut builder = Scopes::builder();
     /// builder.add("crates/ctrl-z", "ctrl-z")?;
     ///
     /// // Create scope set from builder
-    /// let scope = builder.build()?;
+    /// let scopes = builder.build()?;
     /// # Ok(())
     /// # }
     /// ```
-    pub fn build(self) -> Result<Scope> {
-        Ok(Scope {
+    pub fn build(self) -> Result<Scopes> {
+        Ok(Scopes {
             paths: self.paths.into_iter().collect(),
             globs: self.globs.build()?,
         })
@@ -161,7 +161,7 @@ impl Default for Builder {
     /// # Examples
     ///
     /// ```
-    /// use ctrl_z_changeset::scope::Builder;
+    /// use ctrl_z_changeset::scopes::Builder;
     ///
     /// // Create scope set builder
     /// let mut builder = Builder::default();

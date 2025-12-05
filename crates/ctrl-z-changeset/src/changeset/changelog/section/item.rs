@@ -28,7 +28,7 @@
 use std::fmt::{self, Write};
 
 use crate::changeset::revision::Revision;
-use crate::changeset::scope::Scope;
+use crate::changeset::scopes::Scopes;
 
 use super::Section;
 
@@ -42,7 +42,7 @@ pub struct Item<'a> {
     /// Revision.
     revision: &'a Revision<'a>,
     /// Affected scopes.
-    scopes: Vec<&'a str>,
+    affected: Vec<&'a str>,
 }
 
 // ----------------------------------------------------------------------------
@@ -51,16 +51,16 @@ pub struct Item<'a> {
 
 impl<'a> Section<'a> {
     /// Adds a revision to the section item.
-    pub fn add(&mut self, revision: &'a Revision, scope: &'a Scope) {
+    pub fn add(&mut self, revision: &'a Revision, scopes: &'a Scopes) {
         // Obtain names of affected scopes
-        let mut scopes = Vec::new();
+        let mut affected = Vec::new();
         for &index in revision.scopes() {
-            let (_, name) = &scope[index];
-            scopes.push(name.as_str());
+            let (_, name) = &scopes[index];
+            affected.push(name.as_str());
         }
 
         // Create item and add to section
-        self.items.push(Item { revision, scopes });
+        self.items.push(Item { revision, affected });
     }
 }
 
@@ -74,16 +74,16 @@ impl fmt::Display for Item<'_> {
         let id = self.revision.commit().id().to_string();
         f.write_str(&id[0..7])?;
 
-        // Write scopes, if any
-        if !self.scopes.is_empty() {
+        // Write affected scopes, if any
+        if !self.affected.is_empty() {
             f.write_char(' ')?;
-            for (i, scope) in self.scopes.iter().enumerate() {
+            for (i, scope) in self.affected.iter().enumerate() {
                 f.write_str("__")?;
                 f.write_str(scope)?;
                 f.write_str("__")?;
 
                 // Write comma if not last
-                if i < self.scopes.len() - 1 {
+                if i < self.affected.len() - 1 {
                     f.write_str(", ")?;
                 }
             }

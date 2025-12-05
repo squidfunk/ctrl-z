@@ -29,14 +29,14 @@ pub mod change;
 pub mod changelog;
 mod error;
 pub mod revision;
-pub mod scope;
+pub mod scopes;
 pub mod version;
 
 use change::Change;
 use changelog::Changelog;
 pub use error::{Error, Result};
 use revision::Revision;
-use scope::Scope;
+use scopes::Scopes;
 use version::Increment;
 
 // ----------------------------------------------------------------------------
@@ -52,7 +52,7 @@ use version::Increment;
 #[derive(Debug)]
 pub struct Changeset<'a> {
     /// Scope set.
-    scope: Scope,
+    scope: Scopes,
     /// List of revisions.
     revisions: Vec<Revision<'a>>,
     /// Version increments.
@@ -66,7 +66,7 @@ pub struct Changeset<'a> {
 impl<'a> Changeset<'a> {
     /// Creates a changeset.
     #[must_use]
-    pub fn new(scope: Scope) -> Self {
+    pub fn new(scope: Scopes) -> Self {
         let increments = vec![None; scope.len()];
         Self {
             scope,

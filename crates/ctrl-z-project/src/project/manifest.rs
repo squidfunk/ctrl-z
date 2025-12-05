@@ -57,4 +57,5 @@ pub trait Dependencies {
     fn dependencies(&self) -> impl Iterator<Item = Item<'_>>;
 }
 
+// @todo name ProjectInfo or VersionInfo or Info + VersionReqInfo?
 pub type Item<'a> = (&'a String, Option<&'a VersionReq>);

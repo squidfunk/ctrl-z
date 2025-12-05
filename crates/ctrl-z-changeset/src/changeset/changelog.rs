@@ -30,7 +30,7 @@ use std::fmt;
 
 use super::change::Kind;
 use super::revision::Revision;
-use super::scope::Scope;
+use super::scopes::Scopes;
 
 mod section;
 
@@ -51,7 +51,7 @@ use section::{Category, Section};
 #[derive(Debug)]
 pub struct Changelog<'a> {
     /// Scope set.
-    scope: &'a Scope,
+    scope: &'a Scopes,
     /// Sections grouped by category.
     sections: BTreeMap<Category, Section<'a>>,
 }
@@ -63,7 +63,7 @@ pub struct Changelog<'a> {
 impl<'a> Changelog<'a> {
     /// Creates a changelog with the given scope.
     #[must_use]
-    pub fn new(scope: &'a Scope) -> Self {
+    pub fn new(scope: &'a Scopes) -> Self {
         Changelog {
             scope,
             sections: BTreeMap::default(),

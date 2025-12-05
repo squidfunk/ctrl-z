@@ -48,7 +48,7 @@ pub use error::{Error, Result};
 /// repository, where a list of paths is matched through a [`GlobSet`]. When
 /// two paths overlap, one path must be the prefix of another path. Thus, we
 /// return the longer path as the matching scope.
-pub struct Scope {
+pub struct Scopes {
     /// Registered path-name pairs.
     paths: Vec<(PathBuf, String)>,
     /// Glob set.
@@ -59,16 +59,16 @@ pub struct Scope {
 // Implementations
 // ----------------------------------------------------------------------------
 
-impl Scope {
+impl Scopes {
     /// Creates a scope set builder.
     ///
     /// # Examples
     ///
     /// ```
-    /// use ctrl_z_changeset::Scope;
+    /// use ctrl_z_changeset::Scopes;
     ///
-    /// // Create scope builder
-    /// let mut builder = Scope::builder();
+    /// // Create scope set builder
+    /// let mut builder = Scopes::builder();
     #[inline]
     #[must_use]
     pub fn builder() -> Builder {
@@ -82,23 +82,23 @@ impl Scope {
     /// ```
     /// # use std::error::Error;
     /// # fn main() -> Result<(), Box<dyn Error>> {
-    /// use ctrl_z_changeset::Scope;
+    /// use ctrl_z_changeset::Scopes;
     /// use std::path::Path;
     ///
-    /// // Create scope builder and add path
-    /// let mut builder = Scope::builder();
+    /// // Create scope set builder and add path
+    /// let mut builder = Scopes::builder();
     /// builder.add("crates/ctrl-z", "ctrl-z")?;
     ///
-    /// // Create scope from builder
-    /// let scope = builder.build()?;
+    /// // Create scope set from builder
+    /// let scopes = builder.build()?;
     ///
     /// // Create path and obtain longest matching scope
     /// let path = Path::new("crates/ctrl-z/Cargo.toml");
-    /// assert_eq!(scope.matches(&path), Some(0));
+    /// assert_eq!(scopes.get(&path), Some(0));
     /// # Ok(())
     /// # }
     /// ```
-    pub fn matches<P>(&self, path: P) -> Option<usize>
+    pub fn get<P>(&self, path: P) -> Option<usize>
     where
         P: AsRef<Path>,
     {
@@ -110,7 +110,7 @@ impl Scope {
 }
 
 #[allow(clippy::must_use_candidate)]
-impl Scope {
+impl Scopes {
     /// Returns the number of scopes.
     #[inline]
     pub fn len(&self) -> usize {
@@ -128,7 +128,7 @@ impl Scope {
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl Index<usize> for Scope {
+impl Index<usize> for Scopes {
     type Output = (PathBuf, String);
 
     /// Returns the scope at the given index.
@@ -140,7 +140,7 @@ impl Index<usize> for Scope {
 
 // ----------------------------------------------------------------------------
 
-impl<T> TryFrom<&Workspace<T>> for Scope
+impl<T> TryFrom<&Workspace<T>> for Scopes
 where
     T: Manifest,
 {
@@ -148,7 +148,7 @@ where
 
     /// Attempts to create a scope set from the given workspace.
     fn try_from(workspace: &Workspace<T>) -> Result<Self> {
-        let mut builder = Scope::builder();
+        let mut builder = Scopes::builder();
         for (path, name) in workspace.packages() {
             builder.add(path, name)?;
         }
@@ -158,7 +158,7 @@ where
 
 // ----------------------------------------------------------------------------
 
-impl fmt::Debug for Scope {
+impl fmt::Debug for Scopes {
     /// Formats the scope set for debugging.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Scope")

@@ -30,7 +30,7 @@ use thiserror::Error;
 
 use ctrl_z_repository as repository;
 
-use super::{change, scope};
+use super::{change, scopes};
 
 // ----------------------------------------------------------------------------
 // Enums
@@ -47,7 +47,7 @@ pub enum Error {
     Change(#[from] change::Error),
     /// Scope error.
     #[error(transparent)]
-    Scope(#[from] scope::Error),
+    Scope(#[from] scopes::Error),
 }
 
 // ----------------------------------------------------------------------------

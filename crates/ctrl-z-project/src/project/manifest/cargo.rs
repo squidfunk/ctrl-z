@@ -115,13 +115,9 @@ impl Dependencies for Cargo {
             Cargo::Workspace { workspace } => &workspace.dependencies,
         };
 
-        dependencies.iter().map(|(name, dependency)| {
-            let version = match dependency {
-                Dependency::Version(version) => Some(version),
-                Dependency::Info(info) => info.version.as_ref(),
-            };
-            (name, version)
-        })
+        dependencies
+            .iter()
+            .map(|(name, dependency)| (name, dependency.version()))
     }
 }
 

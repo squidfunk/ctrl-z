@@ -28,10 +28,11 @@
 use clap::builder::styling::{AnsiColor, Effects};
 use clap::builder::Styles;
 use clap::{Parser, Subcommand};
+use ctrl_z_project::workspace::updater::Updater;
 // @todo: remove the git indirection
 use inquire::Select;
 use semver::Version;
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
 use std::env;
 use std::path::{Path, PathBuf};
 
@@ -91,7 +92,7 @@ pub fn main() {
 
                 //
                 let path = repo.path().join("Cargo.toml");
-                let workspace = Workspace::<Cargo>::read(path).unwrap();
+                let mut workspace = Workspace::<Cargo>::read(path).unwrap();
 
                 let deps = workspace.dependents();
                 println!("Workspace: {:#?}", deps);
@@ -164,6 +165,21 @@ pub fn main() {
                     "Increments needed for scopes at indexes: {:#?}",
                     incr
                 );
+
+                // now, determine actual version bumps!
+                let versions = BTreeMap::from_iter([
+                    ("foo-utils", Version::parse("0.1.0").unwrap()),
+                    ("foo-core", Version::parse("0.0.2").unwrap()),
+                ]);
+
+                for project in &mut workspace {
+                    project.update(&versions).unwrap();
+                }
+
+                // how go get version for scope? workspace.get?
+                // now, traverse from all sources?
+
+                // Writer <- this should take a workspace, and then write all
 
                 // move prompt outside - provide a callback function that receives
                 // the recommended version bump and can return one as well.

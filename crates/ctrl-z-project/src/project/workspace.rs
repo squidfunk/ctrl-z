@@ -25,7 +25,7 @@
 
 //! Workspace.
 
-use std::collections::btree_map::Iter;
+use std::collections::btree_map::{Values, ValuesMut};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
@@ -35,6 +35,7 @@ use super::Project;
 
 mod dependents;
 mod packages;
+pub mod updater; // @todo
 
 // ----------------------------------------------------------------------------
 // Structs
@@ -111,7 +112,13 @@ where
 
     /// Creates an iterator over the workspace.
     #[inline]
-    pub fn iter(&self) -> Iter<'_, PathBuf, Project<T>> {
+    pub fn iter(&self) -> Values<'_, PathBuf, Project<T>> {
+        self.into_iter()
+    }
+
+    /// Creates a mutable iterator over the workspace.
+    #[inline]
+    pub fn iter_mut(&mut self) -> ValuesMut<'_, PathBuf, Project<T>> {
         self.into_iter()
     }
 }
@@ -124,12 +131,26 @@ impl<'a, T> IntoIterator for &'a Workspace<T>
 where
     T: Manifest,
 {
-    type Item = (&'a PathBuf, &'a Project<T>);
-    type IntoIter = Iter<'a, PathBuf, Project<T>>;
+    type Item = &'a Project<T>;
+    type IntoIter = Values<'a, PathBuf, Project<T>>;
 
     /// Creates an iterator over the workspace.
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
-        self.projects.iter()
+        self.projects.values()
+    }
+}
+
+impl<'a, T> IntoIterator for &'a mut Workspace<T>
+where
+    T: Manifest,
+{
+    type Item = &'a mut Project<T>;
+    type IntoIter = ValuesMut<'a, PathBuf, Project<T>>;
+
+    /// Creates a mutable iterator over the workspace.
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.projects.values_mut()
     }
 }

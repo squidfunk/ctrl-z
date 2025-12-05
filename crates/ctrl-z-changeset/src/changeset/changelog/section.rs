@@ -23,75 +23,58 @@
 
 // ----------------------------------------------------------------------------
 
-//! Section item.
+//! Section.
 
 use std::fmt::{self, Write};
-use std::str;
 
-use ctrl_z_changeset::{Revision, Scope};
+mod category;
+mod item;
 
-use super::Section;
+pub use category::Category;
+pub use item::Item;
 
 // ----------------------------------------------------------------------------
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Section item.
+/// Section.
 #[derive(Debug, PartialEq, Eq)]
-pub struct Item<'a> {
-    /// Revision.
-    revision: &'a Revision<'a>,
-    /// Affected scopes.
-    scopes: Vec<&'a str>,
-}
-
-// ----------------------------------------------------------------------------
-// Implementations
-// ----------------------------------------------------------------------------
-
-impl<'a> Section<'a> {
-    ///
-    pub fn add(&mut self, revision: &'a Revision, scope: &'a Scope) {
-        // Determine affected scopes
-        let mut scopes = Vec::new();
-        for &index in revision.scopes() {
-            let (_, name) = &scope[index];
-            scopes.push(name.as_str());
-        }
-
-        // Revision id
-        self.items.push(Item { revision, scopes });
-    }
+pub struct Section<'a> {
+    /// Section category.
+    category: Category,
+    /// Section items.
+    items: Vec<Item<'a>>,
 }
 
 // ----------------------------------------------------------------------------
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl fmt::Display for Item<'_> {
-    /// Formats the section kind for display.
+impl From<Category> for Section<'_> {
+    /// Creates a section from a given title.
+    #[inline]
+    fn from(category: Category) -> Self {
+        Self { category, items: Vec::new() }
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+impl fmt::Display for Section<'_> {
+    /// Formats the section for display.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let id = self.revision.commit().id().to_string();
-        f.write_str(&id[0..7])?;
+        f.write_str("### ")?;
+        self.category.fmt(f)?;
+        f.write_str("\n\n")?;
 
-        // Write scopes, if any
-        if !self.scopes.is_empty() {
-            f.write_char(' ')?;
-            for (i, scope) in self.scopes.iter().enumerate() {
-                f.write_str("__")?;
-                f.write_str(scope)?;
-                f.write_str("__")?;
-
-                // Write comma if not last
-                if i < self.scopes.len() - 1 {
-                    f.write_str(", ")?;
-                }
-            }
+        // Write all items, each on a new line
+        for item in &self.items {
+            f.write_str("- ")?;
+            item.fmt(f)?;
+            f.write_char('\n')?;
         }
 
-        // Retrieve change and write description
-        let change = self.revision.change();
-        f.write_str(" – ")?;
-        f.write_str(change.description())
+        // Add empty line after items
+        f.write_char('\n')
     }
 }

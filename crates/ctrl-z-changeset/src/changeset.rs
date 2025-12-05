@@ -26,6 +26,7 @@
 //! Changeset.
 
 pub mod change;
+pub mod changelog;
 mod error;
 pub mod revision;
 pub mod scope;

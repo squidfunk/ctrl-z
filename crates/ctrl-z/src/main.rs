@@ -28,7 +28,6 @@
 use clap::builder::styling::{AnsiColor, Effects};
 use clap::builder::Styles;
 use clap::{Parser, Subcommand};
-use ctrl_z_changelog::Changelog;
 // @todo: remove the git indirection
 use inquire::Select;
 use semver::Version;
@@ -37,7 +36,7 @@ use std::env;
 use std::path::{Path, PathBuf};
 use zrx::graph::Graph;
 
-use ctrl_z_changeset::{Changeset, Increment, Scope, VersionExt};
+use ctrl_z_changeset::{Changelog, Changeset, Increment, Scope, VersionExt};
 use ctrl_z_project::{Cargo, Error, Manifest as _, Project};
 use ctrl_z_repository::Reference;
 use ctrl_z_repository::Repository;
@@ -147,8 +146,8 @@ pub fn main() {
                 // changeset: collect for scope!
 
                 println!("Changeset: {:#?}", changeset);
-
-                let changelog = Changelog::from(&changeset);
+                let changelog =
+                    Changelog::new(changeset.revisions(), changeset.scope());
 
                 println!("{changelog}");
 

@@ -23,8 +23,42 @@
 
 // ----------------------------------------------------------------------------
 
-//! Changelog generator.
+//! Section category.
 
-mod changelog;
+use std::fmt;
 
-pub use changelog::Changelog;
+// ----------------------------------------------------------------------------
+// Enums
+// ----------------------------------------------------------------------------
+
+/// Section category.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Category {
+    /// Breaking changes.
+    Breaking,
+    /// Features.
+    Feature,
+    /// Bugfixes.
+    Fix,
+    /// Performance improvements.
+    Performance,
+    /// Refactorings.
+    Refactor,
+}
+
+// ----------------------------------------------------------------------------
+// Trait implementations
+// ----------------------------------------------------------------------------
+
+impl fmt::Display for Category {
+    /// Formats the section category for display.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Category::Breaking => f.write_str("Breaking changes"),
+            Category::Feature => f.write_str("Features"),
+            Category::Fix => f.write_str("Bugfixes"),
+            Category::Performance => f.write_str("Performance improvements"),
+            Category::Refactor => f.write_str("Refactorings"),
+        }
+    }
+}

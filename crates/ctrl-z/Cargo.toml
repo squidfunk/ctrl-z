@@ -38,7 +38,6 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
-ctrl-z-changelog.workspace = true
 ctrl-z-changeset.workspace = true
 ctrl-z-project.workspace = true
 ctrl-z-repository.workspace = true

@@ -28,12 +28,13 @@
 use std::collections::BTreeMap;
 use std::fmt;
 
-use ctrl_z_changeset::change::Kind;
-use ctrl_z_changeset::Changeset;
+use super::change::Kind;
+use super::revision::Revision;
+use super::scope::Scope;
 
 mod section;
 
-use section::{Section, Title};
+use section::{Category, Section};
 
 // ----------------------------------------------------------------------------
 // Structs
@@ -41,46 +42,49 @@ use section::{Section, Title};
 
 /// Changelog.
 pub struct Changelog<'a> {
-    /// Sections indexed by kind.
-    sections: BTreeMap<Title, Section<'a>>,
+    /// Changes grouped by category.
+    sections: BTreeMap<Category, Section<'a>>,
 }
 
 // ----------------------------------------------------------------------------
-// Trait implementations
+// Implementations
 // ----------------------------------------------------------------------------
 
-impl<'a> From<&'a Changeset<'a>> for Changelog<'a> {
-    /// Creates a changelog from a changeset.
+impl<'a> Changelog<'a> {
+    /// Creates a changelog from a scope and set of revisions.
     ///
     /// Note that only relevant changes are included in the changelog, which
     /// includes features, fixes, performance improvements and refactorings. In
     /// case the changeset does not include such changes, the changelog will be
     /// empty, which is expected, since no release is necessary.
-    fn from(changeset: &'a Changeset<'a>) -> Self {
-        let mut sections = BTreeMap::new();
-        for revision in changeset.revisions() {
+    pub fn new<T>(iter: T, scope: &'a Scope) -> Self
+    where
+        T: IntoIterator<Item = &'a Revision<'a>>,
+    {
+        let mut sections = BTreeMap::<Category, Section>::new();
+        for revision in iter {
             let change = revision.change();
 
             // Determine section title - not all types of changes are featured
             // in the changelog, so we skip those that are not relevant
-            let title = if change.is_breaking() {
-                Title::Breaking
+            let category = if change.is_breaking() {
+                Category::Breaking
             } else {
                 match change.kind() {
-                    Kind::Feature => Title::Feature,
-                    Kind::Fix => Title::Fix,
-                    Kind::Performance => Title::Performance,
-                    Kind::Refactor => Title::Refactor,
+                    Kind::Feature => Category::Feature,
+                    Kind::Fix => Category::Fix,
+                    Kind::Performance => Category::Performance,
+                    Kind::Refactor => Category::Refactor,
                     _ => continue,
                 }
             };
 
-            // Determine relevant section and add revision - note that we need
+            // Retrieve or create section and add revision - note that we need
             // to pass the scopes for rendering, as only indices are stored
             sections
-                .entry(title)
-                .or_insert_with(|| Section::from(title))
-                .add(revision, changeset.scope());
+                .entry(category)
+                .or_insert_with(|| category.into())
+                .add(revision, scope);
         }
 
         // Return changelog
@@ -88,6 +92,8 @@ impl<'a> From<&'a Changeset<'a>> for Changelog<'a> {
     }
 }
 
+// ----------------------------------------------------------------------------
+// Trait implementations
 // ----------------------------------------------------------------------------
 
 impl fmt::Display for Changelog<'_> {

@@ -33,11 +33,11 @@ pub mod scope;
 pub mod version;
 
 use change::Change;
+use changelog::Changelog;
 pub use error::{Error, Result};
 use revision::Revision;
 use scope::Scope;
-
-use crate::Increment;
+use version::Increment;
 
 // ----------------------------------------------------------------------------
 // Structs
@@ -63,55 +63,43 @@ pub struct Changeset<'a> {
 // Implementations
 // ----------------------------------------------------------------------------
 
-impl Changeset<'_> {
+impl<'a> Changeset<'a> {
     /// Creates a changeset.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// todo!()
-    /// ```
     #[must_use]
     pub fn new(scope: Scope) -> Self {
         let increments = vec![None; scope.len()];
         Self {
             scope,
-            revisions: Vec::new(),
+            revisions: Vec::default(),
             increments,
         }
     }
 
-    // to_graph + to_changelog + to_plan?
-
-    // From the manifests, we extract all scopes.
-    // What do we need to update all manifests?
-    // - Scope -> Increment
-    // - Package name -> Version (Graph)
-    // - Apply increments to versions
-    // - Then update all manifests
-
-    // use a revision iterator again that uses the scopes? and this is then
-    // used inside of the template?
+    /// Creates a changelog from the changeset.
+    #[must_use]
+    pub fn to_changelog(&'a self) -> Changelog<'a> {
+        let mut changelog = Changelog::new(&self.scope);
+        changelog.extend(&self.revisions);
+        changelog
+    }
 
     // @todo temp
     pub fn increments(&self) -> &[Option<Increment>] {
         &self.increments
     }
-
-    // to_markdown <- render as string! formatter? display?
 }
 
-#[allow(clippy::must_use_candidate)]
-impl Changeset<'_> {
-    /// Returns the scope set.
-    #[inline]
-    pub fn scope(&self) -> &Scope {
-        &self.scope
-    }
+// #[allow(clippy::must_use_candidate)]
+// impl Changeset<'_> {
+//     /// Returns the scope set.
+//     #[inline]
+//     pub fn scope(&self) -> &Scope {
+//         &self.scope
+//     }
 
-    /// Returns the list of revisions.
-    #[inline]
-    pub fn revisions(&self) -> &[Revision<'_>] {
-        &self.revisions
-    }
-}
+//     /// Returns the list of revisions.
+//     #[inline]
+//     pub fn revisions(&self) -> &[Revision<'_>] {
+//         &self.revisions
+//     }
+// }

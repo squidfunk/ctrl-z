@@ -36,7 +36,7 @@ use std::env;
 use std::path::{Path, PathBuf};
 use zrx::graph::Graph;
 
-use ctrl_z_changeset::{Changelog, Changeset, Increment, Scope, VersionExt};
+use ctrl_z_changeset::{Changeset, Increment, Scope, VersionExt};
 use ctrl_z_project::{Cargo, Error, Manifest as _, Project};
 use ctrl_z_repository::Reference;
 use ctrl_z_repository::Repository;
@@ -146,10 +146,7 @@ pub fn main() {
                 // changeset: collect for scope!
 
                 println!("Changeset: {:#?}", changeset);
-                let changelog =
-                    Changelog::new(changeset.revisions(), changeset.scope());
-
-                println!("{changelog}");
+                println!("{}", changeset.to_changelog());
 
                 let mut increments = changeset.increments().to_vec();
                 let incr = increments

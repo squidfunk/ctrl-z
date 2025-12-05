@@ -41,7 +41,16 @@ use section::{Category, Section};
 // ----------------------------------------------------------------------------
 
 /// Changelog.
+///
+/// Changelogs are temporary views on a [`Changeset`][], grouping revisions by
+/// category, which is deduced from the [`Kind`] of change, and ignoring any
+/// changes irrelevant for versioning. Breaking changes are always grouped
+/// into their own section, which comes first.
+///
+/// [`Changeset`]: crate::changeset::Changeset
 pub struct Changelog<'a> {
+    /// Scope set.
+    scope: &'a Scope,
     /// Sections grouped by category.
     sections: BTreeMap<Category, Section<'a>>,
 }
@@ -51,49 +60,63 @@ pub struct Changelog<'a> {
 // ----------------------------------------------------------------------------
 
 impl<'a> Changelog<'a> {
+    /// Creates a changelog with the given scope.
+    #[must_use]
+    pub fn new(scope: &'a Scope) -> Self {
+        Changelog {
+            scope,
+            sections: BTreeMap::default(),
+        }
+    }
+
     /// Creates a changelog from a scope and set of revisions.
     ///
     /// Note that only relevant changes are included in the changelog, which
     /// includes features, fixes, performance improvements and refactorings. In
     /// case the changeset does not include such changes, the changelog will be
     /// empty, which is expected, since no release is necessary.
-    pub fn new<T>(iter: T, scope: &'a Scope) -> Self
-    where
-        T: IntoIterator<Item = &'a Revision<'a>>,
-    {
-        let mut sections = BTreeMap::<Category, Section>::new();
-        for revision in iter {
-            let change = revision.change();
+    pub fn add(&mut self, revision: &'a Revision<'a>) {
+        let change = revision.change();
 
-            // Determine section title - not all types of changes are featured
-            // in the changelog, so we skip those that are not relevant
-            let category = if change.is_breaking() {
-                Category::Breaking
-            } else {
-                match change.kind() {
-                    Kind::Feature => Category::Feature,
-                    Kind::Fix => Category::Fix,
-                    Kind::Performance => Category::Performance,
-                    Kind::Refactor => Category::Refactor,
-                    _ => continue,
-                }
-            };
+        // Determine section title - not all types of changes are featured
+        // in the changelog, so we skip those that are not relevant
+        let category = if change.is_breaking() {
+            Category::Breaking
+        } else {
+            match change.kind() {
+                Kind::Feature => Category::Feature,
+                Kind::Fix => Category::Fix,
+                Kind::Performance => Category::Performance,
+                Kind::Refactor => Category::Refactor,
+                _ => return,
+            }
+        };
 
-            // Retrieve or create section and add revision - note that we need
-            // to pass the scopes for rendering, as only indices are stored
-            sections
-                .entry(category)
-                .or_insert_with(|| category.into())
-                .add(revision, scope);
-        }
-
-        // Return changelog
-        Changelog { sections }
+        // Retrieve or create section and add revision - note that we need
+        // to pass the scopes for rendering, as only indices are stored
+        self.sections
+            .entry(category)
+            .or_insert_with(|| category.into())
+            .add(revision, self.scope);
     }
 }
 
 // ----------------------------------------------------------------------------
 // Trait implementations
+// ----------------------------------------------------------------------------
+
+impl<'a> Extend<&'a Revision<'a>> for Changelog<'a> {
+    /// Extends the changelog with the given revisions.
+    fn extend<T>(&mut self, iter: T)
+    where
+        T: IntoIterator<Item = &'a Revision<'a>>,
+    {
+        for revision in iter {
+            self.add(revision);
+        }
+    }
+}
+
 // ----------------------------------------------------------------------------
 
 impl fmt::Display for Changelog<'_> {

@@ -51,7 +51,7 @@ use section::{Category, Section};
 #[derive(Debug)]
 pub struct Changelog<'a> {
     /// Scope set.
-    scope: &'a Scopes,
+    scopes: &'a Scopes,
     /// Sections grouped by category.
     sections: BTreeMap<Category, Section<'a>>,
 }
@@ -61,16 +61,16 @@ pub struct Changelog<'a> {
 // ----------------------------------------------------------------------------
 
 impl<'a> Changelog<'a> {
-    /// Creates a changelog with the given scope.
+    /// Creates a changelog with the given scope set.
     #[must_use]
-    pub fn new(scope: &'a Scopes) -> Self {
+    pub fn new(scopes: &'a Scopes) -> Self {
         Changelog {
-            scope,
+            scopes,
             sections: BTreeMap::default(),
         }
     }
 
-    /// Creates a changelog from a scope and set of revisions.
+    /// Creates a changelog from a scope set and list of revisions.
     ///
     /// Note that only relevant changes are included in the changelog, which
     /// includes features, fixes, performance improvements and refactorings. In
@@ -98,7 +98,7 @@ impl<'a> Changelog<'a> {
         self.sections
             .entry(category)
             .or_insert_with(|| category.into())
-            .add(revision, self.scope);
+            .add(revision, self.scopes);
     }
 }
 

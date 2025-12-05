@@ -46,13 +46,13 @@ use version::Increment;
 /// Changeset.
 ///
 /// Changesets extract information from commits, and associate them with a given
-/// set of scopes. For each [`Scope`], an [`Increment`] is derived from changes
+/// set of scopes. For all [`Scopes`], an [`Increment`] is derived from changes
 /// contained in the commits. This does not include transitive dependencies,
 /// which are handled outside of changesets. Changesets only describe.
 #[derive(Debug)]
 pub struct Changeset<'a> {
     /// Scope set.
-    scope: Scopes,
+    scopes: Scopes,
     /// List of revisions.
     revisions: Vec<Revision<'a>>,
     /// Version increments.
@@ -66,10 +66,10 @@ pub struct Changeset<'a> {
 impl<'a> Changeset<'a> {
     /// Creates a changeset.
     #[must_use]
-    pub fn new(scope: Scopes) -> Self {
-        let increments = vec![None; scope.len()];
+    pub fn new(scopes: Scopes) -> Self {
+        let increments = vec![None; scopes.len()];
         Self {
-            scope,
+            scopes,
             revisions: Vec::default(),
             increments,
         }
@@ -78,7 +78,7 @@ impl<'a> Changeset<'a> {
     /// Creates a changelog from the changeset.
     #[must_use]
     pub fn to_changelog(&'a self) -> Changelog<'a> {
-        let mut changelog = Changelog::new(&self.scope);
+        let mut changelog = Changelog::new(&self.scopes);
         changelog.extend(&self.revisions);
         changelog
     }

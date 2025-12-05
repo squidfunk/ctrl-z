@@ -28,7 +28,7 @@
 use std::collections::BTreeMap;
 use std::fmt;
 
-use ctrl_z_changeset::change;
+use ctrl_z_changeset::change::Kind;
 use ctrl_z_changeset::Changeset;
 
 mod section;
@@ -67,10 +67,10 @@ impl<'a> From<&'a Changeset<'a>> for Changelog<'a> {
                 Title::Breaking
             } else {
                 match change.kind() {
-                    change::Kind::Feature => Title::Feature,
-                    change::Kind::Fix => Title::Fix,
-                    change::Kind::Performance => Title::Performance,
-                    change::Kind::Refactor => Title::Refactor,
+                    Kind::Feature => Title::Feature,
+                    Kind::Fix => Title::Fix,
+                    Kind::Performance => Title::Performance,
+                    Kind::Refactor => Title::Refactor,
                     _ => continue,
                 }
             };

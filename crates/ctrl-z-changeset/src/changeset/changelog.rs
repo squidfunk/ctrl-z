@@ -47,9 +47,6 @@ use section::{Category, Section};
 /// changes irrelevant for versioning. Breaking changes are always grouped
 /// into their own section, which comes first.
 ///
-/// The output format is Markdown, since this is widely supported by hosting
-/// platforms and tools, and what GitHub supports for release notes.
-///
 /// The changelog is solely intended for printing, which is why it implements
 /// [`fmt::Display`]. The output format is Markdown, as supported by GitHub.
 ///

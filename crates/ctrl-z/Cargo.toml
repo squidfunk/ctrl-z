@@ -43,9 +43,10 @@ ctrl-z-project.workspace = true
 ctrl-z-repository.workspace = true
 
 clap.workspace = true
+cliclack.workspace = true
+console.workspace = true
 git2.workspace = true
 globset.workspace = true
-inquire.workspace = true
 semver.workspace = true
 serde.workspace = true
 toml.workspace = true

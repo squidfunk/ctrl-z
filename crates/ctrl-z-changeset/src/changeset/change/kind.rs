@@ -42,7 +42,7 @@ pub enum Kind {
     Fix,
     /// Performance improvement.
     Performance,
-    /// Refactor.
+    /// Refactoring.
     Refactor,
     /// Build.
     Build,

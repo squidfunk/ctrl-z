@@ -27,7 +27,6 @@
 
 use std::ops::{Bound, RangeBounds};
 
-use crate::repository::convert::ToOid;
 use crate::repository::{Error, Repository, Result};
 
 use super::Commit;

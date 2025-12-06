@@ -32,7 +32,7 @@ use cliclack::log::remark;
 use cliclack::{
     intro, outro, outro_note, select, set_theme, Theme, ThemeState,
 };
-use console::style;
+use console::{style, Style};
 use ctrl_z_project::workspace::updater::Updatable;
 // @todo: remove the git indirection
 use semver::Version;
@@ -113,8 +113,8 @@ pub fn main() {
             if dry_run {
                 println!("Dry run: no changes will be made");
             } else {
-                println!("The following actions will be performed:");
-                println!("- Create a new tag");
+                // println!("The following actions will be performed:");
+                // println!("- Create a new tag");
 
                 let repo =
                     Repository::open(env::current_dir().unwrap()).unwrap();
@@ -178,10 +178,10 @@ pub fn main() {
                     return;
                 };
 
-                println!(
-                    "Last reference: {:?}",
-                    last_ref.commit().unwrap().unwrap().id()
-                );
+                // println!(
+                //     "Last reference: {:?}",
+                //     last_ref.commit().unwrap().unwrap().id()
+                // );
 
                 let last_commit = last_ref.commit().unwrap().unwrap();
 
@@ -202,7 +202,7 @@ pub fn main() {
 
                 // we should impl a partial revision iterator?
 
-                let increments = changeset.increments().to_vec();
+                let mut increments = changeset.increments().to_vec();
                 let incr = increments
                     .iter()
                     .enumerate()
@@ -248,23 +248,52 @@ pub fn main() {
                     }
                 }
                 let versions = versions.values().collect::<Vec<_>>();
-                // println!("versions: {:#?}", versions);
-                // workspace.iter().map(|project| project.);
+
+                struct MagentaTheme;
+
+                impl Theme for MagentaTheme {
+                    // fn radio_symbol(&self, state: &ThemeState, selected: bool) -> String {
+
+                    // }
+
+                    // /// Returns the symbol of the current rendering state.
+                    // fn state_symbol(&self, state: &ThemeState) -> String {
+                    //     let color = self.state_symbol_color(state);
+                    //     match state {
+                    //         ThemeState::Active => color.apply_to("·"),
+                    //         ThemeState::Cancel => color.apply_to("✗"),
+                    //         ThemeState::Submit => color.apply_to("·"),
+                    //         ThemeState::Error(_) => color.apply_to("▲"),
+                    //     }
+                    //     .to_string()
+                    // }
+                }
+                set_theme(MagentaTheme);
+
+                intro("Bump versions").unwrap();
 
                 let mut traversal = deps.graph.traverse(start);
                 let incoming = deps.graph.topology().incoming();
                 // we might also have an auto completing traversal?
                 while let Some(node) = traversal.take() {
                     let bump = &increments[node];
-                    println!(
-                        "{:?} = {:?}",
-                        deps.graph[node].info().unwrap().0,
-                        bump
-                    );
+                    let name = deps.graph[node].info().unwrap().0;
 
                     // node has no deps, we can just conitnue
                     if incoming[node].is_empty() {
-                        println!("  => no dependencies, accepting");
+                        let mut current_version = (*versions[node]).clone();
+                        if let Some(x) = *bump {
+                            current_version = current_version.bump(x);
+                        }
+
+                        let x = format!(
+                            "{}\n{}",
+                            name,
+                            style(current_version).dim()
+                        );
+                        remark(x).unwrap();
+
+                        // println!("  => no dependencies, accepting");
                         let _ = traversal.complete(node);
                         continue;
                     }
@@ -274,95 +303,97 @@ pub fn main() {
                     for &dep in &incoming[node] {
                         let bump = &increments[dep];
                         bump_levels.insert(bump.clone());
-                        println!(
-                            "  <- {:?} = {:?}",
-                            deps.graph[dep].info().unwrap().0,
-                            bump
-                        );
+                        // println!(
+                        //     "  <- {:?} = {:?}",
+                        //     deps.graph[dep].info().unwrap().0,
+                        //     bump
+                        // );
                     }
 
                     // maximum bump allowed:
-                    println!("  => max bump levels: {:?}", bump_levels);
+                    // println!("  => max bump levels: {:?}", bump_levels);
                     // check if bump level is smaller than what we have anyway...
                     // Get the maximum bump level from dependencies
                     let max_bump = bump_levels.into_iter().flatten().max();
 
-                    println!("  => max bump level: {:?}", max_bump);
+                    // println!("  => max bump level: {:?}", max_bump);
                     // if this is NONE, we can stop. if this is equal to the
                     // current bump, we can just take it. otherwise, we need
                     // to ask.
                     if max_bump.is_none() {
-                        println!("  => no bump needed, skipping");
+                        // println!("  => no bump needed, skipping");
                         continue;
                     }
 
-                    struct MagentaTheme;
-
-                    impl Theme for MagentaTheme {
-                        // fn active_symbol(&self) -> String {
-                        //     style("·").cyan().to_string()
-                        // }
-                        // fn submit_symbol(&self) -> String {
-                        //     style("✓").green().to_string()
-                        // }
-
-                        // const S_STEP_ACTIVE: Emoji = Emoji("◆", "*");
-                        // const S_STEP_CANCEL: Emoji = Emoji("■", "x");
-                        // const S_STEP_ERROR: Emoji = Emoji("▲", "x");
-                        // const S_STEP_SUBMIT: Emoji = Emoji("◇", "o");
-
-                        /// Returns the symbol of the current rendering state.
-                        fn state_symbol(&self, state: &ThemeState) -> String {
-                            let color = self.state_symbol_color(state);
-
-                            match state {
-                                ThemeState::Active => color.apply_to("·"),
-                                ThemeState::Cancel => color.apply_to("✗"),
-                                ThemeState::Submit => color.apply_to("✓"),
-                                ThemeState::Error(_) => color.apply_to("▲"),
-                            }
-                            .to_string()
-                        }
-                    }
-                    set_theme(MagentaTheme);
-
                     if bump == &max_bump {
-                        println!("  => bump matches max, accepting");
-                        // just accept
-                    } else {
-                        // what's the suggested bump? minor!
-                        let current_version = versions[node];
-                        println!("  => current version: {}", current_version);
+                        let mut current_version = (*versions[node]).clone();
+                        if let Some(x) = *bump {
+                            current_version = current_version.bump(x);
+                        }
 
-                        intro("create-my-app").unwrap();
-
-                        let selected = select("Pick a project type")
-                            .item("ts", "TypeScript", "")
-                            .item("js", "JavaScript", "")
-                            .item("coffee", "CoffeeScript", "oh no")
-                            .interact()
-                            .unwrap(); // io result!
-
-                        // put the version below the package!
                         let x = format!(
-                            "Hello, world!\n{}",
+                            "{}\n{}",
+                            name,
                             style(current_version).dim()
                         );
                         remark(x).unwrap();
-                        // cliclack::log::info().unwrap();
+                        // println!("  => bump matches max, accepting");
+                        // just accept
+                    } else {
+                        // what's the suggested bump? minor!
+                        let current_version = (*versions[node]).clone();
+                        // println!("  => current version: {}", current_version);
 
-                        let selected = select("Pick a project type")
-                            .item("ts", "TypeScript", "")
-                            .item("js", "JavaScript", "")
-                            .item("coffee", "CoffeeScript", "oh no")
+                        // in case major minor patch are all the same, only
+                        // show the PATCH option.
+
+                        // auto select if there's only one possible version!
+                        // but no, we can also skip...
+
+                        let selected = select(name)
+                            .item(None, "current", "no bump")
+                            .item(
+                                Some(Increment::Patch),
+                                current_version.bump(Increment::Patch),
+                                "patch",
+                            )
+                            .item(
+                                Some(Increment::Minor),
+                                current_version.bump(Increment::Minor),
+                                "minor",
+                            )
+                            .item(
+                                Some(Increment::Major),
+                                current_version.bump(Increment::Major),
+                                "major",
+                            )
+                            .initial_value(Some(Increment::Patch))
                             .interact()
-                            .unwrap();
+                            .unwrap(); // io result!
+
+                        // increment selected! add to deps!
+
+                        increments[node] = selected;
+
+                        // // put the version below the package!
+                        // let x = format!(
+                        //     "Hello, world!\n{}",
+                        //     style(current_version).dim()
+                        // );
+                        // remark(x).unwrap();
+                        // // cliclack::log::info().unwrap();
+
+                        // let selected = select("Pick a project type")
+                        //     .item("ts", "TypeScript", "")
+                        //     .item("js", "JavaScript", "")
+                        //     .item("coffee", "CoffeeScript", "oh no")
+                        //     .interact()
+                        //     .unwrap();
                         // Do stuff
-                        outro("You're all set!").unwrap();
 
                         // render all changes above?
 
-                        println!("selected {:?}", selected);
+                        // println!("selected {:?}", selected);
 
                         // let mut help_msg = String::new();
                         // if let Some(inc) = bump {
@@ -518,6 +549,8 @@ pub fn main() {
                     // if node in sources, just skip!
                     let _ = traversal.complete(node);
                 }
+
+                outro("Completed").unwrap();
 
                 // bumps - go through _all_ of them... start at sources...
                 // if the downstream package is not affected - skip the entire thing!

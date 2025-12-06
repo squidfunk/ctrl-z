@@ -76,7 +76,7 @@ struct Cli {
 enum Commands {
     Release {
         #[command(subcommand)]
-        command: ReleaseCommands,
+        command: Release,
     },
     /// Create a new tag
     Tag {
@@ -87,21 +87,17 @@ enum Commands {
     /// Git hooks
     Hook {
         #[command(subcommand)]
-        hook_type: HookCommands,
+        hook_type: Hook,
     },
 }
 
 #[derive(Subcommand)]
-enum ReleaseCommands {
+enum Release {
     /// Create a new release (interactive version bumping + tagging)
     Tag {
         /// Perform a dry run without making changes
         #[arg(long)]
         dry_run: bool,
-
-        /// Skip interactive prompts (use suggested bumps)
-        #[arg(long)]
-        yes: bool,
     },
 
     /// Generate changelog for a specific tag or range
@@ -128,7 +124,7 @@ enum ReleaseCommands {
 }
 
 #[derive(Subcommand)]
-enum HookCommands {
+enum Hook {
     /// Validate commit message format
     CommitMsg {
         /// Path to commit message file
@@ -144,10 +140,10 @@ pub fn main() {
 
     match cli.command {
         Commands::Hook { hook_type } => match hook_type {
-            HookCommands::CommitMsg { message_file } => {
+            Hook::CommitMsg { message_file } => {
                 handle_commit_msg_hook(&message_file);
             }
-            HookCommands::Install => {
+            Hook::Install => {
                 install_git_hooks();
             }
         },
@@ -459,14 +455,14 @@ pub fn main() {
             }
         }
         Commands::Release { command } => match command {
-            ReleaseCommands::Tag { dry_run, yes: _ } => {
+            Release::Tag { dry_run } => {
                 if dry_run {
                     println!("Dry run: no changes will be made");
                 } else {
                     println!("Creating a new release tag...");
                 }
             }
-            ReleaseCommands::Changelog { tag: req_tag, output: _ } => {
+            Release::Changelog { tag: req_tag, output: _ } => {
                 println!("Generating changelog for {}", req_tag);
                 // so this is the changelog for everything that is coming!
 
@@ -524,18 +520,23 @@ pub fn main() {
 
                 let commits = if let Some((_, prev_tag)) = previous_tag {
                     // Get commits between previous and current tag
+                    println!(
+                        "Getting commits from {:?} to {:?}",
+                        prev_tag.shorthand(),
+                        current_tag.shorthand()
+                    );
                     let prev_commit = prev_tag.commit().unwrap().unwrap();
-                    repo.commits()
+                    repo.commits_from(current_commit.id())
                         .unwrap()
                         .flatten()
                         .take_while(|commit| commit != &prev_commit)
                         .collect::<Vec<_>>()
                 } else {
                     // No previous tag - get all commits up to current tag
-                    repo.commits()
+                    repo.commits_from(current_commit.id())
                         .unwrap()
                         .flatten()
-                        .take_while(|commit| commit != &current_commit)
+                        // .take_while(|commit| commit != &current_commit)
                         .collect::<Vec<_>>()
                 };
 
@@ -544,7 +545,7 @@ pub fn main() {
 
                 println!("{}", changeset.to_changelog());
             }
-            ReleaseCommands::Packages { tag: _, output: _ } => {
+            Release::Packages { tag: _, output: _ } => {
                 println!("Listing affected packages...");
             }
         },
@@ -590,77 +591,6 @@ fn ensure_clean_workdir(
             detail
         )))
     }
-}
-
-fn stage_files(
-    repo: &git2::Repository, files: &[PathBuf],
-) -> Result<(), git2::Error> {
-    let workdir = repo
-        .workdir()
-        .ok_or_else(|| git2::Error::from_str("no workdir"))?;
-
-    let mut index = repo.index()?;
-    for path in files {
-        let rel = path
-            .strip_prefix(workdir)
-            .map_err(|_| git2::Error::from_str("strip_prefix"))?;
-        index.add_path(rel)?;
-    }
-    index.write()?;
-    Ok(())
-}
-
-fn create_tag_interactive(
-    repo: &git2::Repository, tag_name: &str, target: git2::Oid,
-) -> Result<git2::Oid, Box<dyn std::error::Error>> {
-    let message = prompt_tag_message(tag_name)?;
-    let obj = repo.find_object(target, None)?;
-    let sig = repo.signature()?;
-    Ok(repo.tag(tag_name, &obj, &sig, &message, false)?)
-}
-
-fn prompt_tag_message(
-    tag_name: &str,
-) -> Result<String, Box<dyn std::error::Error>> {
-    // Create a temporary file with template
-    let mut temp = NamedTempFile::new()?;
-    writeln!(
-        temp,
-        "# Tag message for {}\n# Lines starting with '#' will be ignored",
-        tag_name
-    )?;
-
-    // Get editor from environment or use default
-    let editor = std::env::var("EDITOR")
-        .or_else(|_| std::env::var("VISUAL"))
-        .unwrap_or_else(|_| "vim".to_string());
-
-    // Open editor
-    let status = std::process::Command::new(&editor)
-        .arg(temp.path())
-        .status()?;
-
-    if !status.success() {
-        return Err("Editor exited with non-zero status".into());
-    }
-
-    // Read the message back
-    let content = std::fs::read_to_string(temp.path())?;
-
-    // Filter out comment lines and trim
-    let message: String = content
-        .lines()
-        .filter(|line| !line.trim_start().starts_with('#'))
-        .collect::<Vec<_>>()
-        .join("\n")
-        .trim()
-        .to_string();
-
-    if message.is_empty() {
-        return Err("Empty tag message".into());
-    }
-
-    Ok(message)
 }
 
 fn prompt_commit_message(
@@ -740,16 +670,6 @@ fn current_branch(repo: &git2::Repository) -> Result<String, git2::Error> {
         .ok_or_else(|| git2::Error::from_str("detached HEAD"))
 }
 
-fn push_refs(
-    repo: &git2::Repository, remote_name: &str, refspecs: &[String],
-) -> Result<(), git2::Error> {
-    let mut remote = repo.find_remote(remote_name)?;
-    let mut opts = git2::PushOptions::new();
-    // Rely on system/git credential helpers by default (no callbacks)
-    let refspecs: Vec<&str> = refspecs.iter().map(String::as_str).collect();
-    remote.push(&refspecs, Some(&mut opts))
-}
-
 fn create_tag(
     repo: &git2::Repository, tag_name: &str, target: git2::Oid, message: &str,
 ) -> Result<git2::Oid, git2::Error> {
@@ -785,7 +705,7 @@ fn handle_commit_msg_hook(message_file: &Path) {
     // Validate using Change parser
     match Change::from_str(message) {
         Ok(change) => {
-            println!("✓ Valid commit message: {:?}", change.kind());
+            println!("✓ Valid commit message: {:?}", change);
             std::process::exit(0);
         }
         Err(e) => {

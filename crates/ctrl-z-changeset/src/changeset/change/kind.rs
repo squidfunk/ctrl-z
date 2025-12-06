@@ -25,6 +25,7 @@
 
 //! Change kind.
 
+use std::fmt;
 use std::str::FromStr;
 
 use super::error::{Error, Result};
@@ -94,6 +95,25 @@ impl FromStr for Kind {
             "test" => Ok(Kind::Test),
             "chore" => Ok(Kind::Chore),
             _ => Err(Error::Kind),
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+impl fmt::Display for Kind {
+    /// Formats the change kind for display.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Kind::Feature => f.write_str("feature"),
+            Kind::Fix => f.write_str("fix"),
+            Kind::Performance => f.write_str("performance"),
+            Kind::Refactor => f.write_str("refactor"),
+            Kind::Build => f.write_str("build"),
+            Kind::Docs => f.write_str("docs"),
+            Kind::Style => f.write_str("style"),
+            Kind::Test => f.write_str("test"),
+            Kind::Chore => f.write_str("chore"),
         }
     }
 }

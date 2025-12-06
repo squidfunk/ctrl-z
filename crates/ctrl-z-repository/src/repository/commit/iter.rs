@@ -25,6 +25,8 @@
 
 //! Iterator over commits in a repository.
 
+use git2::Oid;
+
 use crate::repository::commit::Commit;
 use crate::repository::{Repository, Result};
 
@@ -52,6 +54,21 @@ impl Repository {
         // backwards topologically for as long as the iterator is consumed
         let mut revwalk = self.git_repository.revwalk()?;
         revwalk.push_head()?; // @todo start from another commit!
+        revwalk.set_sorting(git2::Sort::TOPOLOGICAL)?;
+
+        Ok(Commits {
+            git_repository: &self.git_repository,
+            git_revwalk: revwalk,
+            index: 0,
+        })
+    }
+
+    // push commit, rather...
+    pub fn commits_from(&self, oid: Oid) -> Result<Commits<'_>> {
+        // Create a walk over all revisions starting from HEAD and walking
+        // backwards topologically for as long as the iterator is consumed
+        let mut revwalk = self.git_repository.revwalk()?;
+        revwalk.push(oid)?; // @todo start from another commit!
         revwalk.set_sorting(git2::Sort::TOPOLOGICAL)?;
 
         Ok(Commits {

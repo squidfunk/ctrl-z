@@ -25,6 +25,7 @@
 
 //! Change.
 
+use std::fmt::{self, Write};
 use std::str::FromStr;
 
 mod error;
@@ -141,6 +142,22 @@ impl FromStr for Change {
 }
 
 // ----------------------------------------------------------------------------
+
+impl fmt::Display for Change {
+    /// Formats the change for display.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.kind.fmt(f)?;
+        if self.is_breaking {
+            f.write_char('!')?;
+        }
+
+        // Write description
+        f.write_str(": ")?;
+        f.write_str(&self.description)
+    }
+}
+
+// ----------------------------------------------------------------------------
 // Tests
 // ----------------------------------------------------------------------------
 
@@ -174,7 +191,7 @@ mod tests {
         #[test]
         fn errors_on_invalid_format() {
             for format in [
-                "fix:description", // fmt
+                "fix:description",
                 "fix:  description",
                 "fix :description",
                 "fix description",

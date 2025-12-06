@@ -73,6 +73,10 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    Release {
+        #[command(subcommand)]
+        command: ReleaseCommands,
+    },
     /// Create a new tag
     Tag {
         /// Perform a dry run without making changes
@@ -83,6 +87,42 @@ enum Commands {
     Hook {
         #[command(subcommand)]
         hook_type: HookCommands,
+    },
+}
+
+#[derive(Subcommand)]
+enum ReleaseCommands {
+    /// Create a new release (interactive version bumping + tagging)
+    Tag {
+        /// Perform a dry run without making changes
+        #[arg(long)]
+        dry_run: bool,
+
+        /// Skip interactive prompts (use suggested bumps)
+        #[arg(long)]
+        yes: bool,
+    },
+
+    /// Generate changelog for a specific tag or range
+    Changelog {
+        /// Tag name or version (e.g., v1.2.3)
+        #[arg(default_value = "HEAD")]
+        tag: String,
+
+        /// Output file (default: stdout)
+        #[arg(short, long)]
+        output: Option<PathBuf>,
+    },
+
+    /// Packages command that lists all affected packages in a tag
+    Packages {
+        /// Tag name or version (e.g., v1.2.3)
+        #[arg(default_value = "HEAD")]
+        tag: String,
+
+        /// Output file (default: stdout)
+        #[arg(short, long)]
+        output: Option<PathBuf>,
     },
 }
 
@@ -420,6 +460,21 @@ pub fn main() {
                 // )?
             }
         }
+        Commands::Release { command } => match command {
+            ReleaseCommands::Tag { dry_run, yes: _ } => {
+                if dry_run {
+                    println!("Dry run: no changes will be made");
+                } else {
+                    println!("Creating a new release tag...");
+                }
+            }
+            ReleaseCommands::Changelog { tag: _, output: _ } => {
+                println!("Generating changelog...");
+            }
+            ReleaseCommands::Packages { tag: _, output: _ } => {
+                println!("Listing affected packages...");
+            }
+        },
     }
 }
 

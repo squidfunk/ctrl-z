@@ -699,7 +699,7 @@ fn commit_index(
     let sig = repo.signature()?;
     let parent = repo.head()?.peel_to_commit()?;
 
-    // Commit
+    // Commit @todo use commit_signed!
     repo.commit(Some("HEAD"), &sig, &sig, message, &tree, &[&parent])
 }
 

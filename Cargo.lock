@@ -309,6 +309,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "ctrl-z-repository-2"
+version = "0.0.0"
+dependencies = [
+ "git2",
+ "thiserror",
+]
+
+[[package]]
 name = "displaydoc"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"

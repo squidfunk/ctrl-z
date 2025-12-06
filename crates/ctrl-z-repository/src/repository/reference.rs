@@ -25,7 +25,7 @@ pub enum ReferenceKind {
 /// Thin wrapper around git2::Reference.
 // #[derive(Debug)]
 pub struct Reference<'a> {
-    repository: &'a git2::Repository,
+    repository: &'a git2::Repository, // we always have a repo!
     inner: git2::Reference<'a>,
 }
 

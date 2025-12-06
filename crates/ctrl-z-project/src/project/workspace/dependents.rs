@@ -43,7 +43,7 @@ where
     T: Manifest,
 {
     /// Workspace graph.
-    graph: Graph<&'a Project<T>>,
+    pub graph: Graph<&'a Project<T>>, // @todo pub temp
 }
 
 // ----------------------------------------------------------------------------

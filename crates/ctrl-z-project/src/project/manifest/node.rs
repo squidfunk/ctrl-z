@@ -30,7 +30,7 @@ use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::str::FromStr;
 
-use crate::project::manifest::Manifest;
+use crate::project::manifest::{Dependencies, Manifest};
 use crate::project::{Error, Result};
 
 // ----------------------------------------------------------------------------
@@ -82,6 +82,19 @@ impl Manifest for Node {
     #[inline]
     fn members(&self) -> &[String] {
         &self.workspaces
+    }
+}
+
+// @todo
+impl Dependencies for Node {
+    fn dependencies(
+        &self,
+    ) -> impl Iterator<Item = (&String, Option<&VersionReq>)> {
+        // self.dependencies.iter().map(||)
+
+        self.dependencies
+            .iter()
+            .map(|(name, version)| (name, Some(version)))
     }
 }
 

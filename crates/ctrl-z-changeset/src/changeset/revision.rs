@@ -47,7 +47,7 @@ pub struct Revision<'a> {
     /// Computed change.
     change: Change,
     /// Affected scopes.
-    scopes: BTreeSet<usize>,
+    scopes: Vec<usize>,
     /// Relevant issues.
     issues: Vec<u32>,
 }
@@ -72,7 +72,7 @@ impl Revision<'_> {
 
     /// Returns the affected scope indices.
     #[inline]
-    pub fn scopes(&self) -> &BTreeSet<usize> {
+    pub fn scopes(&self) -> &[usize] {
         &self.scopes
     }
 
@@ -117,8 +117,12 @@ impl<'a> Changeset<'a> {
             let issues = commit.body().map(parse_issues).unwrap_or_default();
 
             // Create revision and add to changeset
-            self.revisions
-                .push(Revision { commit, change, scopes, issues });
+            self.revisions.push(Revision {
+                commit,
+                change,
+                scopes: scopes.into_iter().collect(),
+                issues: issues.into_iter().collect(),
+            });
         }
 
         // No errors occurred
@@ -156,7 +160,7 @@ impl<'a> Changeset<'a> {
 // ----------------------------------------------------------------------------
 
 /// Parses issue references, e.g., `#123` from body.
-fn parse_issues(body: &str) -> Vec<u32> {
+fn parse_issues(body: &str) -> BTreeSet<u32> {
     body.split_whitespace()
         .filter_map(|word| {
             word.trim_matches(|c: char| !c.is_ascii_digit() && c != '#')

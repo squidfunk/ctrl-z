@@ -32,7 +32,7 @@ use ctrl_z_project::workspace::updater::Updatable;
 // @todo: remove the git indirection
 use inquire::Select;
 use semver::Version;
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::env;
 use std::path::{Path, PathBuf};
 
@@ -92,6 +92,7 @@ enum HookCommands {
     Install,
 }
 
+#[allow(warnings)]
 pub fn main() {
     let cli = Cli::parse();
 
@@ -118,25 +119,38 @@ pub fn main() {
                 if path.exists() {
                     let mut workspace = Workspace::<Node>::read(path).unwrap();
 
-                    let versions = BTreeMap::from_iter([
-                        (
-                            "@zensical/disco-engine",
-                            Version::parse("0.1.0").unwrap(),
-                        ),
-                        ("@zensical/disco", Version::parse("0.0.1").unwrap()),
-                    ]);
+                    let deps = workspace.dependents().unwrap();
 
-                    for project in &mut workspace {
-                        project.update(&versions).unwrap();
+                    // print as .dot!
+
+                    let mut traversal =
+                        deps.graph.traverse(deps.graph.sources());
+                    // we might also have an auto completing traversal?
+                    while let Some(node) = traversal.take() {
+                        println!(
+                            " - Process package: {:?}",
+                            deps.graph[node].info()
+                        );
+                        traversal.complete(node).unwrap();
                     }
+
+                    // let versions = BTreeMap::from_iter([
+                    //     (
+                    //         "@zensical/disco-engine",
+                    //         Version::parse("0.1.0").unwrap(),
+                    //     ),
+                    //     ("@zensical/disco", Version::parse("0.0.1").unwrap()),
+                    // ]);
+
+                    // for project in &mut workspace {
+                    //     project.update(&versions).unwrap();
+                    // }
                     return;
                 }
 
                 //
                 let path = repo.path().join("Cargo.toml");
                 let mut workspace = Workspace::<Cargo>::read(path).unwrap();
-
-                let deps = workspace.dependents();
 
                 let scopes = Scopes::try_from(&workspace).unwrap();
 
@@ -187,7 +201,7 @@ pub fn main() {
                     .iter()
                     .enumerate()
                     .filter_map(|(i, inc)| inc.map(|_| i))
-                    .collect::<Vec<_>>();
+                    .collect::<BTreeSet<_>>();
 
                 // to_graph // to_changelog
 
@@ -199,20 +213,133 @@ pub fn main() {
                 // or: retrieve changes for a cetain scope - the general filter
                 // method... - changeset iterate revisions...
 
-                println!(
-                    "Increments needed for scopes at indexes: {:#?}",
-                    incr
-                );
+                println!("Changeset: {:#?}", changeset);
 
-                // now, determine actual version bumps!
-                let versions = BTreeMap::from_iter([
-                    ("foo-utils", Version::parse("0.1.0").unwrap()),
-                    ("foo-core", Version::parse("0.0.2").unwrap()),
-                ]);
+                // so from the bumped packages, we must identify the sources.
+                // thus, we can just determine ALL sources, and then intersect
+                // those with those that were bumped. then we use this for
+                // traversal, since we don't need to iterate all of them.
 
-                for project in &mut workspace {
-                    project.update(&versions).unwrap();
+                let deps = workspace.dependents().unwrap();
+                let mut sources: BTreeSet<usize> =
+                    deps.graph.sources().collect();
+
+                // println!("sources {:?}", sources);
+                // println!("incr {:?}", incr);
+                let start = sources
+                    .intersection(&incr)
+                    .copied()
+                    .collect::<HashSet<_>>();
+                // println!("start {:?}", start);
+
+                // inherit bumps = re-export package
+
+                let mut traversal = deps.graph.traverse(start);
+                let incoming = deps.graph.topology().incoming();
+                // we might also have an auto completing traversal?
+                while let Some(node) = traversal.take() {
+                    let bump = &increments[node];
+                    println!(
+                        "{:?} = {:?}",
+                        deps.graph[node].info().unwrap().0,
+                        bump
+                    );
+
+                    // node has no deps, we can just conitnue
+                    if incoming[node].is_empty() {
+                        println!("  => no dependencies, accepting");
+                        let _ = traversal.complete(node);
+                        continue;
+                    }
+
+                    // get deps of this node
+                    let mut bump_levels = BTreeSet::new();
+                    for &dep in &incoming[node] {
+                        let bump = &increments[dep];
+                        bump_levels.insert(bump.clone());
+                        println!(
+                            "  <- {:?} = {:?}",
+                            deps.graph[dep].info().unwrap().0,
+                            bump
+                        );
+                    }
+
+                    // maximum bump allowed:
+                    println!("  => max bump levels: {:?}", bump_levels);
+                    // check if bump level is smaller than what we have anyway...
+                    // Get the maximum bump level from dependencies
+                    let max_bump = bump_levels.into_iter().flatten().max();
+
+                    println!("  => max bump level: {:?}", max_bump);
+                    // if this is NONE, we can stop. if this is equal to the
+                    // current bump, we can just take it. otherwise, we need
+                    // to ask.
+                    if max_bump.is_none() {
+                        println!("  => no bump needed, skipping");
+                        continue;
+                    }
+
+                    if bump == &max_bump {
+                        println!("  => bump matches max, accepting");
+                        // just accept
+                    } else {
+                        // here, we need to prompt...
+                        println!("prompt the user!");
+                        // // prompt
+                        // let x = prompt_increment(
+                        //     deps.graph[node]
+                        //         .manifest
+                        //         .name()
+                        //         .unwrap_or("<no name>"),
+                        //     deps.graph[node]
+                        //         .manifest
+                        //         .version()
+                        //         .expect("versioned package"),
+                        //     max_bump,
+                        //     &[],
+                        // );
+
+                        // match x {
+                        //     Ok(x) => {
+                        //         println!(
+                        //             "  => User selected increment: {:?}",
+                        //             x
+                        //         );
+                        //         // set increment here!
+                        //     }
+                        //     Err(err) => {
+                        //         eprintln!(
+                        //             "  => Error prompting for increment: {}",
+                        //             err
+                        //         );
+                        //         break;
+                        //     }
+                        // }
+                    }
+
+                    // if node in sources, just skip!
+                    let _ = traversal.complete(node);
                 }
+
+                // bumps - go through _all_ of them... start at sources...
+                // if the downstream package is not affected - skip the entire thing!
+
+                // walk through all packages here in TOPO order.
+
+                // println!(
+                //     "Increments needed for scopes at indexes: {:#?}",
+                //     incr
+                // );
+
+                // // now, determine actual version bumps!
+                // let versions = BTreeMap::from_iter([
+                //     ("foo-utils", Version::parse("0.1.0").unwrap()),
+                //     ("foo-core", Version::parse("0.0.2").unwrap()),
+                // ]);
+
+                // for project in &mut workspace {
+                //     project.update(&versions).unwrap();
+                // }
 
                 // how go get version for scope? workspace.get?
                 // now, traverse from all sources?

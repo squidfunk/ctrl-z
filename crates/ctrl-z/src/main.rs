@@ -416,15 +416,29 @@ pub fn main() {
                 //     incr
                 // );
 
-                // // now, determine actual version bumps!
-                // let versions = BTreeMap::from_iter([
-                //     ("foo-utils", Version::parse("0.1.0").unwrap()),
-                //     ("foo-core", Version::parse("0.0.2").unwrap()),
-                // ]);
+                let mut new_versions = BTreeMap::new();
+                for (node, incr) in increments.into_iter().enumerate() {
+                    if let Some(increment) = incr {
+                        let name =
+                            deps.graph[node].info().unwrap().0.to_string();
+                        let version = (*versions[node]).clone();
+                        // compute the actual bumps
+                        new_versions.insert(name, version.bump(increment));
+                    }
+                }
 
-                // for project in &mut workspace {
-                //     project.update(&versions).unwrap();
-                // }
+                println!("new versions {:?}", new_versions);
+
+                for project in &mut workspace {
+                    project
+                        .update(
+                            &new_versions
+                                .iter()
+                                .map(|(k, v)| (k.as_str(), v.clone()))
+                                .collect(),
+                        )
+                        .unwrap();
+                }
 
                 // how go get version for scope? workspace.get?
                 // now, traverse from all sources?

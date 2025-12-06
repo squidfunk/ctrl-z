@@ -27,11 +27,17 @@ where
 pub type Versions<'a> = BTreeMap<&'a str, Version>;
 
 pub trait Updatable {
-    fn update(content: &str, versions: &Versions) -> Result<String>;
+    fn update<S>(content: S, versions: &Versions) -> Result<String>
+    where
+        S: AsRef<str>;
 }
 
 impl Updatable for Cargo {
-    fn update(content: &str, versions: &Versions) -> Result<String> {
+    fn update<S>(content: S, versions: &Versions) -> Result<String>
+    where
+        S: AsRef<str>,
+    {
+        let content = content.as_ref();
         // @todo: move writing in and out? that way we can safe the path! no need!
         // we might just parse this from string? again?
         let mut doc = content.parse::<DocumentMut>()?;
@@ -44,9 +50,13 @@ impl Updatable for Cargo {
 }
 
 impl Updatable for Node {
-    fn update(content: &str, versions: &Versions) -> Result<String> {
+    fn update<S>(content: S, versions: &Versions) -> Result<String>
+    where
+        S: AsRef<str>,
+    {
         // @todo: move writing in and out? that way we can safe the path! no need!
         // we might just parse this from string? again?
+        let content = content.as_ref();
         let mut doc = serde_json::from_str::<Value>(content)?;
         // update_workspace_dependencies(&mut doc, versions);
         // NPM_update_package_version(&mut doc, versions);

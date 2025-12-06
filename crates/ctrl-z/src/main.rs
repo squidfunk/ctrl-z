@@ -506,7 +506,7 @@ pub fn main() {
 
                 changeset.extend(commits).unwrap();
 
-                println!("<{}>", changeset.to_changelog());
+                println!("{}", changeset.to_changelog());
             }
             ReleaseCommands::Packages { tag: _, output: _ } => {
                 println!("Listing affected packages...");

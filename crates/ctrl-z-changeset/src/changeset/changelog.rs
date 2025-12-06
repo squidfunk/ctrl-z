@@ -26,7 +26,7 @@
 //! Changelog.
 
 use std::collections::BTreeMap;
-use std::fmt::{self, Write};
+use std::fmt;
 
 use super::change::Kind;
 use super::revision::Revision;
@@ -46,6 +46,12 @@ use section::{Category, Section};
 /// category, which is deduced from the [`Kind`] of change, and ignoring any
 /// changes irrelevant for versioning. Breaking changes are always grouped
 /// into their own section, which comes first.
+///
+/// The output format is Markdown, since this is widely supported by hosting
+/// platforms and tools, and what GitHub supports for release notes.
+///
+/// The changelog is solely intended for printing, which is why it implements
+/// [`fmt::Display`]. The output format is Markdown, as supported by GitHub.
 ///
 /// [`Changeset`]: crate::changeset::Changeset
 #[derive(Debug)]

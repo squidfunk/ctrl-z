@@ -65,16 +65,16 @@ impl fmt::Display for Section<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str("### ")?;
         self.category.fmt(f)?;
-        f.write_str("\n\n")?;
+        f.write_char('\n')?;
 
         // Write all items, each on a new line
         for item in &self.items {
+            f.write_char('\n')?;
             f.write_str("- ")?;
             item.fmt(f)?;
-            f.write_char('\n')?;
         }
 
-        // Add empty line after items
-        f.write_char('\n')
+        // No errors occurred
+        Ok(())
     }
 }

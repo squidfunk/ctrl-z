@@ -26,7 +26,7 @@
 //! Changelog.
 
 use std::collections::BTreeMap;
-use std::fmt;
+use std::fmt::{self, Write};
 
 use super::change::Kind;
 use super::revision::Revision;
@@ -124,10 +124,10 @@ impl fmt::Display for Changelog<'_> {
     /// Formats the changelog for display.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str("## Changes")?;
-        f.write_str("\n\n")?;
 
         // Write all sections
         for section in self.sections.values() {
+            f.write_str("\n\n")?;
             section.fmt(f)?;
         }
 

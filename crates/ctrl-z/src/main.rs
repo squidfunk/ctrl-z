@@ -445,7 +445,7 @@ pub fn main() {
                 // let oid = commit_index(repo.raw(), message).unwrap();
 
                 // // 4) Create tag
-                let tag_name = "v1.2.3"; // create tag, works as well!
+                let tag_name = "v0.0.1"; // create tag, works as well!
                 create_tag(repo.raw(), tag_name, oid, "").unwrap();
 
                 // // 5) Push branch and tag
@@ -468,8 +468,45 @@ pub fn main() {
                     println!("Creating a new release tag...");
                 }
             }
-            ReleaseCommands::Changelog { tag: _, output: _ } => {
-                println!("Generating changelog...");
+            ReleaseCommands::Changelog { tag, output: _ } => {
+                println!("Generating changelog for {}", tag);
+                // so this is the changelog for everything that is coming!
+
+                let repo =
+                    Repository::open(env::current_dir().unwrap()).unwrap();
+
+                let path = repo.path().join("Cargo.toml");
+                let mut workspace = Workspace::<Cargo>::read(path).unwrap();
+
+                let scopes = Scopes::try_from(&workspace).unwrap();
+
+                // Determine LAST version that we released = last tag.
+                let last_ref = if let Some(last) = repo
+                    .references()
+                    .unwrap()
+                    .flatten()
+                    .filter(Reference::is_tag)
+                    .next()
+                {
+                    last
+                } else {
+                    return;
+                };
+
+                let last_commit = last_ref.commit().unwrap().unwrap();
+
+                // @todo maybe changeset is created from workspace???
+                // that would make scopes a private thing, which is better...
+                let mut changeset = Changeset::new(scopes);
+                let commits = repo
+                    .commits()
+                    .unwrap()
+                    .flatten()
+                    .take_while(|commit| commit != &last_commit);
+
+                changeset.extend(commits).unwrap();
+
+                println!("<{}>", changeset.to_changelog());
             }
             ReleaseCommands::Packages { tag: _, output: _ } => {
                 println!("Listing affected packages...");

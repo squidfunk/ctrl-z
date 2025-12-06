@@ -26,9 +26,10 @@
 //! Project.
 
 use semver::Version;
+use std::fmt::Write;
 use std::iter::{Chain, Once};
 use std::path::{Path, PathBuf};
-use std::{fs, iter};
+use std::{fmt, fs, iter};
 
 mod error;
 pub mod manifest;
@@ -110,5 +111,24 @@ where
     fn into_iter(self) -> Self::IntoIter {
         let members = self.members();
         iter::once(Ok(self)).chain(members)
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+impl<T> fmt::Display for Project<T>
+where
+    T: Manifest,
+{
+    /// Formats the project for display.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let Some((name, version)) = self.info() else {
+            return f.write_str("(workspace)");
+        };
+
+        // Write name and version
+        name.fmt(f)?;
+        f.write_char('@')?;
+        version.fmt(f)
     }
 }

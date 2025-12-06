@@ -134,6 +134,40 @@ enum Hook {
     Install,
 }
 
+// pub struct ProjectConfig {
+//     root: Option<String>,
+// }
+
+// // the root prpject can also be the single sink? if any?
+// pub struct Config {
+//     project: ProjectConfig,
+// }
+
+pub fn to_dot<T>(graph: &zrx::graph::Graph<T>) -> String
+where
+    T: std::fmt::Display,
+{
+    use std::fmt::Write;
+
+    let mut output = String::from("digraph {\n");
+
+    // Write nodes
+    for (index, data) in graph.iter().enumerate() {
+        writeln!(&mut output, "  {} [label=\"{}\"];", index, data).unwrap();
+    }
+
+    // Write edges
+    let outgoing = graph.topology().outgoing();
+    for node in 0..graph.len() {
+        for &to in &outgoing[node] {
+            writeln!(&mut output, "  {} -> {};", node, to).unwrap();
+        }
+    }
+
+    output.push_str("}\n");
+    output
+}
+
 #[allow(warnings)]
 pub fn main() {
     let cli = Cli::parse();
@@ -167,6 +201,9 @@ pub fn main() {
                     let deps = workspace.dependents().unwrap();
 
                     // print as .dot!
+
+                    // let x = to_dot(&deps.graph);
+                    // println!("{x}");
 
                     let mut traversal =
                         deps.graph.traverse(deps.graph.sources());
@@ -233,6 +270,9 @@ pub fn main() {
                 let deps = workspace.dependents().unwrap();
                 let mut sources: BTreeSet<usize> =
                     deps.graph.sources().collect();
+
+                // let x = to_dot(&deps.graph);
+                // println!("{x}");
 
                 // println!("sources {:?}", sources);
                 // println!("incr {:?}", incr);
@@ -439,7 +479,7 @@ pub fn main() {
                 // let message = "chore: publish\n\n...details...";
                 // let oid = commit_index(repo.raw(), message).unwrap();
 
-                // // 4) Create tag
+                // // 4) Create tag - read from config
                 create_tag(repo.raw(), "v0.0.1", oid, "release").unwrap();
 
                 // // 5) Push branch and tag
@@ -705,7 +745,7 @@ fn handle_commit_msg_hook(message_file: &Path) {
     // Validate using Change parser
     match Change::from_str(message) {
         Ok(change) => {
-            println!("✓ Valid commit message: {:?}", change);
+            println!("✓ Valid commit message: {}", change);
             std::process::exit(0);
         }
         Err(e) => {

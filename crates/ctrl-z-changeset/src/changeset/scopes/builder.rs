@@ -110,12 +110,10 @@ impl Builder {
 
             // Create glob and add to builder
             self.paths.insert(path.to_path_buf(), name.into());
-            Glob::new(&glob.to_string_lossy())
-                .map_err(Into::into)
-                .map(|glob| {
-                    self.globs.add(glob);
-                    self
-                })
+            self.globs.add(Glob::new(&glob.to_string_lossy())?);
+
+            // Return builder for chaining
+            Ok(self)
         }
     }
 

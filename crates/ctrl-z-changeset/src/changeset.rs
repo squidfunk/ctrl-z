@@ -25,6 +25,8 @@
 
 //! Changeset.
 
+use ctrl_z_project::{Manifest, Workspace};
+
 pub mod change;
 pub mod changelog;
 mod error;
@@ -33,7 +35,6 @@ pub mod scopes;
 pub mod version;
 
 use change::Change;
-use changelog::Changelog;
 pub use error::{Error, Result};
 use revision::Revision;
 use scopes::Scopes;
@@ -63,24 +64,31 @@ pub struct Changeset<'a> {
 // Implementations
 // ----------------------------------------------------------------------------
 
-impl<'a> Changeset<'a> {
+impl Changeset<'_> {
     /// Creates a changeset.
-    #[must_use]
-    pub fn new(scopes: Scopes) -> Self {
-        let increments = vec![None; scopes.len()];
-        Self {
+    ///
+    /// # Errors
+    ///
+    /// This method returns [`Error::Scopes`][] if the scope set can't be built
+    /// from the workspace, which should practically never happen.
+    ///
+    /// [`Error::Scopes`]: crate::changeset::Error::Scopes
+    pub fn new<T>(workspace: &Workspace<T>) -> Result<Self>
+    where
+        T: Manifest,
+    {
+        let mut builder = Scopes::builder();
+        for (path, name) in workspace.packages() {
+            builder.add(path, name)?;
+        }
+
+        // Create scope set and version increments
+        let scopes = builder.build()?;
+        Ok(Self {
+            increments: vec![None; scopes.len()],
             scopes,
             revisions: Vec::new(),
-            increments,
-        }
-    }
-
-    /// Creates a changelog from the changeset.
-    #[must_use]
-    pub fn to_changelog(&'a self) -> Changelog<'a> {
-        let mut changelog = Changelog::new(&self.scopes);
-        changelog.extend(&self.revisions);
-        changelog
+        })
     }
 
     // @todo temp
@@ -88,18 +96,3 @@ impl<'a> Changeset<'a> {
         &self.increments
     }
 }
-
-// #[allow(clippy::must_use_candidate)]
-// impl Changeset<'_> {
-//     /// Returns the scope set.
-//     #[inline]
-//     pub fn scope(&self) -> &Scope {
-//         &self.scope
-//     }
-
-//     /// Returns the list of revisions.
-//     #[inline]
-//     pub fn revisions(&self) -> &[Revision<'_>] {
-//         &self.revisions
-//     }
-// }

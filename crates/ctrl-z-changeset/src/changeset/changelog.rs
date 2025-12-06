@@ -31,6 +31,7 @@ use std::fmt;
 use super::change::Kind;
 use super::revision::Revision;
 use super::scopes::Scopes;
+use super::Changeset;
 
 mod section;
 
@@ -63,17 +64,25 @@ pub struct Changelog<'a> {
 // Implementations
 // ----------------------------------------------------------------------------
 
-impl<'a> Changelog<'a> {
-    /// Creates a changelog with the given scope set.
+impl<'a> Changeset<'a> {
+    /// Creates a changelog from the changeset.
     #[must_use]
-    pub fn new(scopes: &'a Scopes) -> Self {
-        Changelog {
-            scopes,
+    pub fn to_changelog(&'a self) -> Changelog<'a> {
+        let mut changelog = Changelog {
+            scopes: &self.scopes,
             sections: BTreeMap::default(),
-        }
-    }
+        };
 
-    /// Creates a changelog from a scope set and list of revisions.
+        // Extend changelog with all revisions
+        changelog.extend(&self.revisions);
+        changelog
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+impl<'a> Changelog<'a> {
+    /// Adds a revision to the changelog.
     ///
     /// Note that only relevant changes are included in the changelog, which
     /// includes features, fixes, performance improvements and refactorings. In

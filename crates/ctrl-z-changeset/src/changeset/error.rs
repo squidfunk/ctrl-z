@@ -45,9 +45,9 @@ pub enum Error {
     /// Change error.
     #[error(transparent)]
     Change(#[from] change::Error),
-    /// Scope error.
+    /// Scope set error.
     #[error(transparent)]
-    Scope(#[from] scopes::Error),
+    Scopes(#[from] scopes::Error),
 }
 
 // ----------------------------------------------------------------------------

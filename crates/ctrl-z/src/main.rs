@@ -200,8 +200,6 @@ pub fn main() {
                 let path = repo.path().join("Cargo.toml");
                 let mut workspace = Workspace::<Cargo>::read(path).unwrap();
 
-                let scopes = Scopes::try_from(&workspace).unwrap();
-
                 // Determine LAST version that we released = last tag.
                 let last_ref = if let Some(last) = repo
                     .references()
@@ -219,7 +217,7 @@ pub fn main() {
 
                 // @todo maybe changeset is created from workspace???
                 // that would make scopes a private thing, which is better...
-                let mut changeset = Changeset::new(scopes);
+                let mut changeset = Changeset::new(&workspace).unwrap();
                 let commits = repo
                     .commits()
                     .unwrap()
@@ -478,8 +476,6 @@ pub fn main() {
                 let path = repo.path().join("Cargo.toml");
                 let mut workspace = Workspace::<Cargo>::read(path).unwrap();
 
-                let scopes = Scopes::try_from(&workspace).unwrap();
-
                 // Determine LAST version that we released = last tag.
                 let last_ref = if let Some(last) = repo
                     .references()
@@ -497,7 +493,7 @@ pub fn main() {
 
                 // @todo maybe changeset is created from workspace???
                 // that would make scopes a private thing, which is better...
-                let mut changeset = Changeset::new(scopes);
+                let mut changeset = Changeset::new(&workspace).unwrap();
                 let commits = repo
                     .commits()
                     .unwrap()

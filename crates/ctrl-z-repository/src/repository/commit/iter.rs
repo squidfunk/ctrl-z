@@ -51,7 +51,7 @@ impl Repository {
         // Create a walk over all revisions starting from HEAD and walking
         // backwards topologically for as long as the iterator is consumed
         let mut revwalk = self.git_repository.revwalk()?;
-        revwalk.push_head()?;
+        revwalk.push_head()?; // @todo start from another commit!
         revwalk.set_sorting(git2::Sort::TOPOLOGICAL)?;
 
         Ok(Commits {

@@ -25,6 +25,8 @@
 
 //! Iterator over references in a repository.
 
+use git2::string_array::StringArray;
+
 use crate::repository::reference::Reference;
 use crate::repository::{Repository, Result};
 

@@ -39,6 +39,7 @@ use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::env;
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use tempfile::NamedTempFile;
 
 use ctrl_z_changeset::{Changeset, Increment, Scopes, VersionExt};
@@ -443,8 +444,7 @@ pub fn main() {
                 // let oid = commit_index(repo.raw(), message).unwrap();
 
                 // // 4) Create tag
-                let tag_name = "v0.0.1"; // create tag, works as well!
-                create_tag(repo.raw(), tag_name, oid, "").unwrap();
+                create_tag(repo.raw(), "v0.0.1", oid, "release").unwrap();
 
                 // // 5) Push branch and tag
                 // let branch = current_branch(repo.raw())?;
@@ -466,8 +466,8 @@ pub fn main() {
                     println!("Creating a new release tag...");
                 }
             }
-            ReleaseCommands::Changelog { tag, output: _ } => {
-                println!("Generating changelog for {}", tag);
+            ReleaseCommands::Changelog { tag: req_tag, output: _ } => {
+                println!("Generating changelog for {}", req_tag);
                 // so this is the changelog for everything that is coming!
 
                 let repo =
@@ -477,29 +477,69 @@ pub fn main() {
                 let mut workspace = Workspace::<Cargo>::read(path).unwrap();
 
                 // Determine LAST version that we released = last tag.
-                let last_ref = if let Some(last) = repo
-                    .references()
+                let tags = repo
+                    .references() // create a tags function that does this filtering
                     .unwrap()
                     .flatten()
                     .filter(Reference::is_tag)
-                    .next()
-                {
-                    last
+                    .collect::<Vec<_>>();
+
+                // save tags in a tree map!
+                let mut all_tags = BTreeMap::new();
+                for tag in tags {
+                    println!("{:?} - {:?}", tag.shorthand(), tag.commit());
+
+                    let v = Version::from_str(
+                        tag.shorthand().unwrap().trim_start_matches("v"),
+                    )
+                    .unwrap();
+                    println!("veriosn: {:?}", v);
+                    all_tags.insert(v, tag);
+                }
+
+                // Parse the requested tag version
+                let requested_version =
+                    Version::from_str(req_tag.trim_start_matches("v")).unwrap();
+
+                // Find the current tag and the previous tag
+                let mut iter = all_tags.range(..=&requested_version).rev();
+                let (current_version, current_tag) =
+                    iter.next().expect("Tag not found");
+                let previous_tag = iter.next(); // This is the previous tag (if any)
+
+                // Get commits between tags
+                let current_commit = current_tag.commit().unwrap().unwrap();
+
+                // println!("all_tags {:#?}", all_tags.keys().collect::<Vec<_>>());
+
+                // let (k, tag) = all_tags.last_key_value().unwrap();
+
+                // let last_commit = tag.commit().unwrap().unwrap();
+
+                println!(
+                    "tag {:?}, prev tag {:?}",
+                    current_tag.shorthand(),
+                    previous_tag.map(|(_, t)| t.shorthand())
+                );
+
+                let commits = if let Some((_, prev_tag)) = previous_tag {
+                    // Get commits between previous and current tag
+                    let prev_commit = prev_tag.commit().unwrap().unwrap();
+                    repo.commits()
+                        .unwrap()
+                        .flatten()
+                        .take_while(|commit| commit != &prev_commit)
+                        .collect::<Vec<_>>()
                 } else {
-                    return;
+                    // No previous tag - get all commits up to current tag
+                    repo.commits()
+                        .unwrap()
+                        .flatten()
+                        .take_while(|commit| commit != &current_commit)
+                        .collect::<Vec<_>>()
                 };
 
-                let last_commit = last_ref.commit().unwrap().unwrap();
-
-                // @todo maybe changeset is created from workspace???
-                // that would make scopes a private thing, which is better...
                 let mut changeset = Changeset::new(&workspace).unwrap();
-                let commits = repo
-                    .commits()
-                    .unwrap()
-                    .flatten()
-                    .take_while(|commit| commit != &last_commit);
-
                 changeset.extend(commits).unwrap();
 
                 println!("{}", changeset.to_changelog());

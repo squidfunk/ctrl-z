@@ -95,3 +95,5 @@ impl fmt::Debug for Commit<'_> {
             .finish()
     }
 }
+
+// @todo also implement display! so we can print commits for debugging in the CLI

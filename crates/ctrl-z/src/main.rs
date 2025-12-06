@@ -162,13 +162,6 @@ pub fn main() {
 
                 let scopes = Scopes::try_from(&workspace).unwrap();
 
-                // @todo remove when we can build the graph and scope from it.
-                // in the graph, we now determine all actually versioned packages
-                // and their deps
-                // let graph = create_graph(&projects);
-
-                // Project Collection?
-
                 // Determine LAST version that we released = last tag.
                 let last_ref = if let Some(last) = repo
                     .references()
@@ -181,11 +174,6 @@ pub fn main() {
                 } else {
                     return;
                 };
-
-                // println!(
-                //     "Last reference: {:?}",
-                //     last_ref.commit().unwrap().unwrap().id()
-                // );
 
                 let last_commit = last_ref.commit().unwrap().unwrap();
 
@@ -200,32 +188,12 @@ pub fn main() {
 
                 changeset.extend(commits).unwrap();
 
-                // changeset: collect for scope!
-
-                println!("{}", changeset.to_changelog());
-
-                // we should impl a partial revision iterator?
-
                 let mut increments = changeset.increments().to_vec();
                 let incr = increments
                     .iter()
                     .enumerate()
                     .filter_map(|(i, inc)| inc.map(|_| i))
                     .collect::<BTreeSet<_>>();
-
-                // to_graph // to_changelog
-
-                // changeset - function to group by scope
-                // group by kind
-                // or: retrieve changes for a cetain scope - the general filter
-                // method... - changeset iterate revisions...
-
-                // println!("Changeset: {:#?}", changeset);
-
-                // so from the bumped packages, we must identify the sources.
-                // thus, we can just determine ALL sources, and then intersect
-                // those with those that were bumped. then we use this for
-                // traversal, since we don't need to iterate all of them.
 
                 let deps = workspace.dependents().unwrap();
                 let mut sources: BTreeSet<usize> =
@@ -238,8 +206,6 @@ pub fn main() {
                     .copied()
                     .collect::<HashSet<_>>();
                 // println!("start {:?}", start);
-
-                // inherit bumps = re-export package
 
                 // versions...
                 let mut versions = BTreeMap::<usize, &Version>::new();
@@ -429,9 +395,9 @@ pub fn main() {
 
                 // ------ we got it until here ------ ------ ------ ------ ------
 
-                let changelog = changeset.to_changelog().to_string();
+                // let changelog = changeset.to_changelog().to_string();
 
-                let message = prompt_commit_message(&changelog).unwrap();
+                let message = prompt_commit_message("").unwrap();
                 let oid = commit_index(repo.raw(), &message).unwrap();
 
                 // // 2) Create the release commit
@@ -451,86 +417,7 @@ pub fn main() {
                 //         format!("HEAD:refs/heads/{branch}"),
                 //         format!("refs/tags/{tag_name}"),
                 //     ],
-                // )?;
-
-                // version bump!
-                // ensure_clean_workdir(&repo, &[]).unwrap();
-
-                // we KNOW all files to stage, and we should then check that
-                // everything is correctly staged.
-
-                // now, we would do the git commit
-
-                // last but not least, update the top-level
-
-                // bump version-reqs - how? iterate all manifests, and then
-                // determine which packages we need to bump, then bump the versions
-
-                // we might first instantiate a writer, which allows us to
-                // do version bumps + dependency version bumps
-
-                // start traversal from nodes.
-
-                // if it's a patch, we also patch.
-
-                // parse a config? for scopes + other settings...
-                // .ctrl-z.toml
-
-                // we practically do not need to create intermediary structs.
-                // we should immediately create the right struct. now, first,
-                // we determine the version bumps necessary.
-
-                // so we should save the commit oid + message, right?
-
-                // we don't have the notion of a workspace anymore, we just don't assign
-                // commits outside of scopes, since they won't be releesd anyway
-                // + we skip merges
-
-                // for reference in repo
-                //     .references()
-                //     .unwrap()
-                //     .flatten()
-                //     .filter(Reference::is_tag)
-                // {
-                //     let commit = reference.commit().unwrap().unwrap();
-                //     println!(
-                //         "Reference: {} - {}",
-                //         reference.shorthand().unwrap_or("<no name>"),
-                //         commit.id()
-                //     );
-                // }
-
-                // // Determine LAST version that we released = last tag.
-                // let version = if let Some(last) = repo
-                //     .references()
-                //     .unwrap()
-                //     .flatten()
-                //     .filter(Reference::is_tag)
-                //     .next()
-                // {
-                //     println!("Last reference: {:?}", last.shorthand());
-                //     // try parsing this as a version...
-
-                //     let v = semver::Version::parse(last.shorthand().unwrap())
-                //         .unwrap();
-                //     println!("Parsed version: {:?}", v);
-                //     v
-                // } else {
-                //     return;
-                // };
-
-                // let proceed = Confirm::new("Do you want to proceed?")
-                //     .with_default(false) // Default to NO
-                //     .prompt()
-                //     .unwrap();
-
-                // if proceed {
-                //     println!("Tag command executed");
-                // } else {
-                //     println!("Operation canceled");
-                // }
-
-                // now, based on the files in each commit, we
+                // )?
             }
         }
     }
@@ -653,12 +540,13 @@ fn prompt_commit_message(
 ) -> Result<String, Box<dyn std::error::Error>> {
     // Create a temporary file with template
     let mut temp = NamedTempFile::new()?;
-    writeln!(temp, "chore: release\n")?;
-    writeln!(temp, "{}\n", changelog)?;
-    writeln!(temp, "# Edit the release message above")?;
-    writeln!(temp, "# The first line is the commit summary")?;
-    writeln!(temp, "# The changelog is included in the body")?;
-    writeln!(temp, "# Lines starting with '#' will be ignored")?;
+    writeln!(temp, "chore: release")?;
+    writeln!(temp, "")?;
+    writeln!(temp, "# Describe the changes in this release.")?;
+    // writeln!(temp, "# Edit the release message above")?;
+    // writeln!(temp, "# The first line is the commit summary")?;
+    // writeln!(temp, "# The changelog is included in the body")?;
+    // writeln!(temp, "# Lines starting with '#' will be ignored")?;
 
     // Get editor from environment or use default
     let editor = std::env::var("EDITOR")

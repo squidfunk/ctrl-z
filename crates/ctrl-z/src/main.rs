@@ -249,26 +249,27 @@ pub fn main() {
                 }
                 let versions = versions.values().collect::<Vec<_>>();
 
-                struct MagentaTheme;
+                // struct MagentaTheme;
 
-                impl Theme for MagentaTheme {
-                    // fn radio_symbol(&self, state: &ThemeState, selected: bool) -> String {
+                // impl Theme for MagentaTheme {
+                //     // fn radio_symbol(
+                //     //     &self, state: &ThemeState, selected: bool,
+                //     // ) -> String {
+                //     // }
 
-                    // }
-
-                    // /// Returns the symbol of the current rendering state.
-                    // fn state_symbol(&self, state: &ThemeState) -> String {
-                    //     let color = self.state_symbol_color(state);
-                    //     match state {
-                    //         ThemeState::Active => color.apply_to("·"),
-                    //         ThemeState::Cancel => color.apply_to("✗"),
-                    //         ThemeState::Submit => color.apply_to("·"),
-                    //         ThemeState::Error(_) => color.apply_to("▲"),
-                    //     }
-                    //     .to_string()
-                    // }
-                }
-                set_theme(MagentaTheme);
+                //     // /// Returns the symbol of the current rendering state.
+                //     // fn state_symbol(&self, state: &ThemeState) -> String {
+                //     //     let color = self.state_symbol_color(state);
+                //     //     match state {
+                //     //         ThemeState::Active => color.apply_to("·"),
+                //     //         ThemeState::Cancel => color.apply_to("✗"),
+                //     //         ThemeState::Submit => color.apply_to("·"),
+                //     //         ThemeState::Error(_) => color.apply_to("▲"),
+                //     //     }
+                //     //     .to_string()
+                //     // }
+                // }
+                // set_theme(MagentaTheme);
 
                 intro("Bump versions").unwrap();
 
@@ -341,7 +342,6 @@ pub fn main() {
                         // just accept
                     } else {
                         // what's the suggested bump? minor!
-                        let current_version = (*versions[node]).clone();
                         // println!("  => current version: {}", current_version);
 
                         // in case major minor patch are all the same, only
@@ -350,200 +350,52 @@ pub fn main() {
                         // auto select if there's only one possible version!
                         // but no, we can also skip...
 
-                        let selected = select(name)
-                            .item(None, "current", "no bump")
-                            .item(
-                                Some(Increment::Patch),
-                                current_version.bump(Increment::Patch),
-                                "patch",
-                            )
-                            .item(
+                        // what's the suggested bump? minor!
+                        let current_version = (*versions[node]).clone();
+
+                        // Compute all possible versions
+                        let patch_version =
+                            current_version.bump(Increment::Patch);
+                        let minor_version =
+                            current_version.bump(Increment::Minor);
+                        let major_version =
+                            current_version.bump(Increment::Major);
+
+                        // Build select options, skipping duplicates (e.g., in 0.0.x)
+                        let mut select_builder =
+                            select(name).item(None, current_version, "current");
+
+                        // Always add patch
+                        select_builder = select_builder.item(
+                            Some(Increment::Patch),
+                            patch_version.clone(),
+                            "patch",
+                        );
+
+                        // Only add minor if different from patch
+                        if minor_version != patch_version {
+                            select_builder = select_builder.item(
                                 Some(Increment::Minor),
-                                current_version.bump(Increment::Minor),
+                                minor_version.clone(),
                                 "minor",
-                            )
-                            .item(
+                            );
+                        }
+
+                        // Only add major if different from minor
+                        if major_version != minor_version {
+                            select_builder = select_builder.item(
                                 Some(Increment::Major),
-                                current_version.bump(Increment::Major),
+                                major_version,
                                 "major",
-                            )
-                            .initial_value(Some(Increment::Patch))
+                            );
+                        }
+
+                        let selected = select_builder
+                            .initial_value(Some(Increment::Patch)) // or skip?
                             .interact()
                             .unwrap(); // io result!
 
-                        // increment selected! add to deps!
-
                         increments[node] = selected;
-
-                        // // put the version below the package!
-                        // let x = format!(
-                        //     "Hello, world!\n{}",
-                        //     style(current_version).dim()
-                        // );
-                        // remark(x).unwrap();
-                        // // cliclack::log::info().unwrap();
-
-                        // let selected = select("Pick a project type")
-                        //     .item("ts", "TypeScript", "")
-                        //     .item("js", "JavaScript", "")
-                        //     .item("coffee", "CoffeeScript", "oh no")
-                        //     .interact()
-                        //     .unwrap();
-                        // Do stuff
-
-                        // render all changes above?
-
-                        // println!("selected {:?}", selected);
-
-                        // let mut help_msg = String::new();
-                        // if let Some(inc) = bump {
-                        //     let next = current_version.clone().bump(*inc);
-                        //     println!("  Suggested: {:?} → {}\n", inc, next);
-                        //     help_msg.push_str(&format!(
-                        //         "Suggested: {:?} → {}\n\n",
-                        //         inc,
-                        //         next.to_string()
-                        //     ));
-                        // }
-
-                        // // if !changes.is_empty() {
-                        // //     help_msg.push_str("Recent changes:\n");
-                        // //     for (hash, msg) in changes.iter().take(5) {
-                        // //         help_msg.push_str(&format!(
-                        // //             "  • {} ({})\n",
-                        // //             msg,
-                        // //             &hash[..7]
-                        // //         ));
-                        // //     }
-                        // // }
-
-                        // help_msg.push_str(" - a\n");
-                        // help_msg.push_str(" - b\n");
-                        // help_msg.push_str("\n");
-
-                        // // display? - we can simulate the bump version...
-
-                        // let options = vec![
-                        //     ("Skip", None),
-                        //     ("Patch", Some(Increment::Patch)),
-                        //     ("Minor", Some(Increment::Minor)),
-                        //     ("Major", Some(Increment::Major)),
-                        // ];
-
-                        // #[derive(Clone, Debug)]
-                        // struct BumpOption {
-                        //     label: &'static str,
-                        //     increment: Option<Increment>,
-                        //     resulting_version: Option<Version>,
-                        // }
-
-                        // impl fmt::Display for BumpOption {
-                        //     fn fmt(
-                        //         &self, f: &mut fmt::Formatter,
-                        //     ) -> fmt::Result {
-                        //         match &self.resulting_version {
-                        //             Some(v) => write!(
-                        //                 f,
-                        //                 "{:8} → {}",
-                        //                 self.label,    //.cyan(),
-                        //                 v.to_string()  //.green().bold()
-                        //             ),
-                        //             None => {
-                        //                 write!(f, "{}", self.label) //.dimmed())
-                        //             }
-                        //         }
-                        //     }
-                        // }
-
-                        // let options = vec![
-                        //     BumpOption {
-                        //         label: "Patch",
-                        //         increment: Some(Increment::Patch),
-                        //         resulting_version: Some(
-                        //             current_version
-                        //                 .clone()
-                        //                 .bump(Increment::Patch),
-                        //         ),
-                        //     },
-                        //     BumpOption {
-                        //         label: "Minor",
-                        //         increment: Some(Increment::Minor),
-                        //         resulting_version: Some(
-                        //             current_version
-                        //                 .clone()
-                        //                 .bump(Increment::Minor),
-                        //         ),
-                        //     },
-                        //     BumpOption {
-                        //         label: "Major",
-                        //         increment: Some(Increment::Major),
-                        //         resulting_version: Some(
-                        //             current_version
-                        //                 .clone()
-                        //                 .bump(Increment::Major),
-                        //         ),
-                        //     },
-                        //     BumpOption {
-                        //         label: "Skip",
-                        //         increment: None,
-                        //         resulting_version: None,
-                        //     },
-                        // ];
-
-                        // // determine all current versions...
-
-                        // let formatter: OptionFormatter<'_, BumpOption> =
-                        //     &|opt| {
-                        //         let increment = options
-                        //             .iter()
-                        //             .find(|x| &x.label == &opt.value.label)
-                        //             .unwrap();
-                        //         match &increment.resulting_version {
-                        //             Some(inc) => inc.to_string(),
-                        //             None => "-".to_string(),
-                        //         }
-                        //     };
-
-                        // let choice =
-                        //     Select::new("Select bump:", options.clone())
-                        //         .with_help_message(&help_msg)
-                        //         .with_render_config(RenderConfig {
-
-                        //             help_message: StyleSheet::empty(),
-                        //             highlighted_option_prefix: "→".into(),
-                        //             prompt_prefix: "?".into(),
-                        //             // option_index_prefix: Some("  ".to_string()),
-                        //             ..RenderConfig::default()
-                        //         })
-                        //         .with_formatter(&formatter)
-                        //         .with_starting_cursor(0)
-                        //         .prompt()
-                        //         .unwrap();
-
-                        // // Ok(options
-                        // //     .into_iter()
-                        // //     .find(|x| x.0 == choice)
-                        // //     .unwrap()
-                        // //     .1)
-
-                        // println!("CHOICE {:?}", choice);
-
-                        // match x {
-                        //     Ok(x) => {
-                        //         println!(
-                        //             "  => User selected increment: {:?}",
-                        //             x
-                        //         );
-                        //         // set increment here!
-                        //     }
-                        //     Err(err) => {
-                        //         eprintln!(
-                        //             "  => Error prompting for increment: {}",
-                        //             err
-                        //         );
-                        //         break;
-                        //     }
-                        // }
                     }
 
                     // if node in sources, just skip!
@@ -551,6 +403,8 @@ pub fn main() {
                 }
 
                 outro("Completed").unwrap();
+
+                println!("increments {:?}", increments);
 
                 // bumps - go through _all_ of them... start at sources...
                 // if the downstream package is not affected - skip the entire thing!

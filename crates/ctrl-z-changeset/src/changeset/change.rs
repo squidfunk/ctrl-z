@@ -112,10 +112,26 @@ impl FromStr for Change {
             None => (Kind::from_str(kind)?, false),
         };
 
-        // Ensure description has no leading whitespace, as we chose to be as
-        // strict as possible with the format of commit messages
-        if description.chars().next().is_some_and(char::is_whitespace) {
-            return Err(Error::Format);
+        // Ensure description has no leading or trailing whitespace, as we need
+        // to be as strict as possible with the format of commit messages
+        if description != description.trim() {
+            return Err(Error::Whitespace);
+        }
+
+        // Ensure description is lowercase, unless it's an entire uppercase
+        // word, e.g., an acronym like README, API, or URL
+        if let Some(char) = description.chars().next() {
+            if char.is_uppercase() {
+                let word = description.split_whitespace().next().unwrap_or("");
+                let is_acronym = word
+                    .chars()
+                    .all(|char| !char.is_alphabetic() || char.is_uppercase());
+
+                // If not an acronym, return error
+                if !is_acronym {
+                    return Err(Error::Casing);
+                }
+            }
         }
 
         // Return change

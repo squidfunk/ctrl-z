@@ -41,6 +41,12 @@ pub enum Error {
     /// Invalid kind.
     #[error("invalid kind")]
     Kind,
+    /// Description has leading or trailing whitespace.
+    #[error("description has leading or trailing whitespace")]
+    Whitespace,
+    /// Description must be lowercase.
+    #[error("description must be lowercase")]
+    Casing,
 }
 
 // ----------------------------------------------------------------------------

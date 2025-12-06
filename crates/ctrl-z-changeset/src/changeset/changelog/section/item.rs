@@ -80,7 +80,7 @@ impl fmt::Display for Item<'_> {
         let id = self.revision.commit().id().to_string();
         f.write_str(&id[0..7])?;
 
-        // Write affected scopes, if any
+        // Write affected scopes
         if !self.scopes.is_empty() {
             f.write_char(' ')?;
             for (i, scope) in self.scopes.iter().enumerate() {
@@ -100,7 +100,7 @@ impl fmt::Display for Item<'_> {
         f.write_str(" – ")?;
         f.write_str(change.description())?;
 
-        // Write affected issues, if any
+        // Write relevant issues
         if !self.issues.is_empty() {
             f.write_str(" (")?;
             for (i, issue) in self.issues.iter().enumerate() {

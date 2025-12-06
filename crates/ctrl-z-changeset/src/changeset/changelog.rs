@@ -123,6 +123,10 @@ impl<'a> Extend<&'a Revision<'a>> for Changelog<'a> {
 impl fmt::Display for Changelog<'_> {
     /// Formats the changelog for display.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str("## Changes")?;
+        f.write_str("\n\n")?;
+
+        // Write all sections
         for section in self.sections.values() {
             section.fmt(f)?;
         }

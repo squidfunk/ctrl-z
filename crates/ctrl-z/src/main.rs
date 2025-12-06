@@ -33,12 +33,13 @@ use cliclack::{
     intro, outro, outro_note, select, set_theme, Theme, ThemeState,
 };
 use console::{style, Style};
-use ctrl_z_project::workspace::updater::Updatable;
 // @todo: remove the git indirection
 use semver::Version;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::env;
+use std::io::Write;
 use std::path::{Path, PathBuf};
+use tempfile::NamedTempFile;
 
 use ctrl_z_changeset::{Changeset, Increment, Scopes, VersionExt};
 use ctrl_z_project::{Cargo, Node, Workspace};
@@ -118,6 +119,9 @@ pub fn main() {
 
                 let repo =
                     Repository::open(env::current_dir().unwrap()).unwrap();
+
+                // // 3) Ensure nothing else is left dirty - move this to the top!
+                ensure_clean_workdir(repo.raw(), &[]).unwrap();
 
                 let path = repo.path().join("package.json");
                 if path.exists() {
@@ -211,9 +215,6 @@ pub fn main() {
 
                 // to_graph // to_changelog
 
-                // @todo: directly map the scopes in Scopes! We can then generate
-                // everything from them immediately...
-
                 // changeset - function to group by scope
                 // group by kind
                 // or: retrieve changes for a cetain scope - the general filter
@@ -248,28 +249,6 @@ pub fn main() {
                     }
                 }
                 let versions = versions.values().collect::<Vec<_>>();
-
-                // struct MagentaTheme;
-
-                // impl Theme for MagentaTheme {
-                //     // fn radio_symbol(
-                //     //     &self, state: &ThemeState, selected: bool,
-                //     // ) -> String {
-                //     // }
-
-                //     // /// Returns the symbol of the current rendering state.
-                //     // fn state_symbol(&self, state: &ThemeState) -> String {
-                //     //     let color = self.state_symbol_color(state);
-                //     //     match state {
-                //     //         ThemeState::Active => color.apply_to("·"),
-                //     //         ThemeState::Cancel => color.apply_to("✗"),
-                //     //         ThemeState::Submit => color.apply_to("·"),
-                //     //         ThemeState::Error(_) => color.apply_to("▲"),
-                //     //     }
-                //     //     .to_string()
-                //     // }
-                // }
-                // set_theme(MagentaTheme);
 
                 intro("Bump versions").unwrap();
 
@@ -411,11 +390,6 @@ pub fn main() {
 
                 // walk through all packages here in TOPO order.
 
-                // println!(
-                //     "Increments needed for scopes at indexes: {:#?}",
-                //     incr
-                // );
-
                 let mut new_versions = BTreeMap::new();
                 for (node, incr) in increments.into_iter().enumerate() {
                     if let Some(increment) = incr {
@@ -440,135 +414,33 @@ pub fn main() {
                         .unwrap();
                 }
 
-                // how go get version for scope? workspace.get?
-                // now, traverse from all sources?
-
-                // Writer <- this should take a workspace, and then write all
-
-                // move prompt outside - provide a callback function that receives
-                // the recommended version bump and can return one as well.
-
-                // // can we also impl an iterator over the traversal that auto-completes?
-                // let mut traversal = graph.traverse(incr);
-                // let inc = graph.topology().incoming();
-                // while let Some(node) = traversal.take() {
-                //     println!("Traversed node: {:?} - {:?}", node, &inc[node]);
-
-                //     // we just need to list:
-                //     // - the dependent package name and its version
-                //     // - all commits related to the package (= scope)
-
-                //     let x = prompt_increment(
-                //         graph[node].manifest.name().unwrap(),
-                //         graph[node]
-                //             .manifest
-                //             .version()
-                //             .expect("versioned package"),
-                //         increments[node],
-                //         &[],
-                //     );
-
-                //     match x {
-                //         Ok(x) => {
-                //             println!("User selected increment: {:?}", x);
-                //         }
-                //         Err(err) => {
-                //             eprintln!("Error prompting for increment: {}", err);
-                //             break;
-                //         }
-                //     }
-
-                //     traversal.complete(node);
-                // }
-
-                // traversal!
-
-                // get node indexes
-
-                // graph.traverse(initial)
-
-                // @todo: changeset now has all increments!
-                // we now need to compute the graph and propagate the increments
-                // and apply the versions
-
-                // // also do transitive bumps. can we do this by traversing a
-                // // graph upward? downward? we should define it downward.
-
-                // let root =
-                //     Manifest::<Cargo>::read(repo.path().join("Cargo.toml"))
-                //         .unwrap();
-
-                // // println!("Top-level manifest: {:#?}", manifest);
-
-                // // 3) Ensure nothing else is left dirty - move this to the top!
-                // ensure_clean_workdir(repo.raw(), &[]).unwrap();
-
-                // println!("Increments: {:#?}", increments);
-                // // next, determine package versions and compute next ones
-                // for i in 0..increments.len() {
-                //     let manifest = &graph[i];
-                //     let Some(increment) = increments[i] else {
-                //         continue;
-                //     };
-
-                //     let Some(current_version) = manifest.data.version() else {
-                //         continue;
-                //     };
-
-                //     let next_version = current_version.bump(increment);
-                //     println!(
-                //         "{}: {} -> {}",
-                //         manifest.data.name().unwrap_or("<no name>"),
-                //         current_version,
-                //         next_version
-                //     );
-
-                //     root.set_version_req(
-                //         manifest.data.name().unwrap(),
-                //         next_version.clone(), // just hand over ref!
-                //     );
-
-                //     // now, do the version bump here!
-                //     // we can make it interactive! ask for confirmation and
-                //     // allow to select the bump type!
-
-                //     // we compute the version bumps outside, and then just
-                //     // iterate all packages and set versions and version reqs.
-                //     // for this, we ideally have a notion of bumps
-
-                //     manifest.set_version(next_version);
-                // }
-
-                // // let updated_files: Vec<PathBuf> = graph
-                // //     .iter()
-                // //     .enumerate()
-                // //     .filter_map(|(i, m)| {
-                // //         increments[i].is_some().then(|| m.path.clone())
-                // //     })
-                // //     .collect();
-
-                // // enforce waiting for Cargo.lock
-                // let output = std::process::Command::new("cargo")
-                //     .arg("update")
-                //     .arg("--workspace")
-                //     .arg("--offline")
-                //     // .arg("--format-version=1")
-                //     .current_dir(repo.path())
-                //     .output()
-                //     .unwrap();
+                // enforce waiting for Cargo.lock
+                let output = std::process::Command::new("cargo")
+                    .arg("update")
+                    .arg("--workspace")
+                    .arg("--offline")
+                    // .arg("--format-version=1")
+                    .current_dir(repo.path())
+                    .output()
+                    .unwrap();
 
                 // // 1) Stage everything
-                // stage_all(repo.raw());
+                stage_all(repo.raw());
 
                 // ------ we got it until here ------ ------ ------ ------ ------
+
+                let changelog = changeset.to_changelog().to_string();
+
+                let message = prompt_commit_message(&changelog).unwrap();
+                let oid = commit_index(repo.raw(), &message).unwrap();
 
                 // // 2) Create the release commit
                 // let message = "chore: publish\n\n...details...";
                 // let oid = commit_index(repo.raw(), message).unwrap();
 
                 // // 4) Create tag
-                // let tag_name = "1.2.3"; // create tag, works as well!
-                // create_tag(repo.raw(), tag_name, oid, "release").unwrap();
+                let tag_name = "v1.2.3"; // create tag, works as well!
+                create_tag(repo.raw(), tag_name, oid, "").unwrap();
 
                 // // 5) Push branch and tag
                 // let branch = current_branch(repo.raw())?;
@@ -664,42 +536,6 @@ pub fn main() {
     }
 }
 
-// fn prompt_increment(
-//     package_name: &str,
-//     current_version: &Version,
-//     suggested: Option<Increment>,
-//     changes: &[(String, String)], // (hash, message)
-// ) -> Result<Option<Increment>, inquire::InquireError> {
-//     println!("\n{} (currently {})", package_name, current_version);
-
-//     if let Some(inc) = suggested {
-//         let next = current_version.clone().bump(inc);
-//         println!("  Suggested: {:?} → {}\n", inc, next);
-//     }
-
-//     if !changes.is_empty() {
-//         println!("  Changes:");
-//         for (hash, msg) in changes {
-//             println!("  ✓ {} ({})", msg, &hash[..7]);
-//         }
-//         println!();
-//     }
-
-//     let options = vec![
-//         ("Accept", suggested),
-//         ("Patch", Some(Increment::Patch)),
-//         ("Minor", Some(Increment::Minor)),
-//         ("Major", Some(Increment::Major)),
-//         ("Skip", None),
-//     ];
-
-//     let choice =
-//         Select::new("Select bump:", options.iter().map(|x| x.0).collect())
-//             .prompt()?;
-
-//     Ok(options.into_iter().find(|x| x.0 == choice).unwrap().1)
-// }
-
 fn ensure_clean_workdir(
     repo: &git2::Repository, allowed: &[PathBuf],
 ) -> Result<(), git2::Error> {
@@ -759,6 +595,104 @@ fn stage_files(
     Ok(())
 }
 
+fn create_tag_interactive(
+    repo: &git2::Repository, tag_name: &str, target: git2::Oid,
+) -> Result<git2::Oid, Box<dyn std::error::Error>> {
+    let message = prompt_tag_message(tag_name)?;
+    let obj = repo.find_object(target, None)?;
+    let sig = repo.signature()?;
+    Ok(repo.tag(tag_name, &obj, &sig, &message, false)?)
+}
+
+fn prompt_tag_message(
+    tag_name: &str,
+) -> Result<String, Box<dyn std::error::Error>> {
+    // Create a temporary file with template
+    let mut temp = NamedTempFile::new()?;
+    writeln!(
+        temp,
+        "# Tag message for {}\n# Lines starting with '#' will be ignored",
+        tag_name
+    )?;
+
+    // Get editor from environment or use default
+    let editor = std::env::var("EDITOR")
+        .or_else(|_| std::env::var("VISUAL"))
+        .unwrap_or_else(|_| "vim".to_string());
+
+    // Open editor
+    let status = std::process::Command::new(&editor)
+        .arg(temp.path())
+        .status()?;
+
+    if !status.success() {
+        return Err("Editor exited with non-zero status".into());
+    }
+
+    // Read the message back
+    let content = std::fs::read_to_string(temp.path())?;
+
+    // Filter out comment lines and trim
+    let message: String = content
+        .lines()
+        .filter(|line| !line.trim_start().starts_with('#'))
+        .collect::<Vec<_>>()
+        .join("\n")
+        .trim()
+        .to_string();
+
+    if message.is_empty() {
+        return Err("Empty tag message".into());
+    }
+
+    Ok(message)
+}
+
+fn prompt_commit_message(
+    changelog: &str,
+) -> Result<String, Box<dyn std::error::Error>> {
+    // Create a temporary file with template
+    let mut temp = NamedTempFile::new()?;
+    writeln!(temp, "chore: release\n")?;
+    writeln!(temp, "{}\n", changelog)?;
+    writeln!(temp, "# Edit the release message above")?;
+    writeln!(temp, "# The first line is the commit summary")?;
+    writeln!(temp, "# The changelog is included in the body")?;
+    writeln!(temp, "# Lines starting with '#' will be ignored")?;
+
+    // Get editor from environment or use default
+    let editor = std::env::var("EDITOR")
+        .or_else(|_| std::env::var("VISUAL"))
+        .unwrap_or_else(|_| "vim".to_string());
+
+    // Open editor
+    let status = std::process::Command::new(&editor)
+        .arg(temp.path())
+        .status()?;
+
+    if !status.success() {
+        return Err("Editor exited with non-zero status".into());
+    }
+
+    // Read the message back
+    let content = std::fs::read_to_string(temp.path())?;
+
+    // Filter out comment lines and trim
+    let message: String = content
+        .lines()
+        .filter(|line| !line.trim_start().starts_with('#'))
+        .collect::<Vec<_>>()
+        .join("\n")
+        .trim()
+        .to_string();
+
+    if message.is_empty() {
+        return Err("Empty commit message".into());
+    }
+
+    Ok(message)
+}
+
 fn stage_all(repo: &git2::Repository) -> Result<(), git2::Error> {
     let mut index = repo.index()?;
     // Stage all tracked changes and new files (respecting .gitignore)
@@ -807,118 +741,6 @@ fn create_tag(
     let sig = repo.signature()?;
     repo.tag(tag_name, &obj, &sig, message, false)
 }
-
-// ctrl-z-revision?
-
-// call it project... wrap the repository
-
-// hand over repository
-
-// fn find_packages2(
-//     repo_path: &Path,
-// ) -> Result<BTreeMap<PathBuf, Project<Cargo>>, Error> {
-//     // loader... <- with manifest members, we can implement a GENERAL loader!
-//     let root_cargo = repo_path.join("Cargo.toml");
-//     let project = Project::<Cargo>::read(root_cargo)?;
-//     project
-//         .into_iter()
-//         .map(|res| {
-//             res.map(|member| {
-//                 let dir = member
-//                     .path
-//                     .parent()
-//                     .expect("manifest has parent")
-//                     // .strip_prefix(repo_path)
-//                     // .expect("strip_prefix")
-//                     .to_path_buf();
-//                 (dir, member)
-//             })
-//         })
-//         .collect()
-// }
-
-// // we should create a graph of scopes, so the scopes are the nodes!
-// // we should check what we need from the project and only use that, and then
-// // from the project create the scopes...?
-// fn create_graph(
-//     projects: &BTreeMap<PathBuf, Project<Cargo>>,
-// ) -> Graph<&Project<Cargo>> {
-//     // so this is  a graph fo refs...
-//     let mut builder = Graph::builder::<()>();
-//     for (path, project) in projects {
-//         if project.manifest.version().is_none() {
-//             continue;
-//         }
-//         builder.add_node(project);
-//     }
-
-//     // add edges...
-//     let mut edges = Vec::new();
-//     for (n, manifest) in builder.nodes().iter().enumerate() {
-//         // Extract and enumerate dependencies
-//         let dependencies = match &manifest.manifest {
-//             Cargo::Package { dependencies, .. } => dependencies,
-//             Cargo::Workspace { workspace } => &workspace.dependencies,
-//         };
-
-//         // Add to dependencies
-//         for (dep_name, dependency) in dependencies {
-//             // if a dependency version is set, ensure that it matches!
-//             let m = builder
-//                 .nodes()
-//                 .iter() // @todo impl eq
-//                 .position(|candidate| {
-//                     candidate.manifest.name() == Some(dep_name)
-//                 });
-
-//             if let Some(m) = m {
-//                 edges.push((n, m));
-//             }
-//         }
-//     }
-
-//     for (n, m) in edges {
-//         builder.add_edge(m, n, ()).unwrap();
-//     }
-
-//     builder.build()
-//     // Here, we collect all versions
-// }
-
-// /// Updates a package.json manifest string with new versions.
-// fn update_npm_manifest(content: &str, versions: &Versions) -> Result<String> {
-//     let mut doc: Value = serde_json::from_str(content)?;
-
-//     // Update package version if name matches
-//     if let Some(obj) = doc.as_object_mut() {
-//         if let Some(name) = obj.get("name").and_then(|n| n.as_str()) {
-//             if let Some(new_version) = versions.get(name) {
-//                 obj.insert("version".to_string(), Value::String(new_version.to_string()));
-//             }
-//         }
-
-//         // Update dependencies sections
-//         for section in ["dependencies", "devDependencies", "peerDependencies"] {
-//             if let Some(deps) = obj.get_mut(section).and_then(|d| d.as_object_mut()) {
-//                 update_npm_dependency_table(deps, versions);
-//             }
-//         }
-//     }
-
-//     // Pretty-print with 2-space indentation
-//     Ok(serde_json::to_string_pretty(&doc)?)
-// }
-
-// fn update_npm_dependency_table(
-//     deps: &mut serde_json::Map<String, Value>,
-//     versions: &Versions,
-// ) {
-//     for (dep_name, dep_value) in deps.iter_mut() {
-//         if let Some(new_version) = versions.get(dep_name.as_str()) {
-//             *dep_value = Value::String(new_version.to_string());
-//         }
-//     }
-// }
 
 fn handle_commit_msg_hook(message_file: &Path) {
     use ctrl_z_changeset::Change;

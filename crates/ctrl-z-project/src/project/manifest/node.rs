@@ -121,6 +121,6 @@ impl FromStr for Node {
     /// Attempts to create a manifest from a string.
     #[inline]
     fn from_str(value: &str) -> Result<Self> {
-        serde_json::from_str(value).map_err(Into::into)
+        Ok(serde_json::from_str(value)?)
     }
 }

@@ -1,7 +1,7 @@
 // a trait? that needs to be implemented by manifest?
 
 use crate::{Cargo, Manifest, Node, Project, Result};
-use semver::{Version, VersionReq};
+use semver::Version;
 use serde_json::Value;
 use std::collections::BTreeMap;
 use std::fs;

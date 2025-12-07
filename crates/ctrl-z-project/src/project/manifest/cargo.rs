@@ -144,6 +144,6 @@ impl FromStr for Cargo {
     /// Attempts to create a manifest from a string.
     #[inline]
     fn from_str(value: &str) -> Result<Self> {
-        toml::from_str(value).map_err(Into::into)
+        Ok(toml::from_str(value)?)
     }
 }

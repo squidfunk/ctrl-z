@@ -25,7 +25,6 @@
 
 //! Commit.
 
-use semver::Version;
 use std::fmt;
 
 use super::error::Result;

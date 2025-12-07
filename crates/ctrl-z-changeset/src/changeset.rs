@@ -90,8 +90,24 @@ impl Changeset<'_> {
             revisions: Vec::new(),
         })
     }
+}
 
-    // @todo temp
+#[allow(clippy::must_use_candidate)]
+impl Changeset<'_> {
+    /// Returns the scope set.
+    #[inline]
+    pub fn scopes(&self) -> &Scopes {
+        &self.scopes
+    }
+
+    /// Returns the list of revisions.
+    #[inline]
+    pub fn revisions(&self) -> &[Revision<'_>] {
+        &self.revisions
+    }
+
+    /// Returns the version increments.
+    #[inline]
     pub fn increments(&self) -> &[Option<Increment>] {
         &self.increments
     }

@@ -29,21 +29,17 @@ use clap::builder::styling::{AnsiColor, Effects};
 use clap::builder::Styles;
 use clap::{Parser, Subcommand};
 use cliclack::log::remark;
-use cliclack::{
-    intro, outro, outro_note, select, set_theme, Theme, ThemeState,
-};
-use console::{style, Style};
+use cliclack::{intro, outro, select};
+use console::style;
 use ctrl_z_release::Release;
 // @todo: remove the git indirection
 use semver::Version;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
-use std::env;
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::str::FromStr;
 use tempfile::NamedTempFile;
 
-use ctrl_z_changeset::{Changeset, Increment, Scopes, VersionExt};
+use ctrl_z_changeset::{Increment, VersionExt};
 use ctrl_z_project::{Cargo, Node, Workspace};
 use ctrl_z_repository::Repository;
 
@@ -186,8 +182,7 @@ pub fn main() {
                 // println!("The following actions will be performed:");
                 // println!("- Create a new tag");
 
-                let repo =
-                    Repository::open(env::current_dir().unwrap()).unwrap();
+                let repo = Repository::open(".").unwrap();
 
                 // // // 3) Ensure nothing else is left dirty - move this to the top!
                 // ensure_clean_workdir(repo.raw(), &[]).unwrap();
@@ -233,7 +228,7 @@ pub fn main() {
                     return;
                 }
 
-                // start here...
+                // start here... - we definitely got the correct changeset
                 let release = Release::<Cargo>::new(".").unwrap();
                 let changeset = release.changeset(None).unwrap();
 
@@ -420,7 +415,7 @@ pub fn main() {
                     }
                 }
 
-                println!("new versions {:?}", new_versions);
+                // println!("new versions {:?}", new_versions);
 
                 // for project in &mut workspace {
                 //     project
@@ -624,7 +619,7 @@ fn install_git_hooks() {
 
     // Get the current binary path
     let binary_path =
-        env::current_exe().expect("Failed to get current executable path");
+        std::env::current_exe().expect("Failed to get current executable path");
 
     let hook_content = format!(
         "#!/bin/sh\n{} hook commit-msg \"$1\"\n",

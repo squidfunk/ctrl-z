@@ -66,10 +66,9 @@ impl Repository {
     /// # use std::error::Error;
     /// # fn main() -> Result<(), Box<dyn Error>> {
     /// use ctrl_z_repository::Repository;
-    /// use std::env;
     ///
     /// // Open repository
-    /// let repo = Repository::open(env::current_dir()?)?;
+    /// let repo = Repository::open(".")?;
     ///
     /// // Create iterator over commits
     /// for commit in repo.commits(..)?.flatten() {

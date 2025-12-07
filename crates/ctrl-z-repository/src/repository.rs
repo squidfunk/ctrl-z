@@ -62,10 +62,9 @@ impl Repository {
     /// # use std::error::Error;
     /// # fn main() -> Result<(), Box<dyn Error>> {
     /// use ctrl_z_repository::Repository;
-    /// use std::env;
     ///
     /// // Find and open repository from current directory
-    /// let repo = Repository::open(env::current_dir()?)?;
+    /// let repo = Repository::open(".")?;
     /// # Ok(())
     /// # }
     /// ```
@@ -73,9 +72,9 @@ impl Repository {
     where
         P: AsRef<Path>,
     {
-        git2::Repository::discover(path)
-            .map_err(Into::into)
-            .map(|inner| Self { inner })
+        Ok(Self {
+            inner: git2::Repository::discover(path)?,
+        })
     }
 
     /// Stages all files matching the given path specification.
@@ -133,10 +132,9 @@ impl Repository {
     /// # use std::error::Error;
     /// # fn main() -> Result<(), Box<dyn Error>> {
     /// use ctrl_z_repository::Repository;
-    /// use std::env;
     ///
     /// // Find and open repository from current directory
-    /// let repo = Repository::open(env::current_dir()?)?;
+    /// let repo = Repository::open(".")?;
     /// if !repo.is_clean()? {
     ///     println!("Working directory contains uncommitted changes");
     /// }
@@ -167,10 +165,9 @@ impl Repository {
     /// # use std::error::Error;
     /// # fn main() -> Result<(), Box<dyn Error>> {
     /// use ctrl_z_repository::Repository;
-    /// use std::env;
     ///
     /// // Find and open repository from current directory
-    /// let repo = Repository::open(env::current_dir()?)?;
+    /// let repo = Repository::open(".")?;
     /// if !repo.on_default_branch()? {
     ///     println!("Not on default branch");
     /// }

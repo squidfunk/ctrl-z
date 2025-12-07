@@ -109,7 +109,7 @@ enum ReleaseCommand {
     /// Packages command that lists all affected packages in a tag
     Packages {
         /// Tag name or version (e.g., v1.2.3)
-        tag: String,
+        version: Option<Version>,
 
         /// Output file (default: stdout)
         #[arg(short, long)]
@@ -232,6 +232,12 @@ pub fn main() {
                 let release = Release::<Cargo>::new(".").unwrap();
                 let changeset = release.changeset(None).unwrap();
 
+                // Increment [node => Option<Bump>]
+                // into Hash { node1, node2, node4 }
+                // Intersect with source, so we know which sources to consider
+                // - we might just check which have no incoming nodes based on increment
+                // - is_source?
+
                 let mut increments = changeset.increments().to_vec();
                 let incr = increments
                     .iter()
@@ -253,7 +259,8 @@ pub fn main() {
                     .intersection(&incr)
                     .copied()
                     .collect::<HashSet<_>>();
-                // println!("start {:?}", start);
+
+                println!("start {:?}", start);
 
                 // versions...
                 let mut versions = BTreeMap::<usize, &Version>::new();
@@ -475,14 +482,36 @@ pub fn main() {
                     println!("Creating a new release tag...");
                 }
             }
-            ReleaseCommand::Changelog { version: tag, output: _ } => {
+            ReleaseCommand::Changelog { version, output: _ } => {
                 let release = Release::<Cargo>::new(".").unwrap();
-                let changeset = release.changeset(tag).unwrap();
+                let changeset = release.changeset(version).unwrap();
 
                 println!("{}", changeset.to_changelog());
             }
-            ReleaseCommand::Packages { tag: _, output: _ } => {
-                println!("Listing affected packages...");
+            ReleaseCommand::Packages { version, output: _ } => {
+                let release = Release::<Cargo>::new(".").unwrap();
+                let changeset = release.changeset(version).unwrap();
+
+                // collect all scopes
+                let mut scopes = BTreeSet::<usize>::new(); // why?
+                for revision in changeset.revisions() {
+                    scopes.extend(revision.scopes());
+                }
+
+                // create deps and determine correct order – @todo alarm when
+                // no packages is part of a bump
+                let deps = release.workspace().dependents().unwrap();
+                let increments = changeset.increments();
+
+                // traverse all nodes
+                let mut traversal = deps.graph.traverse(deps.graph.sources());
+                while let Some(node) = traversal.take() {
+                    if scopes.contains(&node) && increments[node].is_some() {
+                        let name = deps.graph[node].info().unwrap().0;
+                        println!("{name}");
+                    }
+                    let _ = traversal.complete(node);
+                }
             }
         },
     }

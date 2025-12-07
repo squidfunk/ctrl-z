@@ -23,12 +23,47 @@
 
 // ----------------------------------------------------------------------------
 
-//! Project utilities.
+//! Release.
 
-mod project;
+use std::path::Path;
 
-pub use project::manifest::cargo::{self, Cargo};
-pub use project::manifest::node::{self, Node};
-pub use project::manifest::{self, Manifest};
-pub use project::workspace::{self, Workspace};
-pub use project::{Error, Project, Result};
+use ctrl_z_project::manifest::Resolver;
+use ctrl_z_project::{Manifest, Workspace};
+use ctrl_z_repository::Repository;
+
+mod error;
+
+pub use error::{Error, Result};
+
+// ----------------------------------------------------------------------------
+// Structs
+// ----------------------------------------------------------------------------
+
+/// Release.
+pub struct Release<T>
+where
+    T: Manifest,
+{
+    /// Repository.
+    repository: Repository,
+    /// Workspace.
+    workspace: Workspace<T>,
+}
+
+// ----------------------------------------------------------------------------
+// Implementations
+// ----------------------------------------------------------------------------
+
+impl<T> Release<T>
+where
+    T: Manifest + Resolver,
+{
+    /// Creates a release for the given repository.
+    pub fn new(repository: Repository) -> Result<Self> {
+        let path = T::resolve(repository.path())?;
+        Ok(Self {
+            repository,
+            workspace: Workspace::read(path)?,
+        })
+    }
+}

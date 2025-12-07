@@ -28,9 +28,10 @@
 use semver::{Version, VersionReq};
 use serde::Deserialize;
 use std::collections::BTreeMap;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
-use crate::project::manifest::{Dependencies, Manifest};
+use crate::project::manifest::{Dependencies, Manifest, Resolver};
 use crate::project::{Error, Result};
 
 // ----------------------------------------------------------------------------
@@ -85,8 +86,22 @@ impl Manifest for Node {
     }
 }
 
-// @todo
+impl Resolver for Node {
+    /// Resolves the manifest path from the given path.
+    ///
+    /// This method just prepends `package.json` to the given path, since it
+    /// doesn't make sense to name it differently in the Node ecosystem.
+    #[inline]
+    fn resolve<P>(path: P) -> Result<PathBuf>
+    where
+        P: AsRef<Path>,
+    {
+        Ok(path.as_ref().join("package.json"))
+    }
+}
+
 impl Dependencies for Node {
+    // @todo
     fn dependencies(
         &self,
     ) -> impl Iterator<Item = (&String, Option<&VersionReq>)> {

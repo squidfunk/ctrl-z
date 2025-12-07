@@ -27,6 +27,7 @@
 
 use semver::{Version, VersionReq};
 use std::fmt::Debug;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
 use super::error::Error;
@@ -51,6 +52,25 @@ pub trait Manifest: Debug + FromStr<Err = Error> {
     fn version(&self) -> Option<&Version>;
     /// Returns the members.
     fn members(&self) -> &[String];
+}
+
+/// Manifest resolver.
+///
+/// This is an additional trait to be added as a trait bound to [`Manifest`]
+/// in situations where the manifest path needs to be resolved.
+pub trait Resolver {
+    /// Resolves the manifest path from the given path.
+    ///
+    /// Some ecosystems allow for multiple names of manifests. This trait keeps
+    /// resolution flexible, so we can even validate paths before resolution.
+    ///
+    /// # Errors
+    ///
+    /// This method should return an error if the path cannot be resolved, or
+    /// if the file doesn't exist. Mechanics are up to the implementor.
+    fn resolve<P>(path: P) -> Result<PathBuf, Error>
+    where
+        P: AsRef<Path>;
 }
 
 // @todo

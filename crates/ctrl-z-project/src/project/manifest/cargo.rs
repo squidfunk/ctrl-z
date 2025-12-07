@@ -28,9 +28,10 @@
 use semver::{Version, VersionReq};
 use serde::Deserialize;
 use std::collections::BTreeMap;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
-use crate::project::manifest::{Dependencies, Manifest};
+use crate::project::manifest::{Dependencies, Manifest, Resolver};
 use crate::project::{Error, Result};
 
 mod dependency;
@@ -102,6 +103,20 @@ impl Manifest for Cargo {
         } else {
             &[]
         }
+    }
+}
+
+impl Resolver for Cargo {
+    /// Resolves the manifest path from the given path.
+    ///
+    /// This method just prepends `Cargo.toml` to the given path, since it
+    /// doesn't make sense to name it differently in the Rust ecosystem.
+    #[inline]
+    fn resolve<P>(path: P) -> Result<PathBuf>
+    where
+        P: AsRef<Path>,
+    {
+        Ok(path.as_ref().join("Cargo.toml"))
     }
 }
 

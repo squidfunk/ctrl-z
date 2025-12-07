@@ -304,6 +304,9 @@ dependencies = [
 name = "ctrl-z-release"
 version = "0.0.0"
 dependencies = [
+ "ctrl-z-changeset",
+ "ctrl-z-project",
+ "ctrl-z-repository",
  "semver",
  "thiserror",
 ]

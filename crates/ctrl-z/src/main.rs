@@ -197,7 +197,7 @@ pub fn main() {
                     return;
                 }
 
-                let path = repo.path().join("package.json");
+                let path = repo.path().join("package.json"); // to_ what?
                 if path.exists() {
                     let mut workspace = Workspace::<Node>::read(path).unwrap();
 
@@ -550,6 +550,8 @@ pub fn main() {
         },
     }
 }
+
+// Release - provide repo...
 
 fn prompt_commit_message(
     changelog: &str,

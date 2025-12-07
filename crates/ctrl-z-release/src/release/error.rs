@@ -23,12 +23,28 @@
 
 // ----------------------------------------------------------------------------
 
-//! Project utilities.
+//! Manifest error.
 
-mod project;
+use std::result;
+use thiserror::Error;
 
-pub use project::manifest::cargo::{self, Cargo};
-pub use project::manifest::node::{self, Node};
-pub use project::manifest::{self, Manifest};
-pub use project::workspace::{self, Workspace};
-pub use project::{Error, Project, Result};
+use ctrl_z_project as project;
+
+// ----------------------------------------------------------------------------
+// Enums
+// ----------------------------------------------------------------------------
+
+/// Manifest error.
+#[derive(Debug, Error)]
+pub enum Error {
+    /// Project error.
+    #[error(transparent)]
+    Project(#[from] project::Error),
+}
+
+// ----------------------------------------------------------------------------
+// Type aliases
+// ----------------------------------------------------------------------------
+
+/// Manifest result.
+pub type Result<T = ()> = result::Result<T, Error>;

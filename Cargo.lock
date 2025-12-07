@@ -305,14 +305,7 @@ name = "ctrl-z-repository"
 version = "0.0.0"
 dependencies = [
  "git2",
- "thiserror",
-]
-
-[[package]]
-name = "ctrl-z-repository-2"
-version = "0.0.0"
-dependencies = [
- "git2",
+ "semver",
  "thiserror",
 ]
 

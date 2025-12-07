@@ -41,6 +41,12 @@ pub enum Error {
     /// Git error.
     #[error(transparent)]
     Git(#[from] git2::Error),
+    /// Version error.
+    #[error(transparent)]
+    Semver(#[from] semver::Error),
+    /// Invalid bound.
+    #[error("invalid bound")]
+    Bound,
 }
 
 // ----------------------------------------------------------------------------

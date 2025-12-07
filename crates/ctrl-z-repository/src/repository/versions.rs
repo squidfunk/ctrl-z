@@ -23,29 +23,32 @@
 
 // ----------------------------------------------------------------------------
 
-//! Commit.
+//! Version set.
 
+use semver::Version;
+use std::collections::BTreeMap;
 use std::fmt;
+use std::str::FromStr;
 
+use super::commit::Commit;
 use super::error::Result;
-use super::id::Id;
 use super::Repository;
-
-mod delta;
-mod iter;
-
-pub use delta::Delta;
 
 // ----------------------------------------------------------------------------
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Commit.
-pub struct Commit<'a> {
+/// Version set.
+///
+/// This data type represents a set of versions in a given repository, which
+/// maps each version to its corresponding commit, making it comfortable for
+/// us to work with versions tags and their associated commits. Git itself
+/// doesn't have a built-in concept of versions.
+pub struct Versions<'a> {
     /// Repository.
     repository: &'a Repository,
-    /// Git commit.
-    inner: git2::Commit<'a>,
+    /// Versions and associated commits.
+    commits: BTreeMap<Version, Commit<'a>>,
 }
 
 // ----------------------------------------------------------------------------
@@ -53,98 +56,47 @@ pub struct Commit<'a> {
 // ----------------------------------------------------------------------------
 
 impl Repository {
-    /// Attempts to find a commit by its identifier.
+    /// Returns the version set of the repository.
+    ///
+    /// This method only extracts the tags matching semantic version specifiers
+    /// from the given repository, and returns a version set. Tags must abide
+    /// to the `vMAJOR.MINOR.PATCH` format, but can include pre-release and
+    /// build suffixes as well. Tags are parsed with [`Version::from_str`].
     ///
     /// # Errors
     ///
     /// This method returns [`Error::Git`][] if the operation fails.
     ///
     /// [`Error::Git`]: crate::repository::Error::Git
-    pub fn get<I>(&self, id: I) -> Result<Commit<'_>>
-    where
-        I: Into<Id>,
-    {
-        Ok(Commit {
-            repository: self,
-            inner: self.inner.find_commit(*id.into())?,
-        })
-    }
+    pub fn versions(&self) -> Result<Versions<'_>> {
+        let tags = self.inner.tag_names(Some("v[0-9]*.[0-9]*.[0-9]**"))?;
+        let iter = tags.iter().flatten().map(|name| {
+            let version = Version::from_str(name.trim_start_matches('v'))?;
+            Ok((version, self.find(name)?))
+        });
 
-    /// Attempts to find a commit by revision specification.
-    ///
-    /// This method accepts any revision specification as understood by Git,
-    /// such as commit hashes, branch names, tags, and more.
-    ///
-    /// # Errors
-    ///
-    /// This method returns [`Error::Git`][] if the operation fails.
-    ///
-    /// [`Error::Git`]: crate::repository::Error::Git
-    pub fn find<S>(&self, spec: S) -> Result<Commit<'_>>
-    where
-        S: AsRef<str>,
-    {
-        let object = self.inner.revparse_single(spec.as_ref())?;
-        Ok(Commit {
+        // Collect and return versions
+        Ok(Versions {
             repository: self,
-            inner: object.peel_to_commit()?,
+            commits: iter.collect::<Result<_>>()?,
         })
     }
 }
 
 // ----------------------------------------------------------------------------
 
-#[allow(clippy::must_use_candidate)]
-impl Commit<'_> {
-    /// Returns the commit identifier.
-    #[inline]
-    pub fn id(&self) -> Id {
-        self.inner.id().into()
-    }
-
-    /// Returns the commit summary.
-    #[allow(clippy::missing_panics_doc)]
-    #[inline]
-    pub fn summary(&self) -> &str {
-        self.inner.summary().expect("invariant")
-    }
-
-    /// Returns the commit body, if any.
-    #[inline]
-    pub fn body(&self) -> Option<&str> {
-        self.inner.body().filter(|body| !body.is_empty())
-    }
-}
+impl<'a> Versions<'a> {}
 
 // ----------------------------------------------------------------------------
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl PartialEq for Commit<'_> {
-    /// Compares two commits for equality.
-    #[inline]
-    fn eq(&self, other: &Self) -> bool {
-        self.inner.id() == other.inner.id()
-    }
-}
-
-impl Eq for Commit<'_> {}
-
-// ----------------------------------------------------------------------------
-
-impl fmt::Display for Commit<'_> {
-    /// Formats the commit for display.
+impl fmt::Debug for Versions<'_> {
+    /// Formats the version set for debugging.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.id().fmt(f)
-    }
-}
-
-impl fmt::Debug for Commit<'_> {
-    /// Formats the commit for debugging.
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("Commit")
-            .field("id", &self.id())
-            .field("summary", &self.summary())
+        f.debug_struct("Versions")
+            .field("repository", &self.repository.path())
+            .field("commit", &self.commits)
             .finish()
     }
 }

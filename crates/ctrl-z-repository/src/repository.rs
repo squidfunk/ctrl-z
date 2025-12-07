@@ -29,7 +29,8 @@ use std::path::Path;
 
 pub mod commit;
 mod error;
-pub mod reference;
+pub mod id;
+pub mod versions;
 
 pub use error::{Error, Result};
 
@@ -40,7 +41,7 @@ pub use error::{Error, Result};
 /// Repository.
 pub struct Repository {
     /// Git repository.
-    git_repository: git2::Repository,
+    inner: git2::Repository,
 }
 
 // ----------------------------------------------------------------------------
@@ -48,24 +49,41 @@ pub struct Repository {
 // ----------------------------------------------------------------------------
 
 impl Repository {
+    /// Finds and open a repository starting from the given path.
     ///
+    /// # Errors
+    ///
+    /// This method returns [`Error::Git`] if the operation fails.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # fn main() -> Result<(), Box<dyn Error>> {
+    /// use ctrl_z_repository_2::Repository;
+    /// use std::env;
+    ///
+    /// // Find and open repository from current directory
+    /// let repo = Repository::open(env::current_dir()?)?;
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn open<P>(path: P) -> Result<Self>
     where
         P: AsRef<Path>,
     {
-        let repository = git2::Repository::discover(path)?;
-        Ok(Self { git_repository: repository })
+        git2::Repository::discover(path)
+            .map_err(Into::into)
+            .map(|inner| Self { inner })
     }
+}
 
-    // @todo temp
-    pub fn raw(&self) -> &git2::Repository {
-        &self.git_repository
-    }
-
+#[allow(clippy::must_use_candidate)]
+impl Repository {
+    /// Returns the repository path.
+    #[allow(clippy::missing_panics_doc)]
+    #[inline]
     pub fn path(&self) -> &Path {
-        let path = self.git_repository.path();
-        path.parent().expect("invariant")
+        self.inner.path().parent().expect("invariant")
     }
-
-    // pub fn commits<P>
 }

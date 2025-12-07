@@ -44,7 +44,6 @@ use tempfile::NamedTempFile;
 
 use ctrl_z_changeset::{Changeset, Increment, Scopes, VersionExt};
 use ctrl_z_project::{Cargo, Node, Workspace};
-use ctrl_z_repository::Reference;
 use ctrl_z_repository::Repository;
 
 // ----------------------------------------------------------------------------
@@ -191,8 +190,8 @@ pub fn main() {
                 let repo =
                     Repository::open(env::current_dir().unwrap()).unwrap();
 
-                // // 3) Ensure nothing else is left dirty - move this to the top!
-                ensure_clean_workdir(repo.raw(), &[]).unwrap();
+                // // // 3) Ensure nothing else is left dirty - move this to the top!
+                // ensure_clean_workdir(repo.raw(), &[]).unwrap();
 
                 let path = repo.path().join("package.json");
                 if path.exists() {
@@ -230,268 +229,268 @@ pub fn main() {
                     return;
                 }
 
-                //
-                let path = repo.path().join("Cargo.toml");
-                let mut workspace = Workspace::<Cargo>::read(path).unwrap();
+                // //
+                // let path = repo.path().join("Cargo.toml");
+                // let mut workspace = Workspace::<Cargo>::read(path).unwrap();
 
-                // Determine LAST version that we released = last tag.
-                let last_ref = if let Some(last) = repo
-                    .references()
-                    .unwrap()
-                    .flatten()
-                    .filter(Reference::is_tag)
-                    .next()
-                {
-                    last
-                } else {
-                    return;
-                };
+                // // Determine LAST version that we released = last tag.
+                // let last_ref = if let Some(last) = repo
+                //     .references()
+                //     .unwrap()
+                //     .flatten()
+                //     .filter(Reference::is_tag)
+                //     .next()
+                // {
+                //     last
+                // } else {
+                //     return;
+                // };
 
-                let last_commit = last_ref.commit().unwrap().unwrap();
+                // let last_commit = last_ref.commit().unwrap().unwrap();
 
-                // @todo maybe changeset is created from workspace???
-                // that would make scopes a private thing, which is better...
-                let mut changeset = Changeset::new(&workspace).unwrap();
-                let commits = repo
-                    .commits()
-                    .unwrap()
-                    .flatten()
-                    .take_while(|commit| commit != &last_commit);
+                // // @todo maybe changeset is created from workspace???
+                // // that would make scopes a private thing, which is better...
+                // let mut changeset = Changeset::new(&workspace).unwrap();
+                // let commits = repo
+                //     .commits()
+                //     .unwrap()
+                //     .flatten()
+                //     .take_while(|commit| commit != &last_commit);
 
-                changeset.extend(commits).unwrap();
+                // changeset.extend(commits).unwrap();
 
-                let mut increments = changeset.increments().to_vec();
-                let incr = increments
-                    .iter()
-                    .enumerate()
-                    .filter_map(|(i, inc)| inc.map(|_| i))
-                    .collect::<BTreeSet<_>>();
+                // let mut increments = changeset.increments().to_vec();
+                // let incr = increments
+                //     .iter()
+                //     .enumerate()
+                //     .filter_map(|(i, inc)| inc.map(|_| i))
+                //     .collect::<BTreeSet<_>>();
 
-                let deps = workspace.dependents().unwrap();
-                let mut sources: BTreeSet<usize> =
-                    deps.graph.sources().collect();
+                // let deps = workspace.dependents().unwrap();
+                // let mut sources: BTreeSet<usize> =
+                //     deps.graph.sources().collect();
 
-                // let x = to_dot(&deps.graph);
-                // println!("{x}");
+                // // let x = to_dot(&deps.graph);
+                // // println!("{x}");
 
-                // println!("sources {:?}", sources);
-                // println!("incr {:?}", incr);
-                let start = sources
-                    .intersection(&incr)
-                    .copied()
-                    .collect::<HashSet<_>>();
-                // println!("start {:?}", start);
+                // // println!("sources {:?}", sources);
+                // // println!("incr {:?}", incr);
+                // let start = sources
+                //     .intersection(&incr)
+                //     .copied()
+                //     .collect::<HashSet<_>>();
+                // // println!("start {:?}", start);
 
-                // versions...
-                let mut versions = BTreeMap::<usize, &Version>::new();
-                for (i, package) in workspace.packages().enumerate() {
-                    if let Some(project) = workspace.get(package.1.as_str()) {
-                        versions.insert(i, project.info().unwrap().1);
-                    }
-                }
-                let versions = versions.values().collect::<Vec<_>>();
+                // // versions...
+                // let mut versions = BTreeMap::<usize, &Version>::new();
+                // for (i, package) in workspace.packages().enumerate() {
+                //     if let Some(project) = workspace.get(package.1.as_str()) {
+                //         versions.insert(i, project.info().unwrap().1);
+                //     }
+                // }
+                // let versions = versions.values().collect::<Vec<_>>();
 
-                intro("Bump versions").unwrap();
+                // intro("Bump versions").unwrap();
 
-                let mut traversal = deps.graph.traverse(start);
-                let incoming = deps.graph.topology().incoming();
-                // we might also have an auto completing traversal?
-                while let Some(node) = traversal.take() {
-                    let bump = &increments[node];
-                    let name = deps.graph[node].info().unwrap().0;
+                // let mut traversal = deps.graph.traverse(start);
+                // let incoming = deps.graph.topology().incoming();
+                // // we might also have an auto completing traversal?
+                // while let Some(node) = traversal.take() {
+                //     let bump = &increments[node];
+                //     let name = deps.graph[node].info().unwrap().0;
 
-                    // node has no deps, we can just conitnue
-                    if incoming[node].is_empty() {
-                        let mut current_version = (*versions[node]).clone();
-                        if let Some(x) = *bump {
-                            current_version = current_version.bump(x);
-                        }
+                //     // node has no deps, we can just conitnue
+                //     if incoming[node].is_empty() {
+                //         let mut current_version = (*versions[node]).clone();
+                //         if let Some(x) = *bump {
+                //             current_version = current_version.bump(x);
+                //         }
 
-                        let x = format!(
-                            "{}\n{}",
-                            name,
-                            style(current_version).dim()
-                        );
-                        remark(x).unwrap();
+                //         let x = format!(
+                //             "{}\n{}",
+                //             name,
+                //             style(current_version).dim()
+                //         );
+                //         remark(x).unwrap();
 
-                        // println!("  => no dependencies, accepting");
-                        let _ = traversal.complete(node);
-                        continue;
-                    }
+                //         // println!("  => no dependencies, accepting");
+                //         let _ = traversal.complete(node);
+                //         continue;
+                //     }
 
-                    // get deps of this node
-                    let mut bump_levels = BTreeSet::new();
-                    for &dep in &incoming[node] {
-                        let bump = &increments[dep];
-                        bump_levels.insert(bump.clone());
-                        // println!(
-                        //     "  <- {:?} = {:?}",
-                        //     deps.graph[dep].info().unwrap().0,
-                        //     bump
-                        // );
-                    }
+                //     // get deps of this node
+                //     let mut bump_levels = BTreeSet::new();
+                //     for &dep in &incoming[node] {
+                //         let bump = &increments[dep];
+                //         bump_levels.insert(bump.clone());
+                //         // println!(
+                //         //     "  <- {:?} = {:?}",
+                //         //     deps.graph[dep].info().unwrap().0,
+                //         //     bump
+                //         // );
+                //     }
 
-                    // maximum bump allowed:
-                    // println!("  => max bump levels: {:?}", bump_levels);
-                    // check if bump level is smaller than what we have anyway...
-                    // Get the maximum bump level from dependencies
-                    let max_bump = bump_levels.into_iter().flatten().max();
+                //     // maximum bump allowed:
+                //     // println!("  => max bump levels: {:?}", bump_levels);
+                //     // check if bump level is smaller than what we have anyway...
+                //     // Get the maximum bump level from dependencies
+                //     let max_bump = bump_levels.into_iter().flatten().max();
 
-                    // println!("  => max bump level: {:?}", max_bump);
-                    // if this is NONE, we can stop. if this is equal to the
-                    // current bump, we can just take it. otherwise, we need
-                    // to ask.
-                    if max_bump.is_none() {
-                        // println!("  => no bump needed, skipping");
-                        continue;
-                    }
+                //     // println!("  => max bump level: {:?}", max_bump);
+                //     // if this is NONE, we can stop. if this is equal to the
+                //     // current bump, we can just take it. otherwise, we need
+                //     // to ask.
+                //     if max_bump.is_none() {
+                //         // println!("  => no bump needed, skipping");
+                //         continue;
+                //     }
 
-                    if bump == &max_bump {
-                        let mut current_version = (*versions[node]).clone();
-                        if let Some(x) = *bump {
-                            current_version = current_version.bump(x);
-                        }
+                //     if bump == &max_bump {
+                //         let mut current_version = (*versions[node]).clone();
+                //         if let Some(x) = *bump {
+                //             current_version = current_version.bump(x);
+                //         }
 
-                        let x = format!(
-                            "{}\n{}",
-                            name,
-                            style(current_version).dim()
-                        );
-                        remark(x).unwrap();
-                        // println!("  => bump matches max, accepting");
-                        // just accept
-                    } else {
-                        // what's the suggested bump? minor!
-                        // println!("  => current version: {}", current_version);
+                //         let x = format!(
+                //             "{}\n{}",
+                //             name,
+                //             style(current_version).dim()
+                //         );
+                //         remark(x).unwrap();
+                //         // println!("  => bump matches max, accepting");
+                //         // just accept
+                //     } else {
+                //         // what's the suggested bump? minor!
+                //         // println!("  => current version: {}", current_version);
 
-                        // in case major minor patch are all the same, only
-                        // show the PATCH option.
+                //         // in case major minor patch are all the same, only
+                //         // show the PATCH option.
 
-                        // auto select if there's only one possible version!
-                        // but no, we can also skip...
+                //         // auto select if there's only one possible version!
+                //         // but no, we can also skip...
 
-                        // what's the suggested bump? minor!
-                        let current_version = (*versions[node]).clone();
+                //         // what's the suggested bump? minor!
+                //         let current_version = (*versions[node]).clone();
 
-                        // Compute all possible versions
-                        let patch_version =
-                            current_version.bump(Increment::Patch);
-                        let minor_version =
-                            current_version.bump(Increment::Minor);
-                        let major_version =
-                            current_version.bump(Increment::Major);
+                //         // Compute all possible versions
+                //         let patch_version =
+                //             current_version.bump(Increment::Patch);
+                //         let minor_version =
+                //             current_version.bump(Increment::Minor);
+                //         let major_version =
+                //             current_version.bump(Increment::Major);
 
-                        // Build select options, skipping duplicates (e.g., in 0.0.x)
-                        let mut select_builder =
-                            select(name).item(None, current_version, "current");
+                //         // Build select options, skipping duplicates (e.g., in 0.0.x)
+                //         let mut select_builder =
+                //             select(name).item(None, current_version, "current");
 
-                        // Always add patch
-                        select_builder = select_builder.item(
-                            Some(Increment::Patch),
-                            patch_version.clone(),
-                            "patch",
-                        );
+                //         // Always add patch
+                //         select_builder = select_builder.item(
+                //             Some(Increment::Patch),
+                //             patch_version.clone(),
+                //             "patch",
+                //         );
 
-                        // Only add minor if different from patch
-                        if minor_version != patch_version {
-                            select_builder = select_builder.item(
-                                Some(Increment::Minor),
-                                minor_version.clone(),
-                                "minor",
-                            );
-                        }
+                //         // Only add minor if different from patch
+                //         if minor_version != patch_version {
+                //             select_builder = select_builder.item(
+                //                 Some(Increment::Minor),
+                //                 minor_version.clone(),
+                //                 "minor",
+                //             );
+                //         }
 
-                        // Only add major if different from minor
-                        if major_version != minor_version {
-                            select_builder = select_builder.item(
-                                Some(Increment::Major),
-                                major_version,
-                                "major",
-                            );
-                        }
+                //         // Only add major if different from minor
+                //         if major_version != minor_version {
+                //             select_builder = select_builder.item(
+                //                 Some(Increment::Major),
+                //                 major_version,
+                //                 "major",
+                //             );
+                //         }
 
-                        let selected = select_builder
-                            .initial_value(Some(Increment::Patch)) // or skip?
-                            .interact()
-                            .unwrap(); // io result!
+                //         let selected = select_builder
+                //             .initial_value(Some(Increment::Patch)) // or skip?
+                //             .interact()
+                //             .unwrap(); // io result!
 
-                        increments[node] = selected;
-                    }
+                //         increments[node] = selected;
+                //     }
 
-                    // if node in sources, just skip!
-                    let _ = traversal.complete(node);
-                }
+                //     // if node in sources, just skip!
+                //     let _ = traversal.complete(node);
+                // }
 
-                outro("Completed").unwrap();
+                // outro("Completed").unwrap();
 
-                println!("increments {:?}", increments);
+                // println!("increments {:?}", increments);
 
-                // bumps - go through _all_ of them... start at sources...
-                // if the downstream package is not affected - skip the entire thing!
+                // // bumps - go through _all_ of them... start at sources...
+                // // if the downstream package is not affected - skip the entire thing!
 
-                // walk through all packages here in TOPO order.
+                // // walk through all packages here in TOPO order.
 
-                let mut new_versions = BTreeMap::new();
-                for (node, incr) in increments.into_iter().enumerate() {
-                    if let Some(increment) = incr {
-                        let name =
-                            deps.graph[node].info().unwrap().0.to_string();
-                        let version = (*versions[node]).clone();
-                        // compute the actual bumps
-                        new_versions.insert(name, version.bump(increment));
-                    }
-                }
+                // let mut new_versions = BTreeMap::new();
+                // for (node, incr) in increments.into_iter().enumerate() {
+                //     if let Some(increment) = incr {
+                //         let name =
+                //             deps.graph[node].info().unwrap().0.to_string();
+                //         let version = (*versions[node]).clone();
+                //         // compute the actual bumps
+                //         new_versions.insert(name, version.bump(increment));
+                //     }
+                // }
 
-                println!("new versions {:?}", new_versions);
+                // println!("new versions {:?}", new_versions);
 
-                for project in &mut workspace {
-                    project
-                        .update(
-                            &new_versions
-                                .iter()
-                                .map(|(k, v)| (k.as_str(), v.clone()))
-                                .collect(),
-                        )
-                        .unwrap();
-                }
+                // for project in &mut workspace {
+                //     project
+                //         .update(
+                //             &new_versions
+                //                 .iter()
+                //                 .map(|(k, v)| (k.as_str(), v.clone()))
+                //                 .collect(),
+                //         )
+                //         .unwrap();
+                // }
 
-                // enforce waiting for Cargo.lock
-                let output = std::process::Command::new("cargo")
-                    .arg("update")
-                    .arg("--workspace")
-                    .arg("--offline")
-                    // .arg("--format-version=1")
-                    .current_dir(repo.path())
-                    .output()
-                    .unwrap();
+                // // enforce waiting for Cargo.lock
+                // let output = std::process::Command::new("cargo")
+                //     .arg("update")
+                //     .arg("--workspace")
+                //     .arg("--offline")
+                //     // .arg("--format-version=1")
+                //     .current_dir(repo.path())
+                //     .output()
+                //     .unwrap();
 
-                // // 1) Stage everything
-                stage_all(repo.raw());
+                // // // 1) Stage everything
+                // stage_all(repo.raw());
 
-                // ------ we got it until here ------ ------ ------ ------ ------
+                // // ------ we got it until here ------ ------ ------ ------ ------
 
-                // let changelog = changeset.to_changelog().to_string();
+                // // let changelog = changeset.to_changelog().to_string();
 
-                let message = prompt_commit_message("").unwrap();
-                let oid = commit_index(repo.raw(), &message).unwrap();
+                // let message = prompt_commit_message("").unwrap();
+                // let oid = commit_index(repo.raw(), &message).unwrap();
 
-                // // 2) Create the release commit
-                // let message = "chore: publish\n\n...details...";
-                // let oid = commit_index(repo.raw(), message).unwrap();
+                // // // 2) Create the release commit
+                // // let message = "chore: publish\n\n...details...";
+                // // let oid = commit_index(repo.raw(), message).unwrap();
 
-                // // 4) Create tag - read from config
-                create_tag(repo.raw(), "v0.0.1", oid, "release").unwrap();
+                // // // 4) Create tag - read from config
+                // create_tag(repo.raw(), "v0.0.1", oid, "release").unwrap();
 
-                // // 5) Push branch and tag
-                // let branch = current_branch(repo.raw())?;
-                // push_refs(
-                //     repo.raw(),
-                //     "origin",
-                //     &[
-                //         format!("HEAD:refs/heads/{branch}"),
-                //         format!("refs/tags/{tag_name}"),
-                //     ],
-                // )?
+                // // // 5) Push branch and tag
+                // // let branch = current_branch(repo.raw())?;
+                // // push_refs(
+                // //     repo.raw(),
+                // //     "origin",
+                // //     &[
+                // //         format!("HEAD:refs/heads/{branch}"),
+                // //         format!("refs/tags/{tag_name}"),
+                // //     ],
+                // // )?
             }
         }
         Commands::Release { command } => match command {
@@ -512,78 +511,93 @@ pub fn main() {
                 let path = repo.path().join("Cargo.toml");
                 let mut workspace = Workspace::<Cargo>::read(path).unwrap();
 
-                // Determine LAST version that we released = last tag.
-                let tags = repo
-                    .references() // create a tags function that does this filtering
-                    .unwrap()
-                    .flatten()
-                    .filter(Reference::is_tag)
-                    .collect::<Vec<_>>();
+                let t = repo.versions().unwrap();
+                println!("versions: {:#?}", t);
 
-                // save tags in a tree map!
-                let mut all_tags = BTreeMap::new();
-                for tag in tags {
-                    println!("{:?} - {:?}", tag.shorthand(), tag.commit());
+                // // finds a commit!
+                // let start = repo.find_commit("v0.0.1").unwrap();
+                // let end = repo.find_commit("v0.0.0").unwrap();
 
-                    let v = Version::from_str(
-                        tag.shorthand().unwrap().trim_start_matches("v"),
-                    )
-                    .unwrap();
-                    println!("veriosn: {:?}", v);
-                    all_tags.insert(v, tag);
-                }
+                // println!("{} - {}", start, end)
 
-                // Parse the requested tag version
-                let requested_version =
-                    Version::from_str(req_tag.trim_start_matches("v")).unwrap();
+                // create a tags iterator...! also again with a range. then just take 2,
+                // and find rthe relevant commits for them.
 
-                // Find the current tag and the previous tag
-                let mut iter = all_tags.range(..=&requested_version).rev();
-                let (current_version, current_tag) =
-                    iter.next().expect("Tag not found");
-                let previous_tag = iter.next(); // This is the previous tag (if any)
+                // get tag names as string! then use repo.find!?
+                // or impl display for ref!!!!
 
-                // Get commits between tags
-                let current_commit = current_tag.commit().unwrap().unwrap();
+                // // Determine LAST version that we released = last tag.
+                // let tags = repo
+                //     .references() // create a tags function that does this filtering
+                //     .unwrap()
+                //     .flatten()
+                //     .filter(Reference::is_tag)
+                //     .collect::<Vec<_>>();
 
-                // println!("all_tags {:#?}", all_tags.keys().collect::<Vec<_>>());
+                // // save tags in a tree map!
+                // let mut all_tags = BTreeMap::new();
+                // for tag in tags {
+                //     println!("{:?} - {:?}", tag.shorthand(), tag.commit());
 
-                // let (k, tag) = all_tags.last_key_value().unwrap();
+                //     let v = Version::from_str(
+                //         tag.shorthand().unwrap().trim_start_matches("v"),
+                //     )
+                //     .unwrap();
+                //     println!("veriosn: {:?}", v);
+                //     all_tags.insert(v, tag);
+                // }
 
-                // let last_commit = tag.commit().unwrap().unwrap();
+                // // Parse the requested tag version
+                // let requested_version =
+                //     Version::from_str(req_tag.trim_start_matches("v")).unwrap();
 
-                println!(
-                    "tag {:?}, prev tag {:?}",
-                    current_tag.shorthand(),
-                    previous_tag.map(|(_, t)| t.shorthand())
-                );
+                // // Find the current tag and the previous tag
+                // let mut iter = all_tags.range(..=&requested_version).rev();
+                // let (current_version, current_tag) =
+                //     iter.next().expect("Tag not found");
+                // let previous_tag = iter.next(); // This is the previous tag (if any)
 
-                let commits = if let Some((_, prev_tag)) = previous_tag {
-                    // Get commits between previous and current tag
-                    println!(
-                        "Getting commits from {:?} to {:?}",
-                        prev_tag.shorthand(),
-                        current_tag.shorthand()
-                    );
-                    let prev_commit = prev_tag.commit().unwrap().unwrap();
-                    repo.commits_from(current_commit.id())
-                        .unwrap()
-                        .flatten()
-                        .take_while(|commit| commit != &prev_commit)
-                        .collect::<Vec<_>>()
-                } else {
-                    // No previous tag - get all commits up to current tag
-                    repo.commits_from(current_commit.id())
-                        .unwrap()
-                        .flatten()
-                        // .take_while(|commit| commit != &current_commit)
-                        .collect::<Vec<_>>()
-                };
+                // // Get commits between tags
+                // let current_commit = current_tag.commit().unwrap().unwrap();
 
-                let mut changeset = Changeset::new(&workspace).unwrap();
-                changeset.extend(commits).unwrap();
+                // // println!("all_tags {:#?}", all_tags.keys().collect::<Vec<_>>());
 
-                println!("{}", changeset.to_changelog());
+                // // let (k, tag) = all_tags.last_key_value().unwrap();
+
+                // // let last_commit = tag.commit().unwrap().unwrap();
+
+                // println!(
+                //     "tag {:?}, prev tag {:?}",
+                //     current_tag.shorthand(),
+                //     previous_tag.map(|(_, t)| t.shorthand())
+                // );
+
+                // let commits = if let Some((_, prev_tag)) = previous_tag {
+                //     // Get commits between previous and current tag
+                //     println!(
+                //         "Getting commits from {:?} to {:?}",
+                //         prev_tag.shorthand(),
+                //         current_tag.shorthand()
+                //     );
+                //     let prev_commit = prev_tag.commit().unwrap().unwrap();
+                //     repo.commits_from(current_commit.id())
+                //         .unwrap()
+                //         .flatten()
+                //         .take_while(|commit| commit != &prev_commit)
+                //         .collect::<Vec<_>>()
+                // } else {
+                //     // No previous tag - get all commits up to current tag
+                //     repo.commits_from(current_commit.id())
+                //         .unwrap()
+                //         .flatten()
+                //         // .take_while(|commit| commit != &current_commit)
+                //         .collect::<Vec<_>>()
+                // };
+
+                // let mut changeset = Changeset::new(&workspace).unwrap();
+                // changeset.extend(commits).unwrap();
+
+                // println!("{}", changeset.to_changelog());
             }
             Release::Packages { tag: _, output: _ } => {
                 println!("Listing affected packages...");

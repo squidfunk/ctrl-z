@@ -23,7 +23,7 @@
 
 // ----------------------------------------------------------------------------
 
-//! Scope.
+//! Scope set.
 
 use globset::GlobSet;
 use std::fmt;
@@ -47,7 +47,7 @@ pub use error::{Error, Result};
 /// two paths overlap, one path must be the prefix of another path. Thus, we
 /// return the longer path as the matching scope.
 pub struct Scopes {
-    /// Registered path-name pairs.
+    /// Registered scopes.
     paths: Vec<(PathBuf, String)>,
     /// Glob set.
     globs: GlobSet,

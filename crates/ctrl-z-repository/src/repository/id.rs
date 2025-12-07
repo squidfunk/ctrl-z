@@ -23,36 +23,33 @@
 
 // ----------------------------------------------------------------------------
 
-//! Iterator over references in a repository.
+//! Object identifier.
 
-use git2::string_array::StringArray;
-
-use crate::repository::reference::Reference;
-use crate::repository::{Repository, Result};
+use git2::Oid;
+use std::fmt;
+use std::ops::Deref;
 
 // ----------------------------------------------------------------------------
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Iterator over references in a repository.
-pub struct References<'a> {
-    git_repository: &'a git2::Repository,
-    /// Git references iterator.
-    git_references: git2::References<'a>,
-}
+/// Object identifier
+///
+/// This is a thin wrapper around [`git2::Oid`] that provides some additional
+/// convenience methods and integrations with the repository API.
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[repr(transparent)]
+pub struct Id(Oid);
 
 // ----------------------------------------------------------------------------
 // Implementations
 // ----------------------------------------------------------------------------
 
-impl Repository {
-    /// Creates an iterator over all references (heads, tags, remotes, etc.).
-    pub fn references(&self) -> Result<References<'_>> {
-        let refs = self.git_repository.references()?;
-        Ok(References {
-            git_repository: &self.git_repository,
-            git_references: refs,
-        })
+impl Id {
+    /// Returns the short string representation.
+    #[inline]
+    pub fn short(&self) -> String {
+        format!("{:.7}", self.0)
     }
 }
 
@@ -60,15 +57,30 @@ impl Repository {
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl<'a> Iterator for References<'a> {
-    type Item = Result<Reference<'a>>;
+impl Deref for Id {
+    type Target = Oid;
 
-    fn next(&mut self) -> Option<Self::Item> {
-        match self.git_references.next()? {
-            Ok(reference) => {
-                Some(Ok(Reference::new(self.git_repository, reference)))
-            }
-            Err(err) => Some(Err(err.into())),
-        }
+    /// Dereferences to the wrapped identifier.
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+impl From<Oid> for Id {
+    /// Creates an object identifier from a Git identity.
+    #[inline]
+    fn from(oid: Oid) -> Self {
+        Self(oid)
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+impl fmt::Display for Id {
+    /// Formats the object identifier for display.
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
     }
 }

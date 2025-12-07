@@ -25,18 +25,18 @@
 
 //! Iterator over deltas in a commit.
 
-use crate::repository::commit::{Commit, Delta};
+use crate::repository::commit::Commit;
 use crate::repository::Result;
+
+use super::Delta;
 
 // ----------------------------------------------------------------------------
 // Structs
 // ----------------------------------------------------------------------------
 
 /// Iterator over deltas in a commit.
-///
-///
 pub struct Deltas<'a> {
-    /// Inner diff object.
+    /// Git diff.
     inner: git2::Diff<'a>,
     /// Current index.
     index: usize,
@@ -46,29 +46,32 @@ pub struct Deltas<'a> {
 // Implementations
 // ----------------------------------------------------------------------------
 
-// @todo rename this into Deltas? + Delta? not an event but a delta
 impl Commit<'_> {
+    /// Creates an iterator over the deltas in the commit.
     ///
+    /// # Errors
+    ///
+    /// This method returns [`Error::Git`][] if the operation fails.
+    ///
+    /// [`Error::Git`]: crate::repository::Error::Git
     pub fn deltas(&self) -> Result<Deltas<'_>> {
         let tree = self.inner.tree()?;
 
-        let parent_tree = if self.inner.parent_count() > 0 {
+        // Obtain parent tree, if any
+        let parent = if self.inner.parent_count() > 0 {
             Some(self.inner.parent(0)?.tree()?)
         } else {
             None
         };
 
-        let mut options = git2::DiffOptions::new();
-        let inner = self.repository.diff_tree_to_tree(
-            parent_tree.as_ref(),
+        // Create diff between parent and current commit
+        let inner = self.repository.inner.diff_tree_to_tree(
+            parent.as_ref(),
             Some(&tree),
-            Some(&mut options),
+            Some(&mut git2::DiffOptions::new()),
         )?;
 
-        Ok(Deltas {
-            inner,
-            index: 0, // Start at the first delta
-        })
+        Ok(Deltas { inner, index: 0 })
     }
 }
 
@@ -79,37 +82,44 @@ impl Commit<'_> {
 impl Iterator for Deltas<'_> {
     type Item = Delta;
 
-    ///
+    /// Returns the next delta.
     fn next(&mut self) -> Option<Self::Item> {
-        // Get the next delta from the diff
         let delta = self.inner.get_delta(self.index)?;
-        self.index += 1; // Increment the delta index
+        self.index += 1;
 
-        //
+        // Obtain old and new file paths
         let from = delta.old_file().path()?;
         let path = delta.new_file().path()?;
 
-        // Determine the type of change
+        // Handle according to type
         match delta.status() {
+            // Path was added
             git2::Delta::Added => {
-                Some(Delta::Create { path: path.to_path_buf() })
+                let path = path.to_path_buf();
+                Some(Delta::Create { path })
             }
-            // A file was deleted
+            // Path was modified
+            git2::Delta::Modified => {
+                let path = path.to_path_buf();
+                Some(Delta::Modify { path })
+            }
+            // Path was copied or its type changed
+            git2::Delta::Copied | git2::Delta::Typechange => {
+                let path = path.to_path_buf();
+                Some(Delta::Modify { path })
+            }
+            // Path was renamed
+            git2::Delta::Renamed => {
+                let from = from.to_path_buf();
+                let path = path.to_path_buf();
+                Some(Delta::Rename { from, path })
+            }
+            // Path was deleted
             git2::Delta::Deleted => {
-                Some(Delta::Delete { path: from.to_path_buf() })
+                let path = from.to_path_buf();
+                Some(Delta::Delete { path })
             }
-            // A file was modified
-            git2::Delta::Modified
-            | git2::Delta::Copied
-            | git2::Delta::Typechange => {
-                Some(Delta::Modify { path: path.to_path_buf() })
-            }
-            // A file was renamed
-            git2::Delta::Renamed => Some(Delta::Rename {
-                from: from.to_path_buf(),
-                path: path.to_path_buf(),
-            }),
-            // Ignore other statuses (e.g., Unmodified, Ignored, Untracked)
+            // Everything else can be ignored
             _ => self.next(),
         }
     }

@@ -39,4 +39,5 @@ workspace = true
 
 [dependencies]
 git2.workspace = true
+semver.workspace = true
 thiserror.workspace = true

@@ -39,7 +39,7 @@ use super::Scopes;
 /// Scope set builder.
 #[derive(Debug)]
 pub struct Builder {
-    /// Registered path-name mapping.
+    /// Registered scopes.
     paths: BTreeMap<PathBuf, String>,
     /// Glob set builder.
     globs: GlobSetBuilder,
@@ -71,7 +71,7 @@ impl Builder {
         }
     }
 
-    /// Adds a path to the scope.
+    /// Adds a scope to the scope set.
     ///
     /// # Errors
     ///
@@ -84,7 +84,7 @@ impl Builder {
     /// # fn main() -> Result<(), Box<dyn Error>> {
     /// use ctrl_z_changeset::Scopes;
     ///
-    /// // Create scope set builder and add path
+    /// // Create scope set builder and add scope
     /// let mut builder = Scopes::builder();
     /// builder.add("crates/ctrl-z", "ctrl-z")?;
     /// # Ok(())
@@ -132,7 +132,7 @@ impl Builder {
     /// # fn main() -> Result<(), Box<dyn Error>> {
     /// use ctrl_z_changeset::Scopes;
     ///
-    /// // Create scope set builder and add path
+    /// // Create scope set builder and add scope
     /// let mut builder = Scopes::builder();
     /// builder.add("crates/ctrl-z", "ctrl-z")?;
     ///

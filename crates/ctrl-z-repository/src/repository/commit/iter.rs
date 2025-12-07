@@ -25,10 +25,11 @@
 
 //! Iterator over commits in a repository.
 
-use git2::Oid;
+use std::ops::{Bound, RangeBounds};
 
-use crate::repository::commit::Commit;
-use crate::repository::{Repository, Result};
+use crate::repository::{Error, Repository, Result};
+
+use super::Commit;
 
 // ----------------------------------------------------------------------------
 // Structs
@@ -36,11 +37,12 @@ use crate::repository::{Repository, Result};
 
 /// Iterator over commits in a repository.
 pub struct Commits<'a> {
-    git_repository: &'a git2::Repository,
-    /// Git diff object.
-    git_revwalk: git2::Revwalk<'a>,
-    /// Current index.
-    index: usize,
+    /// Repository.
+    repository: &'a Repository,
+    /// Git revision walk.
+    revwalk: git2::Revwalk<'a>,
+    /// End of range, if any.
+    end: Option<git2::Oid>,
 }
 
 // ----------------------------------------------------------------------------
@@ -48,34 +50,73 @@ pub struct Commits<'a> {
 // ----------------------------------------------------------------------------
 
 impl Repository {
+    /// Creates an iterator over the commits in the repository.
     ///
-    pub fn commits(&self) -> Result<Commits<'_>> {
-        // Create a walk over all revisions starting from HEAD and walking
-        // backwards topologically for as long as the iterator is consumed
-        let mut revwalk = self.git_repository.revwalk()?;
-        revwalk.push_head()?; // @todo start from another commit!
+    /// This method accepts a range of commits to iterate over. If no range is
+    /// specified, iteration starts at `HEAD` and continues until the end.
+    ///
+    /// # Errors
+    ///
+    /// This method returns [`Error::Git`] if the operation fails.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # fn main() -> Result<(), Box<dyn Error>> {
+    /// use ctrl_z_repository_2::Repository;
+    /// use std::env;
+    ///
+    /// // Open repository
+    /// let repo = Repository::open(env::current_dir()?)?;
+    ///
+    /// // Create iterator over commits
+    /// for commit in repo.commits(..)?.flatten() {
+    ///     println!("{:?}", commit.id());
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn commits<'a, R>(&'a self, range: R) -> Result<Commits<'a>>
+    where
+        R: RangeBounds<Commit<'a>>,
+    {
+        // Create a topological walk over all revisions starting from a given
+        // commit, backwards, for as long as the iterator is consumed
+        let mut revwalk = self.inner.revwalk()?;
         revwalk.set_sorting(git2::Sort::TOPOLOGICAL)?;
 
-        Ok(Commits {
-            git_repository: &self.git_repository,
-            git_revwalk: revwalk,
-            index: 0,
-        })
-    }
+        // Determine start and end of range - note that the range is exclusive
+        // by default, allowing to easily determine commits between two tags
+        let end = match (range.start_bound(), range.end_bound()) {
+            // .. - all commits from HEAD
+            (Bound::Unbounded, Bound::Unbounded) => {
+                revwalk.push_head()?;
+                None
+            }
+            // ..end - commits until end (excluded)
+            (Bound::Unbounded, Bound::Excluded(end)) => {
+                revwalk.push_head()?;
+                Some(*end.id())
+            }
+            // start.. - commits from start onwards
+            (Bound::Included(start), Bound::Unbounded) => {
+                revwalk.push(*start.id())?;
+                None
+            }
+            // start..end - commits between start and end
+            (Bound::Included(start), Bound::Excluded(end)) => {
+                revwalk.push(*start.id())?;
+                Some(*end.id())
+            }
+            // Unsupported range bound
+            (Bound::Excluded(_), _) | (_, Bound::Included(_)) => {
+                return Err(Error::Bound);
+            }
+        };
 
-    // push commit, rather...
-    pub fn commits_from(&self, oid: Oid) -> Result<Commits<'_>> {
-        // Create a walk over all revisions starting from HEAD and walking
-        // backwards topologically for as long as the iterator is consumed
-        let mut revwalk = self.git_repository.revwalk()?;
-        revwalk.push(oid)?; // @todo start from another commit!
-        revwalk.set_sorting(git2::Sort::TOPOLOGICAL)?;
-
-        Ok(Commits {
-            git_repository: &self.git_repository,
-            git_revwalk: revwalk,
-            index: 0,
-        })
+        // Return iterator over commits
+        Ok(Commits { repository: self, revwalk, end })
     }
 }
 
@@ -86,14 +127,18 @@ impl Repository {
 impl<'a> Iterator for Commits<'a> {
     type Item = Result<Commit<'a>>;
 
-    ///
+    /// Returns the next commit.
     fn next(&mut self) -> Option<Self::Item> {
-        // Get the next delta from the diff
-        let oid = self.git_revwalk.next()?;
-        return match oid {
-            Ok(oid) => Some(Commit::new(self.git_repository, oid)),
-            Err(err) => Some(Err(err.into())),
+        let id = match self.revwalk.next()? {
+            Ok(id) => id,
+            Err(err) => return Some(Err(err.into())),
         };
-        None
+
+        // Return next commit, if we haven't reached the end of the range
+        if self.end == Some(id) {
+            None
+        } else {
+            Some(self.repository.get(id))
+        }
     }
 }

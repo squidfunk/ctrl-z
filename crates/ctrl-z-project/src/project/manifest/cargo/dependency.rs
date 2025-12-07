@@ -49,10 +49,8 @@ pub enum Dependency {
 /// Cargo dependency information.
 #[derive(Debug, Deserialize)]
 pub struct DependencyInfo {
-    /// Version.
+    /// Version requirement.
     pub version: Option<VersionReq>,
-    /// Inherit from workspace.
-    pub workspace: Option<bool>,
 }
 
 // ----------------------------------------------------------------------------

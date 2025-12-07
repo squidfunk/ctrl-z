@@ -25,6 +25,7 @@
 
 //! Repository.
 
+use std::fmt;
 use std::path::Path;
 
 pub mod commit;
@@ -189,5 +190,18 @@ impl Repository {
     #[inline]
     pub fn path(&self) -> &Path {
         self.inner.path().parent().expect("invariant")
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Trait implementations
+// ----------------------------------------------------------------------------
+
+impl fmt::Debug for Repository {
+    /// Formats the repository for debugging.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Repository")
+            .field("path", &self.path())
+            .finish()
     }
 }

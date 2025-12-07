@@ -27,6 +27,7 @@
 
 use std::ops::{Bound, RangeBounds};
 
+use crate::repository::id::Id;
 use crate::repository::{Error, Repository, Result};
 
 use super::Commit;
@@ -42,7 +43,7 @@ pub struct Commits<'a> {
     /// Git revision walk.
     revwalk: git2::Revwalk<'a>,
     /// End of range, if any.
-    end: Option<git2::Oid>,
+    end: Option<Id>,
 }
 
 // ----------------------------------------------------------------------------
@@ -52,8 +53,8 @@ pub struct Commits<'a> {
 impl Repository {
     /// Creates an iterator over the commits in the repository.
     ///
-    /// This method accepts a range of commits to iterate over. If no range is
-    /// specified, iteration starts at `HEAD` and continues until the end.
+    /// This method accepts a range of commit identifiers for iteration. If no
+    /// bounds are given, iteration ranges from `HEAD` until the end.
     ///
     /// # Errors
     ///
@@ -77,9 +78,9 @@ impl Repository {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn commits<'a, R>(&'a self, range: R) -> Result<Commits<'a>>
+    pub fn commits<R>(&self, range: R) -> Result<Commits<'_>>
     where
-        R: RangeBounds<Commit<'a>>,
+        R: RangeBounds<Id>,
     {
         // Create a topological walk over all revisions starting from a given
         // commit, backwards, for as long as the iterator is consumed
@@ -97,17 +98,17 @@ impl Repository {
             // ..end - commits until end (excluded)
             (Bound::Unbounded, Bound::Excluded(end)) => {
                 revwalk.push_head()?;
-                Some(*end.id())
+                Some(*end)
             }
             // start.. - commits from start onwards
             (Bound::Included(start), Bound::Unbounded) => {
-                revwalk.push(*start.id())?;
+                revwalk.push(**start)?;
                 None
             }
             // start..end - commits between start and end
             (Bound::Included(start), Bound::Excluded(end)) => {
-                revwalk.push(*start.id())?;
-                Some(*end.id())
+                revwalk.push(**start)?;
+                Some(*end)
             }
             // Unsupported range bound
             (Bound::Excluded(_), _) | (_, Bound::Included(_)) => {
@@ -135,7 +136,7 @@ impl<'a> Iterator for Commits<'a> {
         };
 
         // Return next commit, if we haven't reached the end of the range
-        if self.end == Some(id) {
+        if self.end.as_deref() == Some(&id) {
             None
         } else {
             Some(self.repository.get(id))

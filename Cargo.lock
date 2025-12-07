@@ -301,6 +301,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "ctrl-z-release"
+version = "0.0.0"
+dependencies = [
+ "semver",
+ "thiserror",
+]
+
+[[package]]
 name = "ctrl-z-repository"
 version = "0.0.0"
 dependencies = [

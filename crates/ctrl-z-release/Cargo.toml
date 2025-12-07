@@ -21,41 +21,24 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
-[workspace]
-resolver = "3"
-members = ["crates/*"]
+[package]
+name = "ctrl-z-release"
+version = "0.0.0"
+description = "Release utilities"
+edition.workspace = true
+rust-version.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+repository.workspace = true
+authors.workspace = true
+license.workspace = true
+publish.workspace = true
 
-[workspace.package]
-edition = "2024"
-rust-version = "1.86"
-homepage = "https://github.com/zensical/ctrl-z"
-documentation = "https://github.com/zensical/ctrl-z"
-repository = "https://github.com/zensical/ctrl-z"
-authors = ["Zensical <contributors@zensical.org>"]
-license = "MIT"
-publish = false
+[lints]
+workspace = true
 
-[workspace.lints.clippy]
-all = { level = "warn", priority = -1 }
-pedantic = { level = "warn", priority = -1 }
+[dependencies]
 
-[workspace.dependencies]
-ctrl-z-changeset = { version = "0.0.0", path = "crates/ctrl-z-changeset" }
-ctrl-z-project = { version = "0.0.0", path = "crates/ctrl-z-project" }
-ctrl-z-release = { version = "0.0.0", path = "crates/ctrl-z-release" }
-ctrl-z-repository = { version = "0.0.0", path = "crates/ctrl-z-repository" }
 
-clap = { version = "4.5", features = ["derive"] }
-cliclack = "0.3"
-console = "0.16"
-git2 = "0.20"
-glob = "0.3"
-globset = "0.4"
-semver = { version = "1.0", features = ["serde"] }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = { version = "1.0", features = ["preserve_order"] }
-tempfile = "3.23"
-thiserror = "2.0"
-toml = "0.9"
-toml_edit = "0.23"
-zrx = "0.0.3"
+semver.workspace = true
+thiserror.workspace = true

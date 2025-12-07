@@ -82,9 +82,9 @@ impl Repository {
     /// # Errors
     ///
     /// This method returns [`Error::Git`] if the operation fails.
-    pub fn add<P>(&self, spec: P) -> Result
+    pub fn add<S>(&self, spec: S) -> Result
     where
-        P: AsRef<str>,
+        S: AsRef<str>,
     {
         let mut index = self.inner.index()?;
         index.add_all([spec.as_ref()], git2::IndexAddOption::DEFAULT, None)?;

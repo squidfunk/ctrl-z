@@ -104,7 +104,7 @@ impl Iterator for Deltas<'_> {
                 let path = path.to_path_buf();
                 Some(Delta::Modify { path })
             }
-            // Path was copied or its type changed
+            // Path was copied or changed type
             git2::Delta::Copied | git2::Delta::Typechange => {
                 let path = path.to_path_buf();
                 Some(Delta::Modify { path })

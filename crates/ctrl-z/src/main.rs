@@ -516,96 +516,20 @@ pub fn main() {
                 let v =
                     Version::from_str(req_tag.trim_start_matches("v")).unwrap();
 
-                for vx in versions.range(v..) {
-                    println!("Found version: {}", vx);
-                }
+                // only works if not HEAD
 
-                // get latest? or a specific one?
+                let r = versions
+                    .range(v..)
+                    .take(2)
+                    .map(|(_, commit)| commit)
+                    .collect::<Vec<_>>();
 
-                // // finds a commit!
-                let start = repo.find("v0.0.1").unwrap();
-                let end = repo.find("v0.0.0").unwrap();
+                let commits = repo.commits(r[0]..r[1]).unwrap().flatten();
 
-                println!("{} - {}", start, end)
+                let mut changeset = Changeset::new(&workspace).unwrap();
+                changeset.extend(commits).unwrap();
 
-                // create a tags iterator...! also again with a range. then just take 2,
-                // and find rthe relevant commits for them.
-
-                // get tag names as string! then use repo.find!?
-                // or impl display for ref!!!!
-
-                // // Determine LAST version that we released = last tag.
-                // let tags = repo
-                //     .references() // create a tags function that does this filtering
-                //     .unwrap()
-                //     .flatten()
-                //     .filter(Reference::is_tag)
-                //     .collect::<Vec<_>>();
-
-                // // save tags in a tree map!
-                // let mut all_tags = BTreeMap::new();
-                // for tag in tags {
-                //     println!("{:?} - {:?}", tag.shorthand(), tag.commit());
-
-                //     let v = Version::from_str(
-                //         tag.shorthand().unwrap().trim_start_matches("v"),
-                //     )
-                //     .unwrap();
-                //     println!("veriosn: {:?}", v);
-                //     all_tags.insert(v, tag);
-                // }
-
-                // // Parse the requested tag version
-                // let requested_version =
-                //     Version::from_str(req_tag.trim_start_matches("v")).unwrap();
-
-                // // Find the current tag and the previous tag
-                // let mut iter = all_tags.range(..=&requested_version).rev();
-                // let (current_version, current_tag) =
-                //     iter.next().expect("Tag not found");
-                // let previous_tag = iter.next(); // This is the previous tag (if any)
-
-                // // Get commits between tags
-                // let current_commit = current_tag.commit().unwrap().unwrap();
-
-                // // println!("all_tags {:#?}", all_tags.keys().collect::<Vec<_>>());
-
-                // // let (k, tag) = all_tags.last_key_value().unwrap();
-
-                // // let last_commit = tag.commit().unwrap().unwrap();
-
-                // println!(
-                //     "tag {:?}, prev tag {:?}",
-                //     current_tag.shorthand(),
-                //     previous_tag.map(|(_, t)| t.shorthand())
-                // );
-
-                // let commits = if let Some((_, prev_tag)) = previous_tag {
-                //     // Get commits between previous and current tag
-                //     println!(
-                //         "Getting commits from {:?} to {:?}",
-                //         prev_tag.shorthand(),
-                //         current_tag.shorthand()
-                //     );
-                //     let prev_commit = prev_tag.commit().unwrap().unwrap();
-                //     repo.commits_from(current_commit.id())
-                //         .unwrap()
-                //         .flatten()
-                //         .take_while(|commit| commit != &prev_commit)
-                //         .collect::<Vec<_>>()
-                // } else {
-                //     // No previous tag - get all commits up to current tag
-                //     repo.commits_from(current_commit.id())
-                //         .unwrap()
-                //         .flatten()
-                //         // .take_while(|commit| commit != &current_commit)
-                //         .collect::<Vec<_>>()
-                // };
-
-                // let mut changeset = Changeset::new(&workspace).unwrap();
-                // changeset.extend(commits).unwrap();
-
-                // println!("{}", changeset.to_changelog());
+                println!("{}", changeset.to_changelog());
             }
             Release::Packages { tag: _, output: _ } => {
                 println!("Listing affected packages...");

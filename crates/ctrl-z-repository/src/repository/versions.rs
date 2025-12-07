@@ -26,9 +26,10 @@
 //! Version set.
 
 use semver::Version;
-use std::cmp::Reverse;
+use std::collections::btree_map::Range;
 use std::collections::BTreeMap;
 use std::fmt;
+use std::iter::Rev;
 use std::ops::{Bound, RangeBounds};
 use std::str::FromStr;
 
@@ -43,12 +44,12 @@ use super::Repository;
 /// Version set.
 ///
 /// This data type represents a set of versions in a given repository. Versions
-/// are ordered from new to old, so iteration and range queries are simple. Each
+/// are ordered chronologically, so iteration and range queries are simple. Each
 /// is mapped to the commit it tags, so those commits can be obtained to query
 /// for changes between two versions.
 pub struct Versions<'a> {
     /// Tagged versions.
-    tags: BTreeMap<Reverse<Version>, Commit<'a>>,
+    tags: BTreeMap<Version, Commit<'a>>,
 }
 
 // ----------------------------------------------------------------------------
@@ -72,7 +73,7 @@ impl Repository {
         let tags = self.inner.tag_names(Some("v[0-9]*.[0-9]*.[0-9]**"))?;
         let iter = tags.iter().flatten().map(|name| {
             let version = Version::from_str(name.trim_start_matches('v'))?;
-            Ok((Reverse(version), self.find(name)?))
+            Ok((version, self.find(name)?))
         });
 
         // Collect and return version set
@@ -85,30 +86,26 @@ impl Repository {
 
 impl Versions<'_> {
     /// Creates a range iterator over the version set.
-    pub fn range<R>(
-        &self, range: R,
-    ) -> impl Iterator<Item = (&Version, &Commit<'_>)>
+    pub fn range<R>(&self, range: R) -> Rev<Range<'_, Version, Commit<'_>>>
     where
         R: RangeBounds<Version>,
     {
         // Compute range start
-        let start = match range.start_bound() {
-            Bound::Included(start) => Bound::Included(Reverse(start.clone())),
-            Bound::Excluded(start) => Bound::Excluded(Reverse(start.clone())),
+        let start = match range.end_bound() {
+            Bound::Included(end) => Bound::Included(end.clone()),
+            Bound::Excluded(end) => Bound::Excluded(end.clone()),
             Bound::Unbounded => Bound::Unbounded,
         };
 
         // Compute range end
-        let end = match range.end_bound() {
-            Bound::Included(end) => Bound::Included(Reverse(end.clone())),
-            Bound::Excluded(end) => Bound::Excluded(Reverse(end.clone())),
+        let end = match range.start_bound() {
+            Bound::Included(start) => Bound::Included(start.clone()),
+            Bound::Excluded(start) => Bound::Excluded(start.clone()),
             Bound::Unbounded => Bound::Unbounded,
         };
 
         // Return range iterator
-        self.tags
-            .range((start, end))
-            .map(|(version, commit)| (&version.0, commit))
+        self.tags.range((start, end)).rev()
     }
 }
 

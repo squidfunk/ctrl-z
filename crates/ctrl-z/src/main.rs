@@ -233,47 +233,9 @@ pub fn main() {
                     return;
                 }
 
+                // start here...
                 let release = Release::<Cargo>::new(".").unwrap();
                 let changeset = release.changeset(None).unwrap();
-
-                let workspace = release.workspace();
-
-                //
-                // let path = repo.path().join("Cargo.toml");
-                // let mut workspace = Workspace::<Cargo>::read(path).unwrap();
-
-                // // here, we need to use the last tag!
-                // let versions = repo.versions().unwrap();
-                // let (_, last_commit) = versions.range(..).next().unwrap();
-
-                // // Determine LAST version that we released = last tag.
-                // let last_ref = if let Some(last) = repo
-                //     .references()
-                //     .unwrap()
-                //     .flatten()
-                //     .filter(Reference::is_tag)
-                //     .next()
-                // {
-                //     last
-                // } else {
-                //     return;
-                // };
-
-                // let last_commit = last_ref.commit().unwrap().unwrap();
-
-                // @todo maybe changeset is created from workspace???
-                // that would make scopes a private thing, which is better...
-                // let mut changeset = Changeset::new(&workspace).unwrap();
-                // let commits = repo
-                //     .commits()
-                //     .unwrap()
-                //     .flatten()
-                //     .take_while(|commit| commit != &last_commit);
-
-                // let commits = repo.commits(..last_commit).unwrap().flatten();
-                // changeset.extend(commits).unwrap();
-
-                // println!("{}", changeset.to_changelog());
 
                 let mut increments = changeset.increments().to_vec();
                 let incr = increments
@@ -282,6 +244,7 @@ pub fn main() {
                     .filter_map(|(i, inc)| inc.map(|_| i))
                     .collect::<BTreeSet<_>>();
 
+                let workspace = release.workspace();
                 let deps = workspace.dependents().unwrap();
                 let mut sources: BTreeSet<usize> =
                     deps.graph.sources().collect();

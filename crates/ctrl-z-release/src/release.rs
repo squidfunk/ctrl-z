@@ -74,6 +74,8 @@ where
         })
     }
 
+    // @todo with_options(dry run?)
+
     /// obtain changelog... - we should deduce version outside! otherwise, its ehead
     /// // @todo: maybe we should pass version in the options...
     pub fn changeset(&self, version: Option<Version>) -> Result<Changeset<'_>> {
@@ -85,16 +87,17 @@ where
                 return Err(Error::Version(v));
             }
 
-            let mut iter = versions.range(v..);
-            let (_, start) = iter.next().expect("invariant"); // ok_or?
+            let mut iter = versions.range(..=v).rev();
+            let (v, start) = iter.next().expect("invariant"); // ok_or?
             let end = iter.next();
+            // println!("start: {:?}, end: {:?}", v, end);
             if let Some((_, end)) = end {
                 self.repository.commits(start..end)?
             } else {
                 self.repository.commits(start..)?
             }
         } else {
-            let mut iter = versions.range(..);
+            let mut iter = versions.range(..).rev();
             let end = iter.next();
             if let Some((_, end)) = end {
                 self.repository.commits(..end)?
@@ -109,4 +112,20 @@ where
     }
 }
 
-// @todo with_options(dry run?)
+#[allow(clippy::must_use_candidate)]
+impl<T> Release<T>
+where
+    T: Manifest,
+{
+    /// Returns the repository.
+    #[inline]
+    pub fn repository(&self) -> &Repository {
+        &self.repository
+    }
+
+    /// Returns the workspace.
+    #[inline]
+    pub fn workspace(&self) -> &Workspace<T> {
+        &self.workspace
+    }
+}

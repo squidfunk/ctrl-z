@@ -102,9 +102,8 @@ enum ReleaseCommand {
 
     /// Generate changelog for a specific tag or range
     Changelog {
-        /// Tag name or version (e.g., v1.2.3)
-        // #[arg(short, long)]
-        tag: Option<String>,
+        /// Version in x.y.z format
+        version: Option<Version>,
 
         /// Output file (default: stdout)
         #[arg(short, long)]
@@ -234,13 +233,18 @@ pub fn main() {
                     return;
                 }
 
-                //
-                let path = repo.path().join("Cargo.toml");
-                let mut workspace = Workspace::<Cargo>::read(path).unwrap();
+                let release = Release::<Cargo>::new(".").unwrap();
+                let changeset = release.changeset(None).unwrap();
 
-                // here, we need to use the last tag!
-                let versions = repo.versions().unwrap();
-                let (_, last_commit) = versions.range(..).next().unwrap();
+                let workspace = release.workspace();
+
+                //
+                // let path = repo.path().join("Cargo.toml");
+                // let mut workspace = Workspace::<Cargo>::read(path).unwrap();
+
+                // // here, we need to use the last tag!
+                // let versions = repo.versions().unwrap();
+                // let (_, last_commit) = versions.range(..).next().unwrap();
 
                 // // Determine LAST version that we released = last tag.
                 // let last_ref = if let Some(last) = repo
@@ -259,17 +263,17 @@ pub fn main() {
 
                 // @todo maybe changeset is created from workspace???
                 // that would make scopes a private thing, which is better...
-                let mut changeset = Changeset::new(&workspace).unwrap();
+                // let mut changeset = Changeset::new(&workspace).unwrap();
                 // let commits = repo
                 //     .commits()
                 //     .unwrap()
                 //     .flatten()
                 //     .take_while(|commit| commit != &last_commit);
 
-                let commits = repo.commits(..last_commit).unwrap().flatten();
-                changeset.extend(commits).unwrap();
+                // let commits = repo.commits(..last_commit).unwrap().flatten();
+                // changeset.extend(commits).unwrap();
 
-                println!("{}", changeset.to_changelog());
+                // println!("{}", changeset.to_changelog());
 
                 let mut increments = changeset.increments().to_vec();
                 let incr = increments
@@ -455,26 +459,26 @@ pub fn main() {
 
                 println!("new versions {:?}", new_versions);
 
-                for project in &mut workspace {
-                    project
-                        .update(
-                            &new_versions
-                                .iter()
-                                .map(|(k, v)| (k.as_str(), v.clone()))
-                                .collect(),
-                        )
-                        .unwrap();
-                }
+                // for project in &mut workspace {
+                //     project
+                //         .update(
+                //             &new_versions
+                //                 .iter()
+                //                 .map(|(k, v)| (k.as_str(), v.clone()))
+                //                 .collect(),
+                //         )
+                //         .unwrap();
+                // }
 
-                // enforce waiting for Cargo.lock
-                let output = std::process::Command::new("cargo")
-                    .arg("update")
-                    .arg("--workspace")
-                    .arg("--offline")
-                    // .arg("--format-version=1")
-                    .current_dir(repo.path())
-                    .output()
-                    .unwrap();
+                // // enforce waiting for Cargo.lock
+                // let output = std::process::Command::new("cargo")
+                //     .arg("update")
+                //     .arg("--workspace")
+                //     .arg("--offline")
+                //     // .arg("--format-version=1")
+                //     .current_dir(repo.path())
+                //     .output()
+                //     .unwrap();
 
                 // // // 1) Stage everything
                 // stage_all(repo.raw());
@@ -513,18 +517,9 @@ pub fn main() {
                     println!("Creating a new release tag...");
                 }
             }
-            ReleaseCommand::Changelog { tag: req_tag, output: _ } => {
-                // with_options(dry run)...
+            ReleaseCommand::Changelog { version: tag, output: _ } => {
                 let release = Release::<Cargo>::new(".").unwrap();
-                // println!("Release info: {:#?}", release);
-
-                // sets the req tag if it exists, otherwise uses HEAD
-                let v = req_tag
-                    .map(|tag| Version::from_str(tag.trim_start_matches("v")))
-                    .transpose()
-                    .unwrap();
-
-                let changeset = release.changeset(v).unwrap();
+                let changeset = release.changeset(tag).unwrap();
 
                 println!("{}", changeset.to_changelog());
             }
@@ -607,13 +602,13 @@ fn prompt_commit_message(
 //     repo.commit(Some("HEAD"), &sig, &sig, message, &tree, &[&parent])
 // }
 
-fn create_tag(
-    repo: &git2::Repository, tag_name: &str, target: git2::Oid, message: &str,
-) -> Result<git2::Oid, git2::Error> {
-    let obj = repo.find_object(target, None)?;
-    let sig = repo.signature()?;
-    repo.tag(tag_name, &obj, &sig, message, false)
-}
+// fn create_tag(
+//     repo: &git2::Repository, tag_name: &str, target: git2::Oid, message: &str,
+// ) -> Result<git2::Oid, git2::Error> {
+//     let obj = repo.find_object(target, None)?;
+//     let sig = repo.signature()?;
+//     repo.tag(tag_name, &obj, &sig, message, false)
+// }
 
 fn handle_commit_msg_hook(message_file: &Path) {
     use ctrl_z_changeset::Change;

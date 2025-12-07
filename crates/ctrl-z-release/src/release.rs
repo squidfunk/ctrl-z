@@ -25,6 +25,8 @@
 
 //! Release.
 
+use ctrl_z_changeset::Changeset;
+use semver::Version;
 use std::path::Path;
 
 use ctrl_z_project::manifest::Resolver;
@@ -39,7 +41,8 @@ pub use error::{Error, Result};
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Release.
+/// Release manager.
+#[derive(Debug)]
 pub struct Release<T>
 where
     T: Manifest,
@@ -58,12 +61,52 @@ impl<T> Release<T>
 where
     T: Manifest + Resolver,
 {
-    /// Creates a release for the given repository.
-    pub fn new(repository: Repository) -> Result<Self> {
+    /// Creates a release manager at the given path.
+    pub fn new<P>(path: P) -> Result<Self>
+    where
+        P: AsRef<Path>,
+    {
+        let repository = Repository::open(path.as_ref())?;
         let path = T::resolve(repository.path())?;
         Ok(Self {
             repository,
             workspace: Workspace::read(path)?,
         })
     }
+
+    /// obtain changelog... - we should deduce version outside! otherwise, its ehead
+    /// // @todo: maybe we should pass version in the options...
+    pub fn changeset(&self, version: Option<Version>) -> Result<Changeset<'_>> {
+        let versions = self.repository.versions()?;
+
+        // use version!
+        let commits = if let Some(v) = version {
+            if !versions.contains(&v) {
+                return Err(Error::Version(v));
+            }
+
+            let mut iter = versions.range(v..);
+            let (_, start) = iter.next().expect("invariant"); // ok_or?
+            let end = iter.next();
+            if let Some((_, end)) = end {
+                self.repository.commits(start..end)?
+            } else {
+                self.repository.commits(start..)?
+            }
+        } else {
+            let mut iter = versions.range(..);
+            let end = iter.next();
+            if let Some((_, end)) = end {
+                self.repository.commits(..end)?
+            } else {
+                self.repository.commits(..)?
+            }
+        };
+
+        let mut changeset = Changeset::new(&self.workspace)?;
+        changeset.extend(commits.flatten())?;
+        Ok(changeset)
+    }
 }
+
+// @todo with_options(dry run?)

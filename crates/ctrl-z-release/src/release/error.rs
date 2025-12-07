@@ -25,10 +25,13 @@
 
 //! Manifest error.
 
+use semver::Version;
 use std::result;
 use thiserror::Error;
 
+use ctrl_z_changeset as changeset;
 use ctrl_z_project as project;
+use ctrl_z_repository as repository;
 
 // ----------------------------------------------------------------------------
 // Enums
@@ -37,9 +40,18 @@ use ctrl_z_project as project;
 /// Manifest error.
 #[derive(Debug, Error)]
 pub enum Error {
+    /// Changeset error.
+    #[error(transparent)]
+    Changeset(#[from] changeset::Error),
     /// Project error.
     #[error(transparent)]
     Project(#[from] project::Error),
+    /// Repository error.
+    #[error(transparent)]
+    Repository(#[from] repository::Error),
+    /// Invalid version.
+    #[error("Invalid version: {0}")]
+    Version(Version),
 }
 
 // ----------------------------------------------------------------------------

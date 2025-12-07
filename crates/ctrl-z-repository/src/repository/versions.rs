@@ -29,8 +29,7 @@ use semver::Version;
 use std::collections::btree_map::Range;
 use std::collections::BTreeMap;
 use std::fmt;
-use std::iter::Rev;
-use std::ops::{Bound, RangeBounds};
+use std::ops::RangeBounds;
 use std::str::FromStr;
 
 use super::error::Result;
@@ -85,27 +84,20 @@ impl Repository {
 // ----------------------------------------------------------------------------
 
 impl Versions {
+    /// Returns whether the version set contains the given version.
+    #[inline]
+    #[must_use]
+    pub fn contains(&self, version: &Version) -> bool {
+        self.tags.contains_key(version)
+    }
+
     /// Creates a range iterator over the version set.
-    pub fn range<R>(&self, range: R) -> Rev<Range<'_, Version, Id>>
+    #[inline]
+    pub fn range<R>(&self, range: R) -> Range<'_, Version, Id>
     where
         R: RangeBounds<Version>,
     {
-        // Compute range start
-        let start = match range.end_bound() {
-            Bound::Included(end) => Bound::Included(end.clone()),
-            Bound::Excluded(end) => Bound::Excluded(end.clone()),
-            Bound::Unbounded => Bound::Unbounded,
-        };
-
-        // Compute range end
-        let end = match range.start_bound() {
-            Bound::Included(start) => Bound::Included(start.clone()),
-            Bound::Excluded(start) => Bound::Excluded(start.clone()),
-            Bound::Unbounded => Bound::Unbounded,
-        };
-
-        // Return range iterator
-        self.tags.range((start, end)).rev()
+        self.tags.range(range)
     }
 }
 

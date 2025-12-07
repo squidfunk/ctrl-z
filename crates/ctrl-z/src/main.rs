@@ -33,6 +33,7 @@ use cliclack::{
     intro, outro, outro_note, select, set_theme, Theme, ThemeState,
 };
 use console::{style, Style};
+use ctrl_z_release::Release;
 // @todo: remove the git indirection
 use semver::Version;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
@@ -75,7 +76,7 @@ struct Cli {
 enum Commands {
     Release {
         #[command(subcommand)]
-        command: Release,
+        command: ReleaseCommand,
     },
     /// Create a new tag
     Tag {
@@ -91,7 +92,7 @@ enum Commands {
 }
 
 #[derive(Subcommand)]
-enum Release {
+enum ReleaseCommand {
     /// Create a new release (interactive version bumping + tagging)
     Tag {
         /// Perform a dry run without making changes
@@ -237,6 +238,7 @@ pub fn main() {
                 let path = repo.path().join("Cargo.toml");
                 let mut workspace = Workspace::<Cargo>::read(path).unwrap();
 
+                // here, we need to use the last tag!
                 let versions = repo.versions().unwrap();
                 let (_, last_commit) = versions.range(..).next().unwrap();
 
@@ -504,47 +506,29 @@ pub fn main() {
             }
         }
         Commands::Release { command } => match command {
-            Release::Tag { dry_run } => {
+            ReleaseCommand::Tag { dry_run } => {
                 if dry_run {
                     println!("Dry run: no changes will be made");
                 } else {
                     println!("Creating a new release tag...");
                 }
             }
-            Release::Changelog { tag: req_tag, output: _ } => {
-                let req_tag = if let Some(req_tag) = &req_tag {
-                    req_tag
-                } else {
-                    return;
-                };
-                // so this is the changelog for everything that is coming!
+            ReleaseCommand::Changelog { tag: req_tag, output: _ } => {
+                // with_options(dry run)...
+                let release = Release::<Cargo>::new(".").unwrap();
+                // println!("Release info: {:#?}", release);
 
-                let repo =
-                    Repository::open(env::current_dir().unwrap()).unwrap();
+                // sets the req tag if it exists, otherwise uses HEAD
+                let v = req_tag
+                    .map(|tag| Version::from_str(tag.trim_start_matches("v")))
+                    .transpose()
+                    .unwrap();
 
-                let versions = repo.versions().unwrap();
-
-                let v =
-                    Version::from_str(req_tag.trim_start_matches("v")).unwrap();
-
-                // only works if not HEAD
-
-                let r = versions
-                    .range(v..)
-                    .take(2)
-                    .map(|(_, commit)| commit)
-                    .collect::<Vec<_>>();
-
-                let commits = repo.commits(r[0]..r[1]).unwrap().flatten();
-
-                let path = repo.path().join("Cargo.toml");
-                let mut workspace = Workspace::<Cargo>::read(path).unwrap();
-                let mut changeset = Changeset::new(&workspace).unwrap();
-                changeset.extend(commits).unwrap();
+                let changeset = release.changeset(v).unwrap();
 
                 println!("{}", changeset.to_changelog());
             }
-            Release::Packages { tag: _, output: _ } => {
+            ReleaseCommand::Packages { tag: _, output: _ } => {
                 println!("Listing affected packages...");
             }
         },

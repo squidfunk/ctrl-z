@@ -40,6 +40,7 @@ workspace = true
 [dependencies]
 ctrl-z-changeset.workspace = true
 ctrl-z-project.workspace = true
+ctrl-z-release.workspace = true
 ctrl-z-repository.workspace = true
 
 clap.workspace = true

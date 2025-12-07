@@ -265,6 +265,7 @@ dependencies = [
  "console 0.16.1",
  "ctrl-z-changeset",
  "ctrl-z-project",
+ "ctrl-z-release",
  "ctrl-z-repository",
  "git2",
  "semver",

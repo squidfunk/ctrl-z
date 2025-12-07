@@ -511,14 +511,22 @@ pub fn main() {
                 let path = repo.path().join("Cargo.toml");
                 let mut workspace = Workspace::<Cargo>::read(path).unwrap();
 
-                let t = repo.versions().unwrap();
-                println!("versions: {:#?}", t);
+                let versions = repo.versions().unwrap();
+
+                let v =
+                    Version::from_str(req_tag.trim_start_matches("v")).unwrap();
+
+                for vx in versions.range(v..) {
+                    println!("Found version: {}", vx);
+                }
+
+                // get latest? or a specific one?
 
                 // // finds a commit!
-                // let start = repo.find_commit("v0.0.1").unwrap();
-                // let end = repo.find_commit("v0.0.0").unwrap();
+                let start = repo.find("v0.0.1").unwrap();
+                let end = repo.find("v0.0.0").unwrap();
 
-                // println!("{} - {}", start, end)
+                println!("{} - {}", start, end)
 
                 // create a tags iterator...! also again with a range. then just take 2,
                 // and find rthe relevant commits for them.

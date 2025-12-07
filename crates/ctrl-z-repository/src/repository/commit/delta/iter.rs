@@ -71,6 +71,7 @@ impl Commit<'_> {
             Some(&mut git2::DiffOptions::new()),
         )?;
 
+        // Return iterator over deltas
         Ok(Deltas { inner, index: 0 })
     }
 }

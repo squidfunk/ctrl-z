@@ -30,5 +30,6 @@
 mod repository;
 
 pub use repository::commit::{self, Commit};
+pub use repository::id::{self, Id};
 pub use repository::versions::{self, Versions};
 pub use repository::{Error, Repository, Result};

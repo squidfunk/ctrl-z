@@ -26,11 +26,12 @@
 //! Version set.
 
 use semver::Version;
-use std::collections::BTreeMap;
+use std::cmp::Reverse;
+use std::collections::BTreeSet;
 use std::fmt;
+use std::ops::{Bound, RangeBounds};
 use std::str::FromStr;
 
-use super::commit::Commit;
 use super::error::Result;
 use super::Repository;
 
@@ -40,15 +41,11 @@ use super::Repository;
 
 /// Version set.
 ///
-/// This data type represents a set of versions in a given repository, which
-/// maps each version to its corresponding commit, making it comfortable for
-/// us to work with versions tags and their associated commits. Git itself
-/// doesn't have a built-in concept of versions.
-pub struct Versions<'a> {
-    /// Repository.
-    repository: &'a Repository,
-    /// Versions and associated commits.
-    commits: BTreeMap<Version, Commit<'a>>,
+/// This data type represents a set of versions in a given repository. Versions
+/// are ordered from new to old, so iteration and range queries are simple.
+pub struct Versions {
+    /// Tagged versions.
+    tags: BTreeSet<Reverse<Version>>,
 }
 
 // ----------------------------------------------------------------------------
@@ -68,35 +65,54 @@ impl Repository {
     /// This method returns [`Error::Git`][] if the operation fails.
     ///
     /// [`Error::Git`]: crate::repository::Error::Git
-    pub fn versions(&self) -> Result<Versions<'_>> {
+    pub fn versions(&self) -> Result<Versions> {
         let tags = self.inner.tag_names(Some("v[0-9]*.[0-9]*.[0-9]**"))?;
         let iter = tags.iter().flatten().map(|name| {
-            let version = Version::from_str(name.trim_start_matches('v'))?;
-            Ok((version, self.find(name)?))
+            Ok(Reverse(Version::from_str(name.trim_start_matches('v'))?))
         });
 
-        // Collect and return versions
-        Ok(Versions {
-            repository: self,
-            commits: iter.collect::<Result<_>>()?,
-        })
+        // Collect and return version set
+        let tags = iter.collect::<Result<_>>()?;
+        Ok(Versions { tags })
     }
 }
 
 // ----------------------------------------------------------------------------
 
-impl<'a> Versions<'a> {}
+impl Versions {
+    /// Creates a range iterator over the version set.
+    pub fn range<R>(&self, range: R) -> impl Iterator<Item = &Version>
+    where
+        R: RangeBounds<Version>,
+    {
+        // Compute range start
+        let start = match range.start_bound() {
+            Bound::Included(start) => Bound::Included(Reverse(start.clone())),
+            Bound::Excluded(start) => Bound::Excluded(Reverse(start.clone())),
+            Bound::Unbounded => Bound::Unbounded,
+        };
+
+        // Compute range end
+        let end = match range.end_bound() {
+            Bound::Included(end) => Bound::Included(Reverse(end.clone())),
+            Bound::Excluded(end) => Bound::Excluded(Reverse(end.clone())),
+            Bound::Unbounded => Bound::Unbounded,
+        };
+
+        // Return range iterator
+        self.tags.range((start, end)).map(|v| &v.0)
+    }
+}
 
 // ----------------------------------------------------------------------------
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl fmt::Debug for Versions<'_> {
+impl fmt::Debug for Versions {
     /// Formats the version set for debugging.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Versions")
-            .field("repository", &self.repository.path())
-            .field("commit", &self.commits)
+            .field("tags", &self.tags)
             .finish()
     }
 }

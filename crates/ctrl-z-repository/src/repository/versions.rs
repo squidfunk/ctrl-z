@@ -43,12 +43,12 @@ use super::Repository;
 
 /// Version set.
 ///
-/// This data type represents a set of versions in a given repository. Versions
+/// This data type manages the existing versions in a given repository. Versions
 /// are ordered chronologically, so iteration and range queries are simple. Each
-/// is mapped to the commit it tags, so those commits can be obtained to query
-/// for changes between two versions.
+/// version is mapped to the commit it tags, so those commits can be obtained to
+/// query for changes between two versions.
 pub struct Versions<'a> {
-    /// Tagged versions.
+    /// Commits tagged with versions.
     tags: BTreeMap<Version, Commit<'a>>,
 }
 

@@ -77,8 +77,8 @@ impl<'a> Section<'a> {
 impl fmt::Display for Item<'_> {
     /// Formats the section item for display.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let id = self.revision.commit().id().to_string();
-        f.write_str(&id[0..7])?;
+        let id = self.revision.commit().id();
+        f.write_str(id.short().as_str())?;
 
         // Write affected scopes
         if !self.scopes.is_empty() {

@@ -64,7 +64,7 @@ impl Repository {
     /// ```
     /// # use std::error::Error;
     /// # fn main() -> Result<(), Box<dyn Error>> {
-    /// use ctrl_z_repository_2::Repository;
+    /// use ctrl_z_repository::Repository;
     /// use std::env;
     ///
     /// // Open repository

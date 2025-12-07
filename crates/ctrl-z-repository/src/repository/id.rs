@@ -25,7 +25,6 @@
 
 //! Object identifier.
 
-use git2::Oid;
 use std::fmt;
 use std::ops::Deref;
 
@@ -39,7 +38,7 @@ use std::ops::Deref;
 /// convenience methods and integrations with the repository API.
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(transparent)]
-pub struct Id(Oid);
+pub struct Id(git2::Oid);
 
 // ----------------------------------------------------------------------------
 // Implementations
@@ -48,6 +47,7 @@ pub struct Id(Oid);
 impl Id {
     /// Returns the short string representation.
     #[inline]
+    #[must_use]
     pub fn short(&self) -> String {
         format!("{:.7}", self.0)
     }
@@ -58,7 +58,7 @@ impl Id {
 // ----------------------------------------------------------------------------
 
 impl Deref for Id {
-    type Target = Oid;
+    type Target = git2::Oid;
 
     /// Dereferences to the wrapped identifier.
     fn deref(&self) -> &Self::Target {
@@ -68,10 +68,10 @@ impl Deref for Id {
 
 // ----------------------------------------------------------------------------
 
-impl From<Oid> for Id {
+impl From<git2::Oid> for Id {
     /// Creates an object identifier from a Git identity.
     #[inline]
-    fn from(oid: Oid) -> Self {
+    fn from(oid: git2::Oid) -> Self {
         Self(oid)
     }
 }

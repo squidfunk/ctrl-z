@@ -27,11 +27,12 @@
 
 use semver::Version;
 use std::cmp::Reverse;
-use std::collections::BTreeSet;
+use std::collections::BTreeMap;
 use std::fmt;
 use std::ops::{Bound, RangeBounds};
 use std::str::FromStr;
 
+use super::commit::Commit;
 use super::error::Result;
 use super::Repository;
 
@@ -42,10 +43,12 @@ use super::Repository;
 /// Version set.
 ///
 /// This data type represents a set of versions in a given repository. Versions
-/// are ordered from new to old, so iteration and range queries are simple.
-pub struct Versions {
+/// are ordered from new to old, so iteration and range queries are simple. Each
+/// is mapped to the commit it tags, so those commits can be obtained to query
+/// for changes between two versions.
+pub struct Versions<'a> {
     /// Tagged versions.
-    tags: BTreeSet<Reverse<Version>>,
+    tags: BTreeMap<Reverse<Version>, Commit<'a>>,
 }
 
 // ----------------------------------------------------------------------------
@@ -65,10 +68,11 @@ impl Repository {
     /// This method returns [`Error::Git`][] if the operation fails.
     ///
     /// [`Error::Git`]: crate::repository::Error::Git
-    pub fn versions(&self) -> Result<Versions> {
+    pub fn versions(&self) -> Result<Versions<'_>> {
         let tags = self.inner.tag_names(Some("v[0-9]*.[0-9]*.[0-9]**"))?;
         let iter = tags.iter().flatten().map(|name| {
-            Ok(Reverse(Version::from_str(name.trim_start_matches('v'))?))
+            let version = Version::from_str(name.trim_start_matches('v'))?;
+            Ok((Reverse(version), self.find(name)?))
         });
 
         // Collect and return version set
@@ -79,9 +83,11 @@ impl Repository {
 
 // ----------------------------------------------------------------------------
 
-impl Versions {
+impl Versions<'_> {
     /// Creates a range iterator over the version set.
-    pub fn range<R>(&self, range: R) -> impl Iterator<Item = &Version>
+    pub fn range<R>(
+        &self, range: R,
+    ) -> impl Iterator<Item = (&Version, &Commit<'_>)>
     where
         R: RangeBounds<Version>,
     {
@@ -100,7 +106,9 @@ impl Versions {
         };
 
         // Return range iterator
-        self.tags.range((start, end)).map(|v| &v.0)
+        self.tags
+            .range((start, end))
+            .map(|(version, commit)| (&version.0, commit))
     }
 }
 
@@ -108,7 +116,7 @@ impl Versions {
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl fmt::Debug for Versions {
+impl fmt::Debug for Versions<'_> {
     /// Formats the version set for debugging.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Versions")

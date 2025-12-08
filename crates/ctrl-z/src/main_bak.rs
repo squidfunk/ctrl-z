@@ -457,46 +457,6 @@ pub fn main() {
                 // )?
             }
         }
-        Commands::Release { command } => match command {
-            ReleaseCommand::Tag { dry_run } => {
-                if dry_run {
-                    println!("Dry run: no changes will be made");
-                } else {
-                    println!("Creating a new release tag...");
-                }
-            }
-            ReleaseCommand::Changelog { version, output: _ } => {
-                let release = Release::<Cargo>::new(".").unwrap();
-                let changeset = release.changeset(version).unwrap();
-
-                println!("{}", changeset.to_changelog());
-            }
-            ReleaseCommand::Packages { version, output: _ } => {
-                let release = Release::<Cargo>::new(".").unwrap();
-                let changeset = release.changeset(version).unwrap();
-
-                // collect all scopes
-                let mut scopes = BTreeSet::<usize>::new(); // why?
-                for revision in changeset.revisions() {
-                    scopes.extend(revision.scopes());
-                }
-
-                // create deps and determine correct order – @todo alarm when
-                // no packages is part of a bump _ just don't do a release!
-                let deps = release.workspace().dependents().unwrap();
-                let increments = changeset.increments();
-
-                // traverse all nodes
-                let mut traversal = deps.graph.traverse(deps.graph.sources());
-                while let Some(node) = traversal.take() {
-                    if scopes.contains(&node) && increments[node].is_some() {
-                        let name = deps.graph[node].info().unwrap().0;
-                        println!("{name}");
-                    }
-                    let _ = traversal.complete(node);
-                }
-            }
-        },
     }
 }
 

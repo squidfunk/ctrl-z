@@ -30,6 +30,7 @@ use clap::Subcommand;
 use crate::cli::Result;
 use crate::Options;
 
+mod hook;
 mod release;
 
 // ----------------------------------------------------------------------------
@@ -54,6 +55,11 @@ pub enum Commands {
         #[command(subcommand)]
         command: release::Commands,
     },
+    /// Git hooks.
+    Hook {
+        #[command(subcommand)]
+        command: hook::Commands,
+    },
 }
 
 // ----------------------------------------------------------------------------
@@ -65,6 +71,7 @@ impl Command for Commands {
     fn execute(&self, options: Options) -> Result {
         match self {
             Commands::Release { command } => command.execute(options),
+            Commands::Hook { command } => command.execute(options),
         }
     }
 }

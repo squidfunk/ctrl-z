@@ -77,7 +77,7 @@ where
         let content = fs::read_to_string(path)?;
         Ok(Self {
             path: path.canonicalize()?,
-            manifest: T::from_str(&content)?,
+            manifest: content.parse()?,
         })
     }
 

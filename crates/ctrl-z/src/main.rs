@@ -39,8 +39,6 @@ use cli::{Cli, Command, Result};
 /// Command line options.
 #[derive(Debug)]
 pub struct Options {
-    /// Configuration file.
-    config: PathBuf,
     /// Working directory.
     directory: PathBuf,
 }
@@ -52,8 +50,5 @@ pub struct Options {
 /// Entry point.
 fn main() -> Result {
     let cli = Cli::parse();
-    cli.command.execute(Options {
-        config: cli.config,
-        directory: cli.directory,
-    })
+    cli.command.execute(Options { directory: cli.directory })
 }

@@ -30,7 +30,6 @@ use std::collections::btree_map::Range;
 use std::collections::BTreeMap;
 use std::fmt;
 use std::ops::RangeBounds;
-use std::str::FromStr;
 
 use super::error::Result;
 use super::id::Id;
@@ -71,7 +70,7 @@ impl Repository {
     pub fn versions(&self) -> Result<Versions> {
         let tags = self.inner.tag_names(Some("v[0-9]*.[0-9]*.[0-9]**"))?;
         let iter = tags.iter().flatten().map(|name| {
-            let version = Version::from_str(name.trim_start_matches('v'))?;
+            let version = name.trim_start_matches('v').parse()?;
             Ok((version, self.find(name)?.id()))
         });
 

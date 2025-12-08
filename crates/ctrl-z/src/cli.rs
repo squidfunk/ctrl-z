@@ -59,9 +59,6 @@ const STYLES: Styles = Styles::styled()
 #[command(disable_help_subcommand = true)]
 #[command(styles = STYLES)]
 pub struct Cli {
-    /// Configuration file.
-    #[arg(short, long, value_parser = valid, default_value = ".ctrl-z.toml")]
-    pub config: PathBuf,
     /// Working directory.
     #[arg(short, long, value_parser = valid, default_value = ".")]
     pub directory: PathBuf,

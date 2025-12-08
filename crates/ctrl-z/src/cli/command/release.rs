@@ -31,6 +31,7 @@ use crate::cli::{Command, Result};
 use crate::Options;
 
 mod changelog;
+mod packages;
 
 // ----------------------------------------------------------------------------
 // Enums
@@ -41,6 +42,8 @@ mod changelog;
 pub enum Commands {
     /// Generates the changelog.
     Changelog(changelog::Arguments),
+    /// Returns names of packages with changes.
+    Packages(packages::Arguments),
 }
 
 // ----------------------------------------------------------------------------
@@ -52,6 +55,7 @@ impl Command for Commands {
     fn execute(&self, options: Options) -> Result {
         match self {
             Commands::Changelog(args) => args.execute(options),
+            Commands::Packages(args) => args.execute(options),
         }
     }
 }

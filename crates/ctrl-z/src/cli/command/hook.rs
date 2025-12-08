@@ -23,40 +23,35 @@
 
 // ----------------------------------------------------------------------------
 
-//! Release error.
+//! Git hook commands.
 
-use semver::Version;
-use std::result;
-use thiserror::Error;
+use clap::Subcommand;
 
-use ctrl_z_changeset as changeset;
-use ctrl_z_project as project;
-use ctrl_z_repository as repository;
+use crate::cli::{Command, Result};
+use crate::Options;
+
+mod commit_msg;
 
 // ----------------------------------------------------------------------------
 // Enums
 // ----------------------------------------------------------------------------
 
-/// Release error.
-#[derive(Debug, Error)]
-pub enum Error {
-    /// Changeset error.
-    #[error(transparent)]
-    Changeset(#[from] changeset::Error),
-    /// Project error.
-    #[error(transparent)]
-    Project(#[from] project::Error),
-    /// Repository error.
-    #[error(transparent)]
-    Repository(#[from] repository::Error),
-    /// Invalid version.
-    #[error("Invalid version: {0}")]
-    Version(Version),
+/// Git hook commands.
+#[derive(Subcommand)]
+pub enum Commands {
+    /// Validates commit message format.
+    CommitMsg(commit_msg::Arguments),
 }
 
 // ----------------------------------------------------------------------------
-// Type aliases
+// Trait implementations
 // ----------------------------------------------------------------------------
 
-/// Release result.
-pub type Result<T = ()> = result::Result<T, Error>;
+impl Command for Commands {
+    /// Executes the command.
+    fn execute(&self, options: Options) -> Result {
+        match self {
+            Commands::CommitMsg(args) => args.execute(options),
+        }
+    }
+}

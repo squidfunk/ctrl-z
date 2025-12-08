@@ -28,6 +28,7 @@
 use std::{io, result};
 use thiserror::Error;
 
+use ctrl_z_changeset::change;
 use ctrl_z_release as release;
 
 // ----------------------------------------------------------------------------
@@ -40,6 +41,9 @@ pub enum Error {
     /// I/O error.
     #[error(transparent)]
     Io(#[from] io::Error),
+    /// Change error.
+    #[error(transparent)]
+    Change(#[from] change::Error),
     /// Release error.
     #[error(transparent)]
     Release(#[from] release::Error),

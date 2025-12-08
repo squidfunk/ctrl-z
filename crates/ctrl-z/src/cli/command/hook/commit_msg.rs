@@ -23,40 +23,66 @@
 
 // ----------------------------------------------------------------------------
 
-//! Release error.
+//! Validates commit message format.
 
-use semver::Version;
-use std::result;
-use thiserror::Error;
+use clap::Args;
+use cliclack::{confirm, input, intro, outro, select};
+use std::fs;
+use std::path::PathBuf;
 
-use ctrl_z_changeset as changeset;
-use ctrl_z_project as project;
-use ctrl_z_repository as repository;
+use ctrl_z_changeset::Change;
+
+use crate::cli::{Command, Result};
+use crate::Options;
 
 // ----------------------------------------------------------------------------
-// Enums
+// Structs
 // ----------------------------------------------------------------------------
 
-/// Release error.
-#[derive(Debug, Error)]
-pub enum Error {
-    /// Changeset error.
-    #[error(transparent)]
-    Changeset(#[from] changeset::Error),
-    /// Project error.
-    #[error(transparent)]
-    Project(#[from] project::Error),
-    /// Repository error.
-    #[error(transparent)]
-    Repository(#[from] repository::Error),
-    /// Invalid version.
-    #[error("Invalid version: {0}")]
-    Version(Version),
+/// Validates commit message format.
+#[derive(Args, Debug)]
+pub struct Arguments {
+    /// Path to commit message file.
+    file: PathBuf,
 }
 
 // ----------------------------------------------------------------------------
-// Type aliases
+// Trait implementations
 // ----------------------------------------------------------------------------
 
-/// Release result.
-pub type Result<T = ()> = result::Result<T, Error>;
+impl Command for Arguments {
+    /// Executes the command.
+    fn execute(&self, options: Options) -> Result {
+        let message = fs::read_to_string(&self.file)?;
+
+        let line = message.lines().next().expect("invariant");
+
+        let change: Change = line.parse()?;
+
+        // confirm("Is this commit related to an issue?")
+
+        // intro("Commit message validation")?;
+        let confirm2 = confirm("Is this commit related to an issue?")
+            .initial_value(true)
+            .interact()?;
+
+        if confirm2 {
+            let issue: u32 = input("What's the number of the issue?") // fmt
+                .placeholder("e.g. 123")
+                .interact()?;
+
+            confirm("Does the commit resolve the issue?")
+                .initial_value(false)
+                .interact()?;
+        }
+
+        outro("Added ")?;
+
+        // ensure commit is signed...
+
+        // let
+
+        // load the file!
+        Ok(())
+    }
+}

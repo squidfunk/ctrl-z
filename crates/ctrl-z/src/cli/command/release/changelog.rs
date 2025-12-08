@@ -23,10 +23,11 @@
 
 // ----------------------------------------------------------------------------
 
-//! Changelog subcommand.
+//! Generates the changelog.
 
 use clap::Args;
 use semver::Version;
+use std::fs;
 use std::path::PathBuf;
 
 use ctrl_z_project::Cargo;
@@ -39,7 +40,7 @@ use crate::Options;
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Changelog subcommand.
+/// Generates the changelog.
 #[derive(Args, Debug)]
 pub struct Arguments {
     /// Version in x.y.z format
@@ -56,10 +57,19 @@ pub struct Arguments {
 impl Command for Arguments {
     /// Executes the command.
     fn execute(&self, options: Options) -> Result {
-        // we might take the release options directly to the commands!
         let release = Release::<Cargo>::new(options.directory)?;
         let changeset = release.changeset(self.version.as_ref())?;
-        println!("{}", changeset.to_changelog());
+
+        // Write changelog to standard out or file
+        let changelog = changeset.to_changelog();
+        if let Some(output) = &self.output {
+            fs::create_dir_all(output.parent().expect("invariant"))?;
+            fs::write(output, changelog.to_string())?;
+        } else {
+            print!("{changelog}");
+        }
+
+        // No errors occurred
         Ok(())
     }
 }

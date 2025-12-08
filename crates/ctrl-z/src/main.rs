@@ -214,17 +214,6 @@ pub fn main() {
                         traversal.complete(node).unwrap();
                     }
 
-                    // let versions = BTreeMap::from_iter([
-                    //     (
-                    //         "@zensical/disco-engine",
-                    //         Version::parse("0.1.0").unwrap(),
-                    //     ),
-                    //     ("@zensical/disco", Version::parse("0.0.1").unwrap()),
-                    // ]);
-
-                    // for project in &mut workspace {
-                    //     project.update(&versions).unwrap();
-                    // }
                     return;
                 }
 
@@ -237,6 +226,7 @@ pub fn main() {
                 // Intersect with source, so we know which sources to consider
                 // - we might just check which have no incoming nodes based on increment
                 // - is_source?
+                // then determine base versions of all bumped packages
 
                 let mut increments = changeset.increments().to_vec();
                 let incr = increments
@@ -250,17 +240,12 @@ pub fn main() {
                 let mut sources: BTreeSet<usize> =
                     deps.graph.sources().collect();
 
-                // let x = to_dot(&deps.graph);
-                // println!("{x}");
-
-                // println!("sources {:?}", sources);
-                // println!("incr {:?}", incr);
                 let start = sources
                     .intersection(&incr)
                     .copied()
                     .collect::<HashSet<_>>();
 
-                println!("start {:?}", start);
+                // println!("start {:?}", start);
 
                 // versions...
                 let mut versions = BTreeMap::<usize, &Version>::new();
@@ -273,6 +258,12 @@ pub fn main() {
 
                 intro("Bump versions").unwrap();
 
+                // we _should_ add this to the graph!
+
+                // can return Some() for complete or not?
+                // must be FnMut
+                // graph.traverse_with(node)
+
                 let mut traversal = deps.graph.traverse(start);
                 let incoming = deps.graph.topology().incoming();
                 // we might also have an auto completing traversal?
@@ -280,7 +271,7 @@ pub fn main() {
                     let bump = &increments[node];
                     let name = deps.graph[node].info().unwrap().0;
 
-                    // node has no deps, we can just conitnue
+                    // node has no deps, we can just continue
                     if incoming[node].is_empty() {
                         let mut current_version = (*versions[node]).clone();
                         if let Some(x) = *bump {
@@ -294,7 +285,6 @@ pub fn main() {
                         );
                         remark(x).unwrap();
 
-                        // println!("  => no dependencies, accepting");
                         let _ = traversal.complete(node);
                         continue;
                     }
@@ -304,15 +294,8 @@ pub fn main() {
                     for &dep in &incoming[node] {
                         let bump = &increments[dep];
                         bump_levels.insert(bump.clone());
-                        // println!(
-                        //     "  <- {:?} = {:?}",
-                        //     deps.graph[dep].info().unwrap().0,
-                        //     bump
-                        // );
                     }
 
-                    // maximum bump allowed:
-                    // println!("  => max bump levels: {:?}", bump_levels);
                     // check if bump level is smaller than what we have anyway...
                     // Get the maximum bump level from dependencies
                     let max_bump = bump_levels.into_iter().flatten().max();

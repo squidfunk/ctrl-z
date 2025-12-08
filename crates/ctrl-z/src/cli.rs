@@ -51,12 +51,11 @@ const STYLES: Styles = Styles::styled()
 // ----------------------------------------------------------------------------
 
 /// Global options.
-#[derive(Debug)]
 struct Options {
     /// Configuration file.
-    config: PathBuf,
+    config: Option<PathBuf>,
     /// Working directory.
-    directory: PathBuf,
+    directory: Option<PathBuf>,
 }
 
 // ----------------------------------------------------------------------------
@@ -69,11 +68,11 @@ struct Options {
 #[command(styles = STYLES)]
 struct Cli {
     /// Configuration file.
-    #[arg(short, long, default_value = ".ctrl-z.toml")]
-    config: PathBuf,
+    #[arg(short, long, global = true, default_value = ".ctrl-z.toml")]
+    config: Option<PathBuf>,
     /// Working directory.
-    #[arg(short, long, default_value = ".")]
-    directory: PathBuf,
+    #[arg(short, long, global = true)]
+    directory: Option<PathBuf>,
     /// Commands.
     #[command(subcommand)]
     command: Commands,

@@ -23,71 +23,52 @@
 
 // ----------------------------------------------------------------------------
 
-//! Command line interface.
+//! Commands.
 
-use clap::builder::styling::{AnsiColor, Effects};
-use clap::builder::Styles;
-use clap::Parser;
-use std::env;
-use std::path::PathBuf;
+use clap::Subcommand;
 
-mod command;
+use super::Options;
 
-use command::{Command, Commands, Result};
+mod error;
+mod release;
 
-// ----------------------------------------------------------------------------
-// Constants
-// ----------------------------------------------------------------------------
-
-/// Command line styles.
-const STYLES: Styles = Styles::styled()
-    .header(AnsiColor::Green.on_default().effects(Effects::BOLD))
-    .usage(AnsiColor::Green.on_default().effects(Effects::BOLD))
-    .literal(AnsiColor::Cyan.on_default().effects(Effects::BOLD))
-    .placeholder(AnsiColor::Cyan.on_default());
+pub use error::{Error, Result};
 
 // ----------------------------------------------------------------------------
-// Structs
+// Traits
 // ----------------------------------------------------------------------------
 
-/// Global options.
-#[derive(Debug)]
-struct Options {
-    /// Configuration file.
-    config: PathBuf,
-    /// Working directory.
-    directory: PathBuf,
+/// Command.
+///
+/// @todo
+pub trait Command {
+    /// Executes the command.
+    fn execute(&self, options: Options) -> Result;
 }
 
 // ----------------------------------------------------------------------------
+// Enums
+// ----------------------------------------------------------------------------
 
-/// Command line interface.
-#[derive(Parser)]
-#[command(name = env!("CARGO_PKG_NAME"))]
-#[command(about = env!("CARGO_PKG_DESCRIPTION"), long_about = None)]
-#[command(disable_help_subcommand = true)]
-#[command(styles = STYLES)]
-struct Cli {
-    /// Configuration file.
-    #[arg(short, long, default_value = ".ctrl-z.toml")]
-    config: PathBuf,
-    /// Working directory.
-    #[arg(short, long, default_value = ".")]
-    directory: PathBuf,
-    /// Commands.
-    #[command(subcommand)]
-    command: Commands,
+/// Commands.
+#[derive(Subcommand)]
+pub enum Commands {
+    /// Creates a new release.
+    Release {
+        #[command(subcommand)]
+        command: release::Commands,
+    },
 }
 
 // ----------------------------------------------------------------------------
-// Program
+// Trait implementations
 // ----------------------------------------------------------------------------
 
-/// Entry point.
-fn main() -> Result {
-    let cli = Cli::parse();
-    cli.command.execute(Options {
-        config: cli.config,
-        directory: cli.directory,
-    })
+impl Command for Commands {
+    /// Executes the command.
+    fn execute(&self, options: Options) -> Result {
+        match self {
+            Commands::Release { command } => command.execute(options),
+        }
+    }
 }

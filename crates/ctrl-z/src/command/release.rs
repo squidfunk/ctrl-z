@@ -23,64 +23,34 @@
 
 // ----------------------------------------------------------------------------
 
-//! Object identifier.
+//! Release commands.
 
-use std::fmt;
-use std::ops::Deref;
+use clap::Subcommand;
 
-// ----------------------------------------------------------------------------
-// Structs
-// ----------------------------------------------------------------------------
+use super::{Command, Options, Result};
 
-/// Object identifier.
-///
-/// This is a thin wrapper around [`git2::Oid`] that provides some additional
-/// convenience methods and integrations with the repository API.
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-#[repr(transparent)]
-pub struct Id(git2::Oid);
+mod changelog;
 
 // ----------------------------------------------------------------------------
-// Implementations
+// Enums
 // ----------------------------------------------------------------------------
 
-impl Id {
-    /// Returns the short string representation.
-    #[inline]
-    #[must_use]
-    pub fn short(&self) -> String {
-        format!("{:.7}", self.0)
-    }
+/// Commands.
+#[derive(Subcommand)]
+pub enum Commands {
+    /// Generates the changelog.
+    Changelog(changelog::Arguments),
 }
 
 // ----------------------------------------------------------------------------
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl Deref for Id {
-    type Target = git2::Oid;
-
-    /// Dereferences to the wrapped identifier.
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-// ----------------------------------------------------------------------------
-
-impl From<git2::Oid> for Id {
-    /// Creates an object identifier from a Git identity.
-    #[inline]
-    fn from(oid: git2::Oid) -> Self {
-        Self(oid)
-    }
-}
-
-// ----------------------------------------------------------------------------
-
-impl fmt::Display for Id {
-    /// Formats the object identifier for display.
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0.fmt(f)
+impl Command for Commands {
+    /// Executes the command.
+    fn execute(&self, options: Options) -> Result {
+        match self {
+            Commands::Changelog(args) => args.execute(options),
+        }
     }
 }

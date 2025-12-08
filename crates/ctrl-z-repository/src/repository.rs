@@ -94,7 +94,7 @@ impl Repository {
         Ok(())
     }
 
-    /// Commits staged changes with the given message.
+    /// Commits the staged changes with the given message.
     ///
     /// # Errors
     ///

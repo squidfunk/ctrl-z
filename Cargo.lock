@@ -267,13 +267,9 @@ dependencies = [
  "ctrl-z-project",
  "ctrl-z-release",
  "ctrl-z-repository",
- "git2",
  "semver",
- "serde",
  "tempfile",
- "toml",
- "toml_edit",
- "zrx",
+ "thiserror",
 ]
 
 [[package]]

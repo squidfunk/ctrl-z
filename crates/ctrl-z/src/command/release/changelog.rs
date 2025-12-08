@@ -23,71 +23,39 @@
 
 // ----------------------------------------------------------------------------
 
-//! Command line interface.
+//! Changelog subcommand.
 
-use clap::builder::styling::{AnsiColor, Effects};
-use clap::builder::Styles;
-use clap::Parser;
-use std::env;
+use clap::Args;
+use semver::Version;
 use std::path::PathBuf;
 
-mod command;
-
-use command::{Command, Commands, Result};
-
-// ----------------------------------------------------------------------------
-// Constants
-// ----------------------------------------------------------------------------
-
-/// Command line styles.
-const STYLES: Styles = Styles::styled()
-    .header(AnsiColor::Green.on_default().effects(Effects::BOLD))
-    .usage(AnsiColor::Green.on_default().effects(Effects::BOLD))
-    .literal(AnsiColor::Cyan.on_default().effects(Effects::BOLD))
-    .placeholder(AnsiColor::Cyan.on_default());
+use super::{Command, Options, Result};
 
 // ----------------------------------------------------------------------------
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Global options.
-#[derive(Debug)]
-struct Options {
-    /// Configuration file.
-    config: PathBuf,
-    /// Working directory.
-    directory: PathBuf,
+/// Changelog subcommand.
+#[derive(Args, Debug)]
+pub struct Arguments {
+    /// Version in x.y.z format
+    version: Option<Version>,
+    /// Output file.
+    #[arg(short, long)]
+    output: Option<PathBuf>,
 }
 
 // ----------------------------------------------------------------------------
-
-/// Command line interface.
-#[derive(Parser)]
-#[command(name = env!("CARGO_PKG_NAME"))]
-#[command(about = env!("CARGO_PKG_DESCRIPTION"), long_about = None)]
-#[command(disable_help_subcommand = true)]
-#[command(styles = STYLES)]
-struct Cli {
-    /// Configuration file.
-    #[arg(short, long, default_value = ".ctrl-z.toml")]
-    config: PathBuf,
-    /// Working directory.
-    #[arg(short, long, default_value = ".")]
-    directory: PathBuf,
-    /// Commands.
-    #[command(subcommand)]
-    command: Commands,
-}
-
-// ----------------------------------------------------------------------------
-// Program
+// Trait implementations
 // ----------------------------------------------------------------------------
 
-/// Entry point.
-fn main() -> Result {
-    let cli = Cli::parse();
-    cli.command.execute(Options {
-        config: cli.config,
-        directory: cli.directory,
-    })
+impl Command for Arguments {
+    /// Executes the command.
+    fn execute(&self, options: Options) -> Result {
+        println!(
+            "Generating changelog for version: {:?} - {:?}",
+            self, options
+        );
+        Ok(())
+    }
 }

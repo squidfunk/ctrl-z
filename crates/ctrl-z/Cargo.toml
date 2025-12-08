@@ -24,7 +24,7 @@
 [package]
 name = "ctrl-z"
 version = "0.0.0"
-description = "tbd"
+description = "Automation for Zensical projects"
 edition.workspace = true
 rust-version.workspace = true
 homepage.workspace = true
@@ -46,10 +46,6 @@ ctrl-z-repository.workspace = true
 clap.workspace = true
 cliclack.workspace = true
 console.workspace = true
-git2.workspace = true
 semver.workspace = true
-serde.workspace = true
 tempfile.workspace = true
-toml.workspace = true
-toml_edit.workspace = true
-zrx.workspace = true # remove later again
+thiserror.workspace = true

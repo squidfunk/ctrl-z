@@ -23,28 +23,35 @@
 
 // ----------------------------------------------------------------------------
 
-//! Command error.
+//! Release commands.
 
-use std::result;
-use thiserror::Error;
+use clap::Subcommand;
 
-use ctrl_z_release as release;
+use crate::cli::{Command, Result};
+use crate::Options;
+
+mod changelog;
 
 // ----------------------------------------------------------------------------
 // Enums
 // ----------------------------------------------------------------------------
 
-/// Command error.
-#[derive(Debug, Error)]
-pub enum Error {
-    /// Release error.
-    #[error(transparent)]
-    Release(#[from] release::Error),
+/// Release commands.
+#[derive(Subcommand)]
+pub enum Commands {
+    /// Generates the changelog.
+    Changelog(changelog::Arguments),
 }
 
 // ----------------------------------------------------------------------------
-// Type aliases
+// Trait implementations
 // ----------------------------------------------------------------------------
 
-/// Command result.
-pub type Result<T = ()> = result::Result<T, Error>;
+impl Command for Commands {
+    /// Executes the command.
+    fn execute(&self, options: Options) -> Result {
+        match self {
+            Commands::Changelog(args) => args.execute(options),
+        }
+    }
+}

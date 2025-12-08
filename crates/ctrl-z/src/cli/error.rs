@@ -23,52 +23,31 @@
 
 // ----------------------------------------------------------------------------
 
-//! Commands.
+//! Command error.
 
-use clap::Subcommand;
+use std::{io, result};
+use thiserror::Error;
 
-use super::Options;
-
-mod error;
-mod release;
-
-pub use error::{Error, Result};
-
-// ----------------------------------------------------------------------------
-// Traits
-// ----------------------------------------------------------------------------
-
-/// Command.
-///
-/// @todo
-pub trait Command {
-    /// Executes the command.
-    fn execute(&self, options: Options) -> Result;
-}
+use ctrl_z_release as release;
 
 // ----------------------------------------------------------------------------
 // Enums
 // ----------------------------------------------------------------------------
 
-/// Commands.
-#[derive(Subcommand)]
-pub enum Commands {
-    /// Creates a new release.
-    Release {
-        #[command(subcommand)]
-        command: release::Commands,
-    },
+/// Command error.
+#[derive(Debug, Error)]
+pub enum Error {
+    /// I/O error.
+    #[error(transparent)]
+    Io(#[from] io::Error),
+    /// Release error.
+    #[error(transparent)]
+    Release(#[from] release::Error),
 }
 
 // ----------------------------------------------------------------------------
-// Trait implementations
+// Type aliases
 // ----------------------------------------------------------------------------
 
-impl Command for Commands {
-    /// Executes the command.
-    fn execute(&self, options: Options) -> Result {
-        match self {
-            Commands::Release { command } => command.execute(options),
-        }
-    }
-}
+/// Command result.
+pub type Result<T = ()> = result::Result<T, Error>;

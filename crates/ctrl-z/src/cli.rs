@@ -32,8 +32,10 @@ use std::env;
 use std::path::PathBuf;
 
 mod command;
+mod error;
 
-use command::{Command, Commands, Result};
+pub use command::{Command, Commands};
+pub use error::{Error, Result};
 
 // ----------------------------------------------------------------------------
 // Constants
@@ -50,43 +52,31 @@ const STYLES: Styles = Styles::styled()
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Global options.
-struct Options {
-    /// Configuration file.
-    config: Option<PathBuf>,
-    /// Working directory.
-    directory: Option<PathBuf>,
-}
-
-// ----------------------------------------------------------------------------
-
 /// Command line interface.
 #[derive(Parser)]
 #[command(name = env!("CARGO_PKG_NAME"))]
 #[command(about = env!("CARGO_PKG_DESCRIPTION"), long_about = None)]
 #[command(disable_help_subcommand = true)]
 #[command(styles = STYLES)]
-struct Cli {
+pub struct Cli {
     /// Configuration file.
-    #[arg(short, long, global = true, default_value = ".ctrl-z.toml")]
-    config: Option<PathBuf>,
+    #[arg(short, long, value_parser = valid, default_value = ".ctrl-z.toml")]
+    pub config: PathBuf,
     /// Working directory.
-    #[arg(short, long, global = true)]
-    directory: Option<PathBuf>,
+    #[arg(short, long, value_parser = valid, default_value = ".")]
+    pub directory: PathBuf,
     /// Commands.
     #[command(subcommand)]
-    command: Commands,
+    pub command: Commands,
 }
 
 // ----------------------------------------------------------------------------
-// Program
+// Functions
 // ----------------------------------------------------------------------------
 
-/// Entry point.
-fn main() -> Result {
-    let cli = Cli::parse();
-    cli.command.execute(Options {
-        config: cli.config,
-        directory: cli.directory,
-    })
+/// Validates that the given path exists.
+fn valid(value: &str) -> Result<PathBuf> {
+    let path = PathBuf::from(value);
+    path.metadata()?;
+    Ok(path)
 }

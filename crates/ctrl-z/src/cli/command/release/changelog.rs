@@ -23,34 +23,43 @@
 
 // ----------------------------------------------------------------------------
 
-//! Release commands.
+//! Changelog subcommand.
 
-use clap::Subcommand;
+use clap::Args;
+use semver::Version;
+use std::path::PathBuf;
 
-use super::{Command, Options, Result};
+use ctrl_z_project::Cargo;
+use ctrl_z_release::Release;
 
-mod changelog;
+use crate::cli::{Command, Result};
+use crate::Options;
 
 // ----------------------------------------------------------------------------
-// Enums
+// Structs
 // ----------------------------------------------------------------------------
 
-/// Commands.
-#[derive(Subcommand)]
-pub enum Commands {
-    /// Generates the changelog.
-    Changelog(changelog::Arguments),
+/// Changelog subcommand.
+#[derive(Args, Debug)]
+pub struct Arguments {
+    /// Version in x.y.z format
+    version: Option<Version>,
+    /// Output to file.
+    #[arg(short, long)]
+    output: Option<PathBuf>,
 }
 
 // ----------------------------------------------------------------------------
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl Command for Commands {
+impl Command for Arguments {
     /// Executes the command.
     fn execute(&self, options: Options) -> Result {
-        match self {
-            Commands::Changelog(args) => args.execute(options),
-        }
+        // we might take the release options directly to the commands!
+        let release = Release::<Cargo>::new(options.directory)?;
+        let changeset = release.changeset(self.version.as_ref())?;
+        println!("{}", changeset.to_changelog());
+        Ok(())
     }
 }

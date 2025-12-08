@@ -25,58 +25,24 @@
 
 //! Command line interface.
 
-use clap::builder::styling::{AnsiColor, Effects};
-use clap::builder::Styles;
 use clap::Parser;
-use std::env;
 use std::path::PathBuf;
 
-mod command;
+mod cli;
 
-use command::{Command, Commands, Result};
-
-// ----------------------------------------------------------------------------
-// Constants
-// ----------------------------------------------------------------------------
-
-/// Command line styles.
-const STYLES: Styles = Styles::styled()
-    .header(AnsiColor::Green.on_default().effects(Effects::BOLD))
-    .usage(AnsiColor::Green.on_default().effects(Effects::BOLD))
-    .literal(AnsiColor::Cyan.on_default().effects(Effects::BOLD))
-    .placeholder(AnsiColor::Cyan.on_default());
+use cli::{Cli, Command, Result};
 
 // ----------------------------------------------------------------------------
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Global options.
+/// Command line options.
 #[derive(Debug)]
-struct Options {
+pub struct Options {
     /// Configuration file.
     config: PathBuf,
     /// Working directory.
     directory: PathBuf,
-}
-
-// ----------------------------------------------------------------------------
-
-/// Command line interface.
-#[derive(Parser)]
-#[command(name = env!("CARGO_PKG_NAME"))]
-#[command(about = env!("CARGO_PKG_DESCRIPTION"), long_about = None)]
-#[command(disable_help_subcommand = true)]
-#[command(styles = STYLES)]
-struct Cli {
-    /// Configuration file.
-    #[arg(short, long, default_value = ".ctrl-z.toml")]
-    config: PathBuf,
-    /// Working directory.
-    #[arg(short, long, default_value = ".")]
-    directory: PathBuf,
-    /// Commands.
-    #[command(subcommand)]
-    command: Commands,
 }
 
 // ----------------------------------------------------------------------------

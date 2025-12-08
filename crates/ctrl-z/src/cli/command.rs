@@ -23,39 +23,48 @@
 
 // ----------------------------------------------------------------------------
 
-//! Changelog subcommand.
+//! Commands.
 
-use clap::Args;
-use semver::Version;
-use std::path::PathBuf;
+use clap::Subcommand;
 
-use super::{Command, Options, Result};
+use crate::cli::Result;
+use crate::Options;
+
+mod release;
 
 // ----------------------------------------------------------------------------
-// Structs
+// Traits
 // ----------------------------------------------------------------------------
 
-/// Changelog subcommand.
-#[derive(Args, Debug)]
-pub struct Arguments {
-    /// Version in x.y.z format
-    version: Option<Version>,
-    /// Output file.
-    #[arg(short, long)]
-    output: Option<PathBuf>,
+/// Command.
+pub trait Command {
+    /// Executes the command.
+    fn execute(&self, options: Options) -> Result;
+}
+
+// ----------------------------------------------------------------------------
+// Enums
+// ----------------------------------------------------------------------------
+
+/// Commands.
+#[derive(Subcommand)]
+pub enum Commands {
+    /// Creates a new release.
+    Release {
+        #[command(subcommand)]
+        command: release::Commands,
+    },
 }
 
 // ----------------------------------------------------------------------------
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl Command for Arguments {
+impl Command for Commands {
     /// Executes the command.
     fn execute(&self, options: Options) -> Result {
-        println!(
-            "Generating changelog for version: {:?} - {:?}",
-            self, options
-        );
-        Ok(())
+        match self {
+            Commands::Release { command } => command.execute(options),
+        }
     }
 }

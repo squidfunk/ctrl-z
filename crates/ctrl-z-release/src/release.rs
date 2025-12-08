@@ -78,13 +78,15 @@ where
 
     /// obtain changelog... - we should deduce version outside! otherwise, its ehead
     /// // @todo: maybe we should pass version in the options...
-    pub fn changeset(&self, version: Option<Version>) -> Result<Changeset<'_>> {
+    pub fn changeset(
+        &self, version: Option<&Version>,
+    ) -> Result<Changeset<'_>> {
         let versions = self.repository.versions()?;
 
         // use version!
         let commits = if let Some(v) = version {
             if !versions.contains(&v) {
-                return Err(Error::Version(v));
+                return Err(Error::Version(v.clone()));
             }
 
             let mut iter = versions.range(..=v).rev();

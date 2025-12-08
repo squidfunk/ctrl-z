@@ -23,7 +23,7 @@
 
 // ----------------------------------------------------------------------------
 
-//! Release commands.
+//! Release management.
 
 use clap::Subcommand;
 
@@ -38,7 +38,7 @@ mod create;
 // Enums
 // ----------------------------------------------------------------------------
 
-/// Release commands.
+/// Release management.
 #[derive(Subcommand)]
 pub enum Commands {
     /// Creates a new release.

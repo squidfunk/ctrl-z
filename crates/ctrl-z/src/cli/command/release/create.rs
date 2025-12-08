@@ -26,8 +26,6 @@
 //! Creates a new release.
 
 use clap::Args;
-use semver::Version;
-use std::path::PathBuf;
 
 use ctrl_z_project::Cargo;
 use ctrl_z_release::Release;
@@ -41,13 +39,7 @@ use crate::Options;
 
 /// Creates a new release.
 #[derive(Args, Debug)]
-pub struct Arguments {
-    /// Version in x.y.z format
-    version: Option<Version>,
-    /// Output to file.
-    #[arg(short, long)]
-    output: Option<PathBuf>,
-}
+pub struct Arguments {}
 
 // ----------------------------------------------------------------------------
 // Trait implementations
@@ -57,7 +49,7 @@ impl Command for Arguments {
     /// Executes the command.
     fn execute(&self, options: Options) -> Result {
         let release = Release::<Cargo>::new(options.directory)?;
-        let changeset = release.changeset(self.version.as_ref())?;
+        let changeset = release.changeset(None)?;
 
         println!("Create new release...");
 

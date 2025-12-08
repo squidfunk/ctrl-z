@@ -50,7 +50,7 @@ pub trait Command {
 /// Commands.
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Creates a new release.
+    /// Release management.
     Release {
         #[command(subcommand)]
         command: release::Commands,

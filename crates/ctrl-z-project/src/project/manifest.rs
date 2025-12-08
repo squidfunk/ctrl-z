@@ -26,6 +26,7 @@
 //! Manifest.
 
 use semver::{Version, VersionReq};
+use std::borrow::Cow;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -51,7 +52,7 @@ pub trait Manifest: Debug + FromStr<Err = Error> {
     /// Returns the version.
     fn version(&self) -> Option<&Version>;
     /// Returns the members.
-    fn members(&self) -> &[String];
+    fn members(&self) -> Cow<'_, [String]>;
 }
 
 /// Manifest resolver.

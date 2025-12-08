@@ -23,11 +23,10 @@
 
 // ----------------------------------------------------------------------------
 
-//! Returns names of packages with changes.
+//! Creates a new release.
 
 use clap::Args;
 use semver::Version;
-use std::collections::BTreeSet;
 use std::path::PathBuf;
 
 use ctrl_z_project::Cargo;
@@ -40,7 +39,7 @@ use crate::Options;
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Returns names of packages with changes.
+/// Creates a new release.
 #[derive(Args, Debug)]
 pub struct Arguments {
     /// Version in x.y.z format
@@ -60,26 +59,9 @@ impl Command for Arguments {
         let release = Release::<Cargo>::new(options.directory)?;
         let changeset = release.changeset(self.version.as_ref())?;
 
-        // collect all scopes
-        let mut scopes = BTreeSet::<usize>::new(); // why?
-        for revision in changeset.revisions() {
-            scopes.extend(revision.scopes());
-        }
+        println!("Create new release...");
 
-        // create deps and determine correct order – @todo alarm when
-        // no packages is part of a bump _ just don't do a release!
-        let deps = release.workspace().dependents().unwrap();
-        let increments = changeset.increments();
-
-        // traverse all nodes
-        let mut traversal = deps.graph.traverse(deps.graph.sources());
-        while let Some(node) = traversal.take() {
-            if scopes.contains(&node) && increments[node].is_some() {
-                let name = deps.graph[node].info().unwrap().0;
-                println!("{name}");
-            }
-            let _ = traversal.complete(node);
-        }
+        // No errors occurred
         Ok(())
     }
 }

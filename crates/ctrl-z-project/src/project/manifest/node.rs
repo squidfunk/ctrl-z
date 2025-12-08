@@ -27,6 +27,7 @@
 
 use semver::{Version, VersionReq};
 use serde::Deserialize;
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -81,16 +82,16 @@ impl Manifest for Node {
 
     /// Returns the members.
     #[inline]
-    fn members(&self) -> &[String] {
-        &self.workspaces
+    fn members(&self) -> Cow<'_, [String]> {
+        Cow::Borrowed(&self.workspaces)
     }
 }
 
 impl Resolver for Node {
     /// Resolves the manifest path from the given path.
     ///
-    /// This method just prepends `package.json` to the given path, since it
-    /// doesn't make sense to name it differently in the Node ecosystem.
+    /// This method just appends `package.json` to the given path, since this
+    /// is the only valid and supported name in the Node ecosystem.
     #[inline]
     fn resolve<P>(path: P) -> Result<PathBuf>
     where

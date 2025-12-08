@@ -542,48 +542,6 @@ fn prompt_commit_message(
 //     repo.tag(tag_name, &obj, &sig, message, false)
 // }
 
-fn handle_commit_msg_hook(message_file: &Path) {
-    use ctrl_z_changeset::Change;
-    use std::fs;
-    use std::str::FromStr;
-
-    // Read commit message
-    let content = match fs::read_to_string(message_file) {
-        Ok(c) => c,
-        Err(e) => {
-            eprintln!("Error reading commit message: {}", e);
-            std::process::exit(1);
-        }
-    };
-
-    // Get first non-comment line
-    let message = content
-        .lines()
-        .find(|line| {
-            !line.trim().is_empty() && !line.trim_start().starts_with('#')
-        })
-        .unwrap_or("");
-
-    // @todo also check for refs... can we use inquire here?
-
-    // Validate using Change parser
-    match Change::from_str(message) {
-        Ok(change) => {
-            println!("✓ Valid commit message: {}", change);
-            std::process::exit(0);
-        }
-        Err(e) => {
-            eprintln!("✗ Invalid commit message format");
-            eprintln!("  {}", e);
-            eprintln!("\nExpected format:");
-            eprintln!("  <type>[!]: <description>");
-            eprintln!("\nValid types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert");
-            eprintln!("Add '!' for breaking changes");
-            std::process::exit(1);
-        }
-    }
-}
-
 // @todo: check if already installed
 fn install_git_hooks() {
     use std::fs;

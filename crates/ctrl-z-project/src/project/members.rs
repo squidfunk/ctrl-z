@@ -71,7 +71,8 @@ where
         let file = self.path.file_name().expect("invariant");
 
         // Create path iterator over members and initialize stack
-        let iter = self.manifest.members().iter().map(|path| root.join(path));
+        let data = self.manifest.members();
+        let iter = data.iter().map(|path| root.join(path));
         Members {
             paths: vec![iter.rev().collect()],
             file: file.to_string_lossy().to_string(),

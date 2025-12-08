@@ -27,6 +27,7 @@
 
 use semver::{Version, VersionReq};
 use serde::Deserialize;
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -97,11 +98,11 @@ impl Manifest for Cargo {
 
     /// Returns the members.
     #[inline]
-    fn members(&self) -> &[String] {
+    fn members(&self) -> Cow<'_, [String]> {
         if let Cargo::Workspace { workspace } = self {
-            &workspace.members
+            Cow::Borrowed(&workspace.members)
         } else {
-            &[]
+            Cow::Borrowed(&[])
         }
     }
 }
@@ -109,8 +110,8 @@ impl Manifest for Cargo {
 impl Resolver for Cargo {
     /// Resolves the manifest path from the given path.
     ///
-    /// This method just prepends `Cargo.toml` to the given path, since it
-    /// doesn't make sense to name it differently in the Rust ecosystem.
+    /// This method just appends `Cargo.toml` to the given path, since this
+    /// is the only valid and supported name in the Rust ecosystem.
     #[inline]
     fn resolve<P>(path: P) -> Result<PathBuf>
     where

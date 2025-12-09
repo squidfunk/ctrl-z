@@ -78,12 +78,14 @@ impl Summary {
 
 impl<S> From<S> for Summary
 where
-    S: Into<String>,
+    S: AsRef<str>,
 {
     /// Creates a summary from a string.
     #[inline]
     fn from(value: S) -> Self {
-        Self { body: Some(value.into()) }
+        let mut builder = Self::builder();
+        builder.body(value);
+        builder.build()
     }
 }
 
@@ -93,7 +95,7 @@ impl fmt::Display for Summary {
     /// Formats the summary for display.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if let Some(body) = &self.body {
-            body.fmt(f)?;
+            body.trim().fmt(f)?;
         }
 
         // No errors occurred

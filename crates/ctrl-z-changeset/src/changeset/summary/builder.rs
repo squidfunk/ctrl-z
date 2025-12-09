@@ -74,9 +74,9 @@ impl Builder {
     /// ```
     pub fn body<B>(&mut self, body: B) -> &mut Self
     where
-        B: Into<String>,
+        B: AsRef<str>,
     {
-        self.body = Some(body.into());
+        self.body = Some(body.as_ref().trim().to_string());
         self
     }
 

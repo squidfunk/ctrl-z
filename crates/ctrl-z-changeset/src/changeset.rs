@@ -97,7 +97,7 @@ impl Changeset<'_> {
     }
 
     /// Updates the changeset with the given summary.
-    #[inline]
+    #[must_use]
     pub fn with_summary(self, summary: Summary) -> Self {
         Self { summary: Some(summary), ..self }
     }

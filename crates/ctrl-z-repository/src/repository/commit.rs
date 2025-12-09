@@ -109,7 +109,7 @@ impl Commit<'_> {
         self.inner.summary().expect("invariant")
     }
 
-    /// Returns the commit body, if any.
+    /// Returns the commit body.
     #[inline]
     pub fn body(&self) -> Option<&str> {
         self.inner.body().filter(|body| !body.is_empty())

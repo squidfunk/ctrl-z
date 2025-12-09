@@ -55,6 +55,7 @@ semver = { version = "1.0", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = ["preserve_order"] }
 tempfile = "3.23"
+textwrap = "0.16"
 thiserror = "2.0"
 toml = "0.9"
 toml_edit = "0.23"

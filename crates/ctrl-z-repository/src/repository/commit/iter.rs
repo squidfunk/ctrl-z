@@ -42,7 +42,7 @@ pub struct Commits<'a> {
     repository: &'a Repository,
     /// Git revision walk.
     revwalk: git2::Revwalk<'a>,
-    /// End of range, if any.
+    /// End of range.
     end: Option<Id>,
 }
 

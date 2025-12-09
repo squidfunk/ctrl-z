@@ -81,7 +81,7 @@ where
         })
     }
 
-    /// Returns the name and version of the project, if any.
+    /// Returns the name and version of the project.
     ///
     /// This method is provided for convenience, in order to extract the name
     /// and version of a project with one method call. Some projects that are

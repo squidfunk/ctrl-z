@@ -58,7 +58,7 @@ pub struct DependencyInfo {
 // ----------------------------------------------------------------------------
 
 impl Dependency {
-    /// Returns the version requirement, if any.
+    /// Returns the version requirement.
     #[must_use]
     pub fn version(&self) -> Option<&VersionReq> {
         match self {

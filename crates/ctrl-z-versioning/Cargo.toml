@@ -22,9 +22,9 @@
 # IN THE SOFTWARE.
 
 [package]
-name = "ctrl-z-release"
+name = "ctrl-z-versioning"
 version = "0.0.0"
-description = "Release utilities"
+description = "Versioning utilities"
 edition.workspace = true
 rust-version.workspace = true
 homepage.workspace = true

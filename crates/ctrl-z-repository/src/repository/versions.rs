@@ -60,7 +60,7 @@ impl Repository {
     /// This method only extracts the tags matching semantic version specifiers
     /// from the given repository, and returns a version set. Tags must abide
     /// to the `vMAJOR.MINOR.PATCH` format, but can include pre-release and
-    /// build suffixes as well. Tags are parsed with [`Version::from_str`].
+    /// build suffixes as well. Each tag is parsed as a [`Version`].
     ///
     /// # Errors
     ///

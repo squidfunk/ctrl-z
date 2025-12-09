@@ -37,6 +37,8 @@ use super::increment::Increment;
 pub trait VersionExt {
     /// Returns the next version after applying the given increment.
     fn bump(&self, increment: Increment) -> Version;
+    /// Returns the highest possible increment for the version.
+    fn max_bump(&self) -> Increment;
 }
 
 // ----------------------------------------------------------------------------
@@ -107,5 +109,17 @@ impl VersionExt for Version {
         version.pre = Prerelease::EMPTY;
         version.build = BuildMetadata::EMPTY;
         version
+    }
+
+    /// Returns the highest possible bump for the version.
+    ///
+    /// This method returns the highest possible increment for this version,
+    /// taking into account special handling for `0.0.z` and `0.y.z` ranges.
+    fn max_bump(&self) -> Increment {
+        match (self.major, self.minor) {
+            (0, 0) => Increment::Patch,
+            (0, _) => Increment::Minor,
+            _ => Increment::Major,
+        }
     }
 }

@@ -23,10 +23,43 @@
 
 // ----------------------------------------------------------------------------
 
-//! Release utilities.
+//! Release error.
 
-#![allow(clippy::match_same_arms)]
+use semver::Version;
+use std::{io, result};
+use thiserror::Error;
 
-mod release;
+use ctrl_z_changeset as changeset;
+use ctrl_z_project as project;
+use ctrl_z_repository as repository;
 
-pub use release::{Error, Release, Result};
+// ----------------------------------------------------------------------------
+// Enums
+// ----------------------------------------------------------------------------
+
+/// Release error.
+#[derive(Debug, Error)]
+pub enum Error {
+    /// I/O error.
+    #[error(transparent)]
+    Io(#[from] io::Error),
+    /// Changeset error.
+    #[error(transparent)]
+    Changeset(#[from] changeset::Error),
+    /// Project error.
+    #[error(transparent)]
+    Project(#[from] project::Error),
+    /// Repository error.
+    #[error(transparent)]
+    Repository(#[from] repository::Error),
+    /// Invalid version.
+    #[error("Invalid version: {0}")]
+    Version(Version),
+}
+
+// ----------------------------------------------------------------------------
+// Type aliases
+// ----------------------------------------------------------------------------
+
+/// Release result.
+pub type Result<T = ()> = result::Result<T, Error>;

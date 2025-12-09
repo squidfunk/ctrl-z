@@ -29,7 +29,7 @@ use std::{io, result};
 use thiserror::Error;
 
 use ctrl_z_changeset::change;
-use ctrl_z_release as release;
+use ctrl_z_versioning as versioning;
 
 // ----------------------------------------------------------------------------
 // Enums
@@ -44,9 +44,9 @@ pub enum Error {
     /// Change error.
     #[error(transparent)]
     Change(#[from] change::Error),
-    /// Release error.
+    /// Versioning error.
     #[error(transparent)]
-    Release(#[from] release::Error),
+    Versioning(#[from] versioning::Error),
 }
 
 // ----------------------------------------------------------------------------

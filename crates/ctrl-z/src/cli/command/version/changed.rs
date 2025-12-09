@@ -31,7 +31,7 @@ use std::collections::BTreeSet;
 use std::path::PathBuf;
 
 use ctrl_z_project::Cargo;
-use ctrl_z_release::Release;
+use ctrl_z_versioning::Manager;
 
 use crate::cli::{Command, Result};
 use crate::Options;
@@ -57,8 +57,8 @@ pub struct Arguments {
 impl Command for Arguments {
     /// Executes the command.
     fn execute(&self, options: Options) -> Result {
-        let release = Release::<Cargo>::new(options.directory)?;
-        let changeset = release.changeset(self.version.as_ref())?;
+        let manager = Manager::<Cargo>::new(options.directory)?;
+        let changeset = manager.changeset(self.version.as_ref())?;
 
         // collect all scopes
         let mut scopes = BTreeSet::<usize>::new(); // why?
@@ -68,7 +68,7 @@ impl Command for Arguments {
 
         // create deps and determine correct order – @todo alarm when
         // no packages is part of a bump _ just don't do a release!
-        let deps = release.workspace().dependents().unwrap();
+        let deps = manager.workspace().dependents().unwrap();
         let increments = changeset.increments();
 
         // traverse all nodes
@@ -80,6 +80,8 @@ impl Command for Arguments {
             }
             let _ = traversal.complete(node);
         }
+
+        // @todo add file output
         Ok(())
     }
 }

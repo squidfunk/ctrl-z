@@ -24,7 +24,7 @@
 [package]
 name = "ctrl-z"
 version = "0.0.0"
-description = "Automation for Zensical projects"
+description = "Mono repository automation toolkit"
 edition.workspace = true
 rust-version.workspace = true
 homepage.workspace = true
@@ -40,8 +40,8 @@ workspace = true
 [dependencies]
 ctrl-z-changeset.workspace = true
 ctrl-z-project.workspace = true
-ctrl-z-release.workspace = true
 ctrl-z-repository.workspace = true
+ctrl-z-versioning.workspace = true
 
 clap.workspace = true
 cliclack.workspace = true

@@ -32,7 +32,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use ctrl_z_project::Cargo;
-use ctrl_z_release::Release;
+use ctrl_z_versioning::Manager;
 
 use crate::cli::{Command, Result};
 use crate::Options;
@@ -58,8 +58,8 @@ pub struct Arguments {
 impl Command for Arguments {
     /// Executes the command.
     fn execute(&self, options: Options) -> Result {
-        let release = Release::<Cargo>::new(options.directory)?;
-        let changeset = release.changeset(self.version.as_ref())?;
+        let manager = Manager::<Cargo>::new(options.directory)?;
+        let changeset = manager.changeset(self.version.as_ref())?;
 
         // Write changelog to standard out or file
         let changelog = changeset.to_changelog();

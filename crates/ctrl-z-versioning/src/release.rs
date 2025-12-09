@@ -23,13 +23,14 @@
 
 // ----------------------------------------------------------------------------
 
-//! Release.
+//! Version manager.
 
-use ctrl_z_changeset::Changeset;
+use ctrl_z_changeset::{Changeset, Increment};
 use semver::Version;
+use std::collections::BTreeSet;
 use std::path::Path;
 
-use ctrl_z_project::manifest::Resolver;
+use ctrl_z_project::manifest::{Dependencies, Resolver};
 use ctrl_z_project::{Manifest, Workspace};
 use ctrl_z_repository::Repository;
 
@@ -41,9 +42,9 @@ pub use error::{Error, Result};
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Release manager.
+/// Version manager.
 #[derive(Debug)]
-pub struct Release<T>
+pub struct Manager<T>
 where
     T: Manifest,
 {
@@ -57,11 +58,11 @@ where
 // Implementations
 // ----------------------------------------------------------------------------
 
-impl<T> Release<T>
+impl<T> Manager<T>
 where
     T: Manifest + Resolver,
 {
-    /// Creates a release manager at the given path.
+    /// Creates a version manager at the given path.
     pub fn new<P>(path: P) -> Result<Self>
     where
         P: AsRef<Path>,
@@ -85,7 +86,7 @@ where
 
         // use version!
         let commits = if let Some(v) = version {
-            if !versions.contains(&v) {
+            if !versions.contains(v) {
                 return Err(Error::Version(v.clone()));
             }
 
@@ -112,10 +113,87 @@ where
         changeset.extend(commits.flatten())?;
         Ok(changeset)
     }
+
+    //
+    pub fn changed(&self) {}
+
+    // this should be called recommendation!?
+    pub fn bump<F>(&self, mut f: F) -> Result<()>
+    where
+        T: Dependencies, // @todo move into manifest
+        F: FnMut(
+            &str,
+            &Version,
+            &[Option<Increment>],
+        ) -> Result<Option<Increment>>,
+    {
+        // obtain the ids of all packages
+
+        let changeset = self.changeset(None)?; // what if changeset is empty?
+        let dependents = self.workspace.dependents()?;
+
+        // increments are equal to the number of packaes, so we obtain the
+        // index of the packages that changed, which are precisely the node
+        // indices in the dependency graph
+        let mut increments = changeset.increments().to_vec();
+        let changed = increments
+            .iter()
+            .enumerate()
+            .filter_map(|(index, increment)| increment.map(|_| index));
+
+        // no dependencis?
+        let incoming = dependents.graph.topology().incoming();
+        for node in dependents.graph.traverse(changed) {
+            let project = &dependents.graph[node];
+
+            // Project info + bump
+            let info = project.info().expect("invariant");
+            let (name, current_version) = info;
+
+            let bump = increments[node];
+
+            // determine the max bump levels by deps. this dictates the number
+            // of options that we currently have
+            let mut dep_bump = BTreeSet::new();
+            for &dep in &incoming[node] {
+                dep_bump.insert(increments[dep]);
+            }
+
+            if dep_bump.is_empty() {
+                // no deps! just use the exact bump!
+                increments[node] = f(name, current_version, &[bump])?;
+                // update the increment!
+                continue;
+            }
+
+            // now, filter all things from dep_bump taht is smaller than the
+            // current bump
+            // println!("dep_bump before filter: {:?}", dep_bump);
+            dep_bump.insert(bump); // insert earlier? or here?
+            dep_bump.retain(|&b| b >= bump);
+
+            // @todo handle max bump!
+
+            // if the original package is not bumped, we add all levels up to
+            // the max bump / max dep bump.
+
+            increments[node] = f(
+                name,
+                current_version,
+                &dep_bump.into_iter().collect::<Vec<_>>(),
+            )?;
+        }
+
+        // now, do the actual bumps? apply it to the worksapce...?
+        // for project in self.workspace.iter_mut() {}
+
+        // @todo
+        Ok(())
+    }
 }
 
 #[allow(clippy::must_use_candidate)]
-impl<T> Release<T>
+impl<T> Manager<T>
 where
     T: Manifest,
 {

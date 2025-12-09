@@ -26,9 +26,13 @@
 //! Creates a new version and updates all packages.
 
 use clap::Args;
+use cliclack::log::remark;
+use cliclack::{intro, outro, select};
+use console::style;
 
+use ctrl_z_changeset::VersionExt;
 use ctrl_z_project::Cargo;
-use ctrl_z_release::Release;
+use ctrl_z_versioning::Manager;
 
 use crate::cli::{Command, Result};
 use crate::Options;
@@ -48,10 +52,41 @@ pub struct Arguments {}
 impl Command for Arguments {
     /// Executes the command.
     fn execute(&self, options: Options) -> Result {
-        let release = Release::<Cargo>::new(options.directory)?;
-        let changeset = release.changeset(None)?;
+        //
+        intro("")?;
 
-        println!("Create new release...");
+        let manager = Manager::<Cargo>::new(options.directory)?;
+        manager.bump(|name, version, bumps| {
+            if bumps.len() == 1 {
+                // @todo is the expext right here?
+                let increment = bumps[0].expect("invariant");
+
+                let x = format!(
+                    "{}\n{}",
+                    name,
+                    style(version.bump(increment)).dim()
+                ); // denote what bumped
+                remark(x)?;
+
+                // Just keep the incrmen as is..
+                return Ok(Some(increment));
+            }
+
+            //
+            let mut builder =
+                bumps.iter().fold(select(name), |builder, &bump| {
+                    if let Some(next) = bump {
+                        builder.item(Some(next), version.bump(next), next)
+                    } else {
+                        builder.item(None, version, "current")
+                    }
+                });
+
+            //
+            Ok(builder.interact()?)
+        })?;
+
+        outro("")?;
 
         // No errors occurred
         Ok(())

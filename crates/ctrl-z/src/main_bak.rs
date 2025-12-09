@@ -43,91 +43,6 @@ use ctrl_z_changeset::{Increment, VersionExt};
 use ctrl_z_project::{Cargo, Node, Workspace};
 use ctrl_z_repository::Repository;
 
-// ----------------------------------------------------------------------------
-// Constants
-// ----------------------------------------------------------------------------
-
-/// Configuration for command line styles.
-const STYLES: Styles = Styles::styled()
-    .header(AnsiColor::Green.on_default().effects(Effects::BOLD))
-    .usage(AnsiColor::Green.on_default().effects(Effects::BOLD))
-    .literal(AnsiColor::Cyan.on_default().effects(Effects::BOLD))
-    .placeholder(AnsiColor::Cyan.on_default());
-
-// ----------------------------------------------------------------------------
-// Structs
-// ----------------------------------------------------------------------------
-
-/// Command line interface.
-#[derive(Parser)]
-#[command(name = "ctrl-z")]
-#[command(about = "tbd", long_about = None)]
-#[command(styles=STYLES)]
-struct Cli {
-    #[command(subcommand)]
-    command: Commands,
-}
-
-#[derive(Subcommand)]
-enum Commands {
-    Release {
-        #[command(subcommand)]
-        command: ReleaseCommand,
-    },
-    /// Create a new tag
-    Tag {
-        /// Perform a dry run without making changes
-        #[arg(long)]
-        dry_run: bool,
-    },
-    /// Git hooks
-    Hook {
-        #[command(subcommand)]
-        hook_type: Hook,
-    },
-}
-
-#[derive(Subcommand)]
-enum ReleaseCommand {
-    /// Create a new release (interactive version bumping + tagging)
-    Tag {
-        /// Perform a dry run without making changes
-        #[arg(long)]
-        dry_run: bool,
-    },
-
-    /// Generate changelog for a specific tag or range
-    Changelog {
-        /// Version in x.y.z format
-        version: Option<Version>,
-
-        /// Output file (default: stdout)
-        #[arg(short, long)]
-        output: Option<PathBuf>,
-    },
-
-    /// Packages command that lists all affected packages in a tag
-    Packages {
-        /// Tag name or version (e.g., v1.2.3)
-        version: Option<Version>,
-
-        /// Output file (default: stdout)
-        #[arg(short, long)]
-        output: Option<PathBuf>,
-    },
-}
-
-#[derive(Subcommand)]
-enum Hook {
-    /// Validate commit message format
-    CommitMsg {
-        /// Path to commit message file
-        #[arg(default_value = ".git/COMMIT_EDITMSG")]
-        message_file: PathBuf,
-    },
-    Install,
-}
-
 // pub struct ProjectConfig {
 //     root: Option<String>,
 // }
@@ -209,175 +124,181 @@ pub fn main() {
                     return;
                 }
 
-                // start here... - we definitely got the correct changeset
-                let release = Release::<Cargo>::new(".").unwrap();
-                let changeset = release.changeset(None).unwrap();
+                // // start here... - we definitely got the correct changeset
+                // let release = Release::<Cargo>::new(".").unwrap();
+                // let changeset = release.changeset(None).unwrap();
 
-                // Increment [node => Option<Bump>]
-                // into Hash { node1, node2, node4 }
-                // Intersect with source, so we know which sources to consider
-                // - we might just check which have no incoming nodes based on increment
-                // - is_source?
-                // then determine base versions of all bumped packages
+                // // Increment [node => Option<Bump>]
+                // // into Hash { node1, node2, node4 }
+                // // Intersect with source, so we know which sources to consider
+                // // - we might just check which have no incoming nodes based on increment
+                // // - is_source?
+                // // then determine base versions of all bumped packages
 
-                let mut increments = changeset.increments().to_vec();
-                let incr = increments
-                    .iter()
-                    .enumerate()
-                    .filter_map(|(i, inc)| inc.map(|_| i))
-                    .collect::<BTreeSet<_>>();
+                // // so
 
-                let workspace = release.workspace();
-                let deps = workspace.dependents().unwrap();
-                let mut sources: BTreeSet<usize> =
-                    deps.graph.sources().collect();
+                // let mut increments = changeset.increments().to_vec();
+                // let incr = increments
+                //     .iter()
+                //     .enumerate()
+                //     .filter_map(|(i, inc)| inc.map(|_| i))
+                //     .collect::<BTreeSet<_>>();
 
-                let start = sources
-                    .intersection(&incr)
-                    .copied()
-                    .collect::<HashSet<_>>();
+                // // move this into the sources package?
+                // // no so we add all of them... we can add them without intersection
+                // // as this is ensured by the traversal
 
-                // println!("start {:?}", start);
+                // let workspace = release.workspace();
+                // let deps = workspace.dependents().unwrap();
+                // let mut sources: BTreeSet<usize> =
+                //     deps.graph.sources().collect();
 
-                // versions...
-                let mut versions = BTreeMap::<usize, &Version>::new();
-                for (i, package) in workspace.packages().enumerate() {
-                    if let Some(project) = workspace.get(package.1.as_str()) {
-                        versions.insert(i, project.info().unwrap().1);
-                    }
-                }
-                let versions = versions.values().collect::<Vec<_>>();
+                // let start = sources
+                //     .intersection(&incr)
+                //     .copied()
+                //     .collect::<HashSet<_>>();
 
-                intro("Bump versions").unwrap();
+                // // println!("start {:?}", start);
 
-                // we _should_ add this to the graph!
+                // // versions...
+                // let mut versions = BTreeMap::<usize, &Version>::new();
+                // for (i, package) in workspace.packages().enumerate() {
+                //     if let Some(project) = workspace.get(package.1.as_str()) {
+                //         versions.insert(i, project.info().unwrap().1);
+                //     }
+                // }
+                // let versions = versions.values().collect::<Vec<_>>();
 
-                // can return Some() for complete or not?
-                // must be FnMut
-                // graph.traverse_with(node)
+                // intro("Bump versions").unwrap();
 
-                let mut traversal = deps.graph.traverse(start);
-                let incoming = deps.graph.topology().incoming();
-                // we might also have an auto completing traversal?
-                while let Some(node) = traversal.take() {
-                    let bump = &increments[node];
-                    let name = deps.graph[node].info().unwrap().0;
+                // // we _should_ add this to the graph!
 
-                    // node has no deps, we can just continue
-                    if incoming[node].is_empty() {
-                        let mut current_version = (*versions[node]).clone();
-                        if let Some(x) = *bump {
-                            current_version = current_version.bump(x);
-                        }
+                // // can return Some() for complete or not?
+                // // must be FnMut
+                // // graph.traverse_with(node)
 
-                        let x = format!(
-                            "{}\n{}",
-                            name,
-                            style(current_version).dim()
-                        );
-                        remark(x).unwrap();
+                // let mut traversal = deps.graph.traverse(start);
+                // let incoming = deps.graph.topology().incoming();
+                // // we might also have an auto completing traversal?
+                // while let Some(node) = traversal.take() {
+                //     let bump = &increments[node];
+                //     let name = deps.graph[node].info().unwrap().0;
 
-                        let _ = traversal.complete(node);
-                        continue;
-                    }
+                //     // node has no deps, we can just continue
+                //     if incoming[node].is_empty() {
+                //         let mut current_version = (*versions[node]).clone();
+                //         if let Some(x) = *bump {
+                //             current_version = current_version.bump(x);
+                //         }
 
-                    // get deps of this node
-                    let mut bump_levels = BTreeSet::new();
-                    for &dep in &incoming[node] {
-                        let bump = &increments[dep];
-                        bump_levels.insert(bump.clone());
-                    }
+                //         let x = format!(
+                //             "{}\n{}",
+                //             name,
+                //             style(current_version).dim()
+                //         );
+                //         remark(x).unwrap();
 
-                    // check if bump level is smaller than what we have anyway...
-                    // Get the maximum bump level from dependencies
-                    let max_bump = bump_levels.into_iter().flatten().max();
+                //         let _ = traversal.complete(node);
+                //         continue;
+                //     }
 
-                    // println!("  => max bump level: {:?}", max_bump);
-                    // if this is NONE, we can stop. if this is equal to the
-                    // current bump, we can just take it. otherwise, we need
-                    // to ask.
-                    if max_bump.is_none() {
-                        // println!("  => no bump needed, skipping");
-                        continue;
-                    }
+                //     // get deps of this node
+                //     let mut bump_levels = BTreeSet::new();
+                //     for &dep in &incoming[node] {
+                //         let bump = &increments[dep];
+                //         bump_levels.insert(bump.clone());
+                //     }
 
-                    if bump == &max_bump {
-                        let mut current_version = (*versions[node]).clone();
-                        if let Some(x) = *bump {
-                            current_version = current_version.bump(x);
-                        }
+                //     // check if bump level is smaller than what we have anyway...
+                //     // Get the maximum bump level from dependencies
+                //     let max_bump = bump_levels.into_iter().flatten().max();
 
-                        let x = format!(
-                            "{}\n{}",
-                            name,
-                            style(current_version).dim()
-                        );
-                        remark(x).unwrap();
-                        // println!("  => bump matches max, accepting");
-                        // just accept
-                    } else {
-                        // what's the suggested bump? minor!
-                        // println!("  => current version: {}", current_version);
+                //     // println!("  => max bump level: {:?}", max_bump);
+                //     // if this is NONE, we can stop. if this is equal to the
+                //     // current bump, we can just take it. otherwise, we need
+                //     // to ask.
+                //     if max_bump.is_none() {
+                //         // println!("  => no bump needed, skipping");
+                //         continue;
+                //     }
 
-                        // in case major minor patch are all the same, only
-                        // show the PATCH option.
+                //     if bump == &max_bump {
+                //         let mut current_version = (*versions[node]).clone();
+                //         if let Some(x) = *bump {
+                //             current_version = current_version.bump(x);
+                //         }
 
-                        // auto select if there's only one possible version!
-                        // but no, we can also skip...
+                //         let x = format!(
+                //             "{}\n{}",
+                //             name,
+                //             style(current_version).dim()
+                //         );
+                //         remark(x).unwrap();
+                //         // println!("  => bump matches max, accepting");
+                //         // just accept
+                //     } else {
+                //         // what's the suggested bump? minor!
+                //         // println!("  => current version: {}", current_version);
 
-                        // what's the suggested bump? minor!
-                        let current_version = (*versions[node]).clone();
+                //         // in case major minor patch are all the same, only
+                //         // show the PATCH option.
 
-                        // Compute all possible versions
-                        let patch_version =
-                            current_version.bump(Increment::Patch);
-                        let minor_version =
-                            current_version.bump(Increment::Minor);
-                        let major_version =
-                            current_version.bump(Increment::Major);
+                //         // auto select if there's only one possible version!
+                //         // but no, we can also skip...
 
-                        // Build select options, skipping duplicates (e.g., in 0.0.x)
-                        let mut select_builder =
-                            select(name).item(None, current_version, "current");
+                //         // what's the suggested bump? minor!
+                //         let current_version = (*versions[node]).clone();
 
-                        // Always add patch
-                        select_builder = select_builder.item(
-                            Some(Increment::Patch),
-                            patch_version.clone(),
-                            "patch",
-                        );
+                //         // Compute all possible versions
+                //         let patch_version =
+                //             current_version.bump(Increment::Patch);
+                //         let minor_version =
+                //             current_version.bump(Increment::Minor);
+                //         let major_version =
+                //             current_version.bump(Increment::Major);
 
-                        // Only add minor if different from patch
-                        if minor_version != patch_version {
-                            select_builder = select_builder.item(
-                                Some(Increment::Minor),
-                                minor_version.clone(),
-                                "minor",
-                            );
-                        }
+                //         // Build select options, skipping duplicates (e.g., in 0.0.x)
+                //         let mut select_builder =
+                //             select(name).item(None, current_version, "current");
 
-                        // Only add major if different from minor
-                        if major_version != minor_version {
-                            select_builder = select_builder.item(
-                                Some(Increment::Major),
-                                major_version,
-                                "major",
-                            );
-                        }
+                //         // Always add patch
+                //         select_builder = select_builder.item(
+                //             Some(Increment::Patch),
+                //             patch_version.clone(),
+                //             "patch",
+                //         );
 
-                        let selected = select_builder
-                            .initial_value(Some(Increment::Patch)) // or skip?
-                            .interact()
-                            .unwrap(); // io result!
+                //         // Only add minor if different from patch
+                //         if minor_version != patch_version {
+                //             select_builder = select_builder.item(
+                //                 Some(Increment::Minor),
+                //                 minor_version.clone(),
+                //                 "minor",
+                //             );
+                //         }
 
-                        increments[node] = selected;
-                    }
+                //         // Only add major if different from minor
+                //         if major_version != minor_version {
+                //             select_builder = select_builder.item(
+                //                 Some(Increment::Major),
+                //                 major_version,
+                //                 "major",
+                //             );
+                //         }
 
-                    // if node in sources, just skip!
-                    let _ = traversal.complete(node);
-                }
+                //         let selected = select_builder
+                //             .initial_value(Some(Increment::Patch)) // or skip?
+                //             .interact()
+                //             .unwrap(); // io result!
 
-                outro("Completed").unwrap();
+                //         increments[node] = selected;
+                //     }
+
+                //     // if node in sources, just skip!
+                //     let _ = traversal.complete(node);
+                // }
+
+                // outro("Completed").unwrap();
 
                 println!("increments {:?}", increments);
 

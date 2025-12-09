@@ -265,8 +265,8 @@ dependencies = [
  "console 0.16.1",
  "ctrl-z-changeset",
  "ctrl-z-project",
- "ctrl-z-release",
  "ctrl-z-repository",
+ "ctrl-z-versioning",
  "semver",
  "tempfile",
  "thiserror",
@@ -298,21 +298,21 @@ dependencies = [
 ]
 
 [[package]]
-name = "ctrl-z-release"
+name = "ctrl-z-repository"
 version = "0.0.0"
 dependencies = [
- "ctrl-z-changeset",
- "ctrl-z-project",
- "ctrl-z-repository",
+ "git2",
  "semver",
  "thiserror",
 ]
 
 [[package]]
-name = "ctrl-z-repository"
+name = "ctrl-z-versioning"
 version = "0.0.0"
 dependencies = [
- "git2",
+ "ctrl-z-changeset",
+ "ctrl-z-project",
+ "ctrl-z-repository",
  "semver",
  "thiserror",
 ]

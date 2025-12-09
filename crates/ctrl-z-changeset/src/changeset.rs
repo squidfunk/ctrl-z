@@ -60,8 +60,8 @@ pub struct Changeset<'a> {
     revisions: Vec<Revision<'a>>,
     /// Version increments.
     increments: Vec<Option<Increment>>,
-    // /// Summary of changes.
-    // summary: Summary,
+    /// Summary of changes.
+    summary: Option<Summary>,
 }
 
 // ----------------------------------------------------------------------------
@@ -92,7 +92,14 @@ impl Changeset<'_> {
             increments: vec![None; scopes.len()],
             scopes,
             revisions: Vec::new(),
+            summary: None,
         })
+    }
+
+    /// Updates the changeset with the given summary.
+    #[inline]
+    pub fn with_summary(self, summary: Summary) -> Self {
+        Self { summary: Some(summary), ..self }
     }
 }
 
@@ -116,11 +123,11 @@ impl Changeset<'_> {
         &self.increments
     }
 
-    // /// Returns a reference to the summary.
-    // #[inline]
-    // pub fn summary(&self) -> &Summary {
-    //     &self.summary
-    // }
+    /// Returns a reference to the summary.
+    #[inline]
+    pub fn summary(&self) -> Option<&Summary> {
+        self.summary.as_ref()
+    }
 
     /// Returns the number of revisions.
     #[inline]

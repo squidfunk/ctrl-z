@@ -158,7 +158,7 @@ impl fmt::Display for Change {
 
         // Write description
         f.write_str(": ")?;
-        f.write_str(&self.description)
+        self.description.fmt(f)
     }
 }
 

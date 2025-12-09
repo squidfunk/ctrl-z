@@ -78,7 +78,7 @@ impl fmt::Display for Item<'_> {
     /// Formats the section item for display.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let id = self.revision.commit().id();
-        f.write_str(id.short().as_str())?;
+        id.short().fmt(f)?;
 
         // Write affected scopes
         if !self.scopes.is_empty() {

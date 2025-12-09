@@ -25,91 +25,78 @@
 
 //! Summary.
 
+use std::fmt;
+
+mod builder;
+
+pub use builder::Builder;
+
 // ----------------------------------------------------------------------------
 // Structs
 // ----------------------------------------------------------------------------
 
 /// Summary.
+#[derive(Debug)]
 pub struct Summary {
     /// Body content.
     body: Option<String>,
 }
 
-// // ----------------------------------------------------------------------------
-// // Implementations
-// // ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+// Implementations
+// ----------------------------------------------------------------------------
 
-// impl Summary {
-//     /// Creates a scope set builder.
-//     ///
-//     /// # Examples
-//     ///
-//     /// ```
-//     /// use ctrl_z_changeset::Summary;
-//     ///
-//     /// // Create scope set builder
-//     /// let mut builder = Scopes::builder();
-//     #[inline]
-//     #[must_use]
-//     pub fn builder() -> Builder {
-//         Builder::new()
-//     }
+impl Summary {
+    /// Creates a summary builder.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ctrl_z_changeset::Summary;
+    ///
+    /// // Create summary builder
+    /// let mut builder = Summary::builder();
+    #[inline]
+    #[must_use]
+    pub fn builder() -> Builder {
+        Builder::new()
+    }
+}
 
-//     /// Returns the longest matching scope for the given path, if any.
-//     ///
-//     /// # Examples
-//     ///
-//     /// ```
-//     /// # use std::error::Error;
-//     /// # fn main() -> Result<(), Box<dyn Error>> {
-//     /// use ctrl_z_changeset::Scopes;
-//     /// use std::path::Path;
-//     ///
-//     /// // Create scope set builder and add path
-//     /// let mut builder = Scopes::builder();
-//     /// builder.add("crates/ctrl-z", "ctrl-z")?;
-//     ///
-//     /// // Create scope set from builder
-//     /// let scopes = builder.build()?;
-//     ///
-//     /// // Create path and obtain longest matching scope
-//     /// let path = Path::new("crates/ctrl-z/Cargo.toml");
-//     /// assert_eq!(scopes.get(&path), Some(0));
-//     /// # Ok(())
-//     /// # }
-//     /// ```
-//     pub fn get<P>(&self, path: P) -> Option<usize>
-//     where
-//         P: AsRef<Path>,
-//     {
-//         self.globs.matches(path).into_iter().max_by_key(|&index| {
-//             let (path, _) = &self.paths[index];
-//             path.components().count()
-//         })
-//     }
-// }
+#[allow(clippy::must_use_candidate)]
+impl Summary {
+    /// Returns the body content.
+    #[inline]
+    pub fn body(&self) -> Option<&str> {
+        self.body.as_deref()
+    }
+}
 
-// // ----------------------------------------------------------------------------
-// // Trait implementations
-// // ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+// Trait implementations
+// ----------------------------------------------------------------------------
 
-// impl Index<usize> for Scopes {
-//     type Output = (PathBuf, String);
+impl<S> From<S> for Summary
+where
+    S: Into<String>,
+{
+    /// Creates a summary from a string.
+    #[inline]
+    fn from(value: S) -> Self {
+        Self { body: Some(value.into()) }
+    }
+}
 
-//     /// Returns the scope at the given index.
-//     #[inline]
-//     fn index(&self, index: usize) -> &Self::Output {
-//         &self.paths[index]
-//     }
-// }
+// ----------------------------------------------------------------------------
 
-// // ----------------------------------------------------------------------------
+impl fmt::Display for Summary {
+    /// Formats the summary for display.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if let Some(body) = &self.body {
+            body.fmt(f)?;
+        }
 
-// impl fmt::Debug for Scopes {
-//     /// Formats the scope set for debugging.
-//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-//         f.debug_struct("Scope")
-//             .field("paths", &self.paths)
-//             .finish_non_exhaustive()
-//     }
-// }
+        // No errors occurred
+        Ok(())
+    }
+}

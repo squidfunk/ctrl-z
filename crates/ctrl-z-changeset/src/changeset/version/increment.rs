@@ -50,7 +50,7 @@ pub enum Increment {
 // ----------------------------------------------------------------------------
 
 impl Change {
-    /// Returns the corresponding version increment, if any.
+    /// Returns the corresponding version increment.
     ///
     /// # Examples
     ///

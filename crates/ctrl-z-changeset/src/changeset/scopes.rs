@@ -73,7 +73,7 @@ impl Scopes {
         Builder::new()
     }
 
-    /// Returns the longest matching scope for the given path, if any.
+    /// Returns the longest matching scope for the given path.
     ///
     /// # Examples
     ///

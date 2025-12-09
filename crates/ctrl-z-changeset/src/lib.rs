@@ -32,5 +32,7 @@ mod changeset;
 pub use changeset::change::{self, Change};
 pub use changeset::changelog::{self, Changelog};
 pub use changeset::revision::{self, Revision};
+pub use changeset::scopes::{self, Scopes};
+pub use changeset::summary::{self, Summary};
 pub use changeset::version::{self, Increment, VersionExt};
 pub use changeset::{Changeset, Error, Result};

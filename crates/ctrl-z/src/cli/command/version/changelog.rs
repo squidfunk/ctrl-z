@@ -64,6 +64,8 @@ impl Command for Arguments {
         // Write changelog to standard out or file
         let changelog = changeset.to_changelog();
         if let Some(output) = &self.output {
+            // In order to be predictable and consistent, we always need to
+            // write the changelog to a file, even though it may be empty
             fs::create_dir_all(output.parent().expect("invariant"))?;
             fs::write(output, changelog.to_string())?;
         } else if !changelog.is_empty() {

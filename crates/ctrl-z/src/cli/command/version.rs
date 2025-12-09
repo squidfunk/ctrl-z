@@ -23,7 +23,7 @@
 
 // ----------------------------------------------------------------------------
 
-//! Versioning.
+//! Versioning and release automation.
 
 use clap::Subcommand;
 
@@ -38,7 +38,7 @@ mod create;
 // Enums
 // ----------------------------------------------------------------------------
 
-/// Versioning.
+/// Versioning and release automation.
 #[derive(Subcommand)]
 pub enum Commands {
     /// Creates a new version and updates all packages.

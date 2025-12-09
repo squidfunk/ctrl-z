@@ -120,6 +120,33 @@ impl Repository {
         Ok(())
     }
 
+    pub fn branch<N>(&self, name: N) -> Result
+    where
+        N: AsRef<str>,
+    {
+        let branch_name = name.as_ref();
+
+        // Get current HEAD commit
+        let head = self.inner.head()?;
+        let head_commit = head.peel_to_commit()?;
+
+        // Create new branch from HEAD
+        let branch = self.inner.branch(branch_name, &head_commit, false)?;
+
+        // Get the reference name for checkout
+        let branch_ref = branch.get();
+        let refname = branch_ref.name().ok_or_else(|| {
+            git2::Error::from_str("Failed to get branch reference name")
+        })?;
+
+        // Checkout the new branch
+        self.inner.set_head(refname)?;
+        self.inner.checkout_head(Some(
+            git2::build::CheckoutBuilder::default().force(),
+        ))?;
+        Ok(())
+    }
+
     /// Returns whether there are no uncommitted or untracked changes.
     ///
     /// # Errors

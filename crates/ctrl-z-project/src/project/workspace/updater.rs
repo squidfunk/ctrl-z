@@ -24,6 +24,7 @@ where
     }
 }
 
+// versions are here... first, we refactor this stuff here...
 pub type Versions<'a> = BTreeMap<&'a str, Version>;
 
 pub trait Updatable {
@@ -77,7 +78,7 @@ impl Updatable for Node {
                 ["dependencies", "devDependencies", "peerDependencies"]
             {
                 if let Some(deps) =
-                    obj.get_mut(section).and_then(|d| d.as_object_mut())
+                    obj.get_mut(section).and_then(|value| value.as_object_mut())
                 {
                     update_npm_dependency_table(deps, versions);
                 }
@@ -91,10 +92,9 @@ impl Updatable for Node {
 }
 
 fn update_npm_dependency_table(
-    deps: &mut serde_json::Map<String, Value>, versions: &Versions,
+    map: &mut serde_json::Map<String, Value>, versions: &Versions,
 ) {
-    for (name, value) in deps.iter_mut() {
-        // must use version req! ^
+    for (name, value) in map.iter_mut() {
         if let Some(version) = versions.get(name.as_str()) {
             *value = Value::String(format!("^{version}"));
         }

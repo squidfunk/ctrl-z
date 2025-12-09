@@ -61,6 +61,9 @@ impl Command for Arguments {
         let manager = Manager::<Cargo>::new(options.directory)?;
         let changeset = manager.changeset(self.version.as_ref())?;
 
+        // @todo this should print the summary as well...!
+        // it should be the exact thing we would put into the changelog
+
         // Write changelog to standard out or file
         let changelog = changeset.to_changelog();
         if let Some(output) = &self.output {

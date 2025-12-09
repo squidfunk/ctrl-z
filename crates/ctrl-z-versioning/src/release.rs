@@ -204,7 +204,9 @@ where
         Ok(versions)
     }
 
-    pub fn update(&mut self, versions: BTreeMap<String, Version>) -> Result<()>
+    pub fn update(
+        &mut self, versions: BTreeMap<String, Version>, summary: String,
+    ) -> Result<()>
     where
         T: Updatable,
     {
@@ -218,6 +220,20 @@ where
                 )
                 .unwrap();
         }
+
+        // create new branch, commit to repo, then push everything.
+
+        let version = "0.0.4";
+
+        self.repository.branch(format!("release/v{version}"))?;
+        self.repository.add("*")?;
+
+        // @todo: here we need to prompt for the release notes - add main tag
+        self.repository
+            .commit(format!("chore: release v{version}\n\n{summary}"))?;
+
+        // commit message must contain changelog
+
         Ok(())
     }
 }

@@ -23,7 +23,7 @@
 
 // ----------------------------------------------------------------------------
 
-//! Git hook commands.
+//! Git hooks installation and usage.
 
 use clap::Subcommand;
 
@@ -36,7 +36,7 @@ mod commit_msg;
 // Enums
 // ----------------------------------------------------------------------------
 
-/// Git hook commands.
+/// Git hooks installation and usage.
 #[derive(Subcommand)]
 pub enum Commands {
     /// Validates commit message format.

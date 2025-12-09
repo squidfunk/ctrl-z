@@ -29,6 +29,8 @@ use clap::Args;
 use cliclack::log::remark;
 use cliclack::{intro, outro, select};
 use console::style;
+use std::io::Write;
+use tempfile::NamedTempFile;
 
 use ctrl_z_changeset::VersionExt;
 use ctrl_z_project::Cargo;
@@ -43,7 +45,11 @@ use crate::Options;
 
 /// Creates a new version and updates all packages.
 #[derive(Args, Debug)]
-pub struct Arguments {}
+pub struct Arguments {
+    /// Use visual editor for release notes.
+    #[arg(short, long)]
+    visual: bool,
+}
 
 // ----------------------------------------------------------------------------
 // Trait implementations
@@ -52,10 +58,12 @@ pub struct Arguments {}
 impl Command for Arguments {
     /// Executes the command.
     fn execute(&self, options: Options) -> Result {
+        let mut manager = Manager::<Cargo>::new(options.directory)?;
+        // @todo: ensure everything is clean!
+
         //
         intro("")?;
 
-        let mut manager = Manager::<Cargo>::new(options.directory)?;
         let versions = manager.bump(|name, version, bumps| {
             if bumps.len() == 1 {
                 // @todo is the expext right here?
@@ -88,9 +96,71 @@ impl Command for Arguments {
 
         outro("")?;
 
-        manager.update(versions)?;
+        let summary = prompt_commit_message(self.visual)?;
+
+        println!("summary: {}", prepend_lines_with_quote(&summary));
+        manager.update(versions, summary)?;
 
         // No errors occurred
         Ok(())
     }
+}
+
+fn prepend_lines_with_quote(text: &str) -> String {
+    text.lines()
+        .map(|line| format!("> {}", line))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+fn prompt_commit_message(visual: bool) -> Result<String> {
+    // Create a temporary file with template
+    let mut temp = NamedTempFile::new()?;
+    writeln!(
+        temp,
+        "## Summary\n\nDescription\n\n### Highlights\n\n- \n- \n\n"
+    )?; // where is the template?
+        // writeln!(temp, "# Edit the release message above")?;
+        // writeln!(temp, "# The first line is the commit summary")?;
+        // writeln!(temp, "# The changelog is included in the body")?;
+        // writeln!(temp, "# Lines starting with '#' will be ignored")?;
+
+    // Get editor from environment or use default
+    let editor = if visual {
+        std::env::var("VISUAL").unwrap_or_else(|_| "vim".to_string())
+    } else {
+        std::env::var("EDITOR").unwrap_or_else(|_| "vim".to_string())
+    };
+
+    // Open editor
+    let mut cmd = std::process::Command::new(&editor);
+    cmd.arg(temp.path());
+    if editor == "code" {
+        cmd.arg("--wait");
+    }
+    let status = cmd.status()?;
+
+    if !status.success() {
+        std::process::exit(1);
+        // return Err("Editor exited with non-zero status".into());
+    }
+
+    // Read the message back
+    let message = std::fs::read_to_string(temp.path())?;
+
+    // // Filter out comment lines and trim
+    // let message: String = content
+    //     .lines()
+    //     .filter(|line| !line.trim_start().starts_with('#'))
+    //     .collect::<Vec<_>>()
+    //     .join("\n")
+    //     .trim()
+    //     .to_string();
+
+    if message.is_empty() {
+        std::process::exit(1);
+        // return Err("Empty commit message".into());
+    }
+
+    Ok(message)
 }

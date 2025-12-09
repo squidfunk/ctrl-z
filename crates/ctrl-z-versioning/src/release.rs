@@ -25,9 +25,10 @@
 
 //! Version manager.
 
-use ctrl_z_changeset::{Changeset, Increment};
+use ctrl_z_changeset::{Changeset, Increment, VersionExt};
+use ctrl_z_project::workspace::updater::Updatable;
 use semver::Version;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
 use ctrl_z_project::manifest::{Dependencies, Resolver};
@@ -118,7 +119,7 @@ where
     pub fn changed(&self) {}
 
     // this should be called recommendation!?
-    pub fn bump<F>(&self, mut f: F) -> Result<()>
+    pub fn bump<F>(&self, mut f: F) -> Result<BTreeMap<String, Version>>
     where
         T: Dependencies, // @todo move into manifest
         F: FnMut(
@@ -187,7 +188,47 @@ where
         // now, do the actual bumps? apply it to the worksapce...?
         // for project in self.workspace.iter_mut() {}
 
+        let mut versions = BTreeMap::new();
+        for (index, increment) in increments.iter().enumerate() {
+            if let Some(increment) = increment {
+                let project = &dependents.graph[index];
+                let info = project.info().expect("invariant");
+                let (name, current_version) = info;
+
+                let new_version = current_version.bump(*increment);
+                versions.insert(name.to_string(), new_version);
+            }
+        }
+
+        // for project in &mut self.workspace {
+        //     // project
+        //     //     .update(
+        //     //         &new_versions
+        //     //             .iter()
+        //     //             .map(|(k, v)| (k.as_str(), v.clone()))
+        //     //             .collect(),
+        //     //     )
+        //     //     .unwrap();
+        // }
+
         // @todo
+        Ok(versions)
+    }
+
+    pub fn update(&mut self, versions: BTreeMap<String, Version>) -> Result<()>
+    where
+        T: Updatable,
+    {
+        for project in &mut self.workspace {
+            project
+                .update(
+                    &versions
+                        .iter()
+                        .map(|(k, v)| (k.as_str(), v.clone()))
+                        .collect(),
+                )
+                .unwrap();
+        }
         Ok(())
     }
 }

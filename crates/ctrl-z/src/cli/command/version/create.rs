@@ -55,8 +55,8 @@ impl Command for Arguments {
         //
         intro("")?;
 
-        let manager = Manager::<Cargo>::new(options.directory)?;
-        manager.bump(|name, version, bumps| {
+        let mut manager = Manager::<Cargo>::new(options.directory)?;
+        let versions = manager.bump(|name, version, bumps| {
             if bumps.len() == 1 {
                 // @todo is the expext right here?
                 let increment = bumps[0].expect("invariant");
@@ -87,6 +87,8 @@ impl Command for Arguments {
         })?;
 
         outro("")?;
+
+        manager.update(versions)?;
 
         // No errors occurred
         Ok(())

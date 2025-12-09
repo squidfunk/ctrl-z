@@ -148,3 +148,18 @@ impl fmt::Debug for Commit<'_> {
             .finish()
     }
 }
+
+// ----------------------------------------------------------------------------
+// Functions
+// ----------------------------------------------------------------------------
+
+/// Trims the trailers from the given commit message.
+///
+/// This function implements the most concise way to remove trailers from the
+/// given message, e.g., to use the body in a changelog summary.
+#[must_use]
+pub fn trim_trailers(message: &str) -> Option<&str> {
+    let trailers = git2::message_trailers_strs(message).ok()?;
+    let (key, _) = trailers.iter().next()?;
+    message.split_once(key).map(|(body, _)| body.trim())
+}

@@ -59,7 +59,7 @@ impl Command for Arguments {
     /// Executes the command.
     fn execute(&self, options: Options) -> Result {
         let mut manager = Manager::<Cargo>::new(options.directory)?;
-        // @todo: ensure everything is clean!
+        // @todo: ensure everything is clean!! no uncommitted changes.
 
         //
         intro("")?;

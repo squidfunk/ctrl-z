@@ -30,9 +30,10 @@ use clap::Subcommand;
 use crate::cli::{Command, Result};
 use crate::Options;
 
-mod changed;
 mod changelog;
 mod create;
+mod packages;
+mod summary;
 
 // ----------------------------------------------------------------------------
 // Enums
@@ -43,10 +44,12 @@ mod create;
 pub enum Commands {
     /// Creates a new version and updates all packages.
     Create(create::Arguments),
-    /// Generates a version's changelog in Markdown format.
+    /// Returns the changelog of a version in Markdown format.
     Changelog(changelog::Arguments),
+    /// Returns the summary of a version in Markdown format.
+    Summary(summary::Arguments),
     /// Returns the names of changed packages in topological order.
-    Changed(changed::Arguments),
+    Packages(packages::Arguments),
 }
 
 // ----------------------------------------------------------------------------
@@ -57,9 +60,10 @@ impl Command for Commands {
     /// Executes the command.
     fn execute(&self, options: Options) -> Result {
         match self {
-            Commands::Changed(args) => args.execute(options),
             Commands::Changelog(args) => args.execute(options),
             Commands::Create(args) => args.execute(options),
+            Commands::Packages(args) => args.execute(options),
+            Commands::Summary(args) => args.execute(options),
         }
     }
 }

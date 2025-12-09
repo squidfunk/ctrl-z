@@ -27,6 +27,7 @@
 
 use clap::Args;
 use cliclack::{confirm, input, intro, outro, select};
+use ctrl_z_changeset::change::Kind;
 use std::fs;
 use std::path::PathBuf;
 
@@ -58,6 +59,15 @@ impl Command for Arguments {
         let line = message.lines().next().expect("invariant");
 
         let change: Change = line.parse()?;
+
+        // don't check issue on these kinds of changes
+        match change.kind() {
+            Kind::Feature => {}
+            Kind::Fix => {}
+            Kind::Performance => {}
+            Kind::Refactor => {}
+            _ => return Ok(()),
+        }
 
         // confirm("Is this commit related to an issue?")
 

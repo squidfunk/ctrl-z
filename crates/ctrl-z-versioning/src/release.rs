@@ -91,6 +91,8 @@ where
                 return Err(Error::Version(v.clone()));
             }
 
+            // how can I find orphaned tags?
+
             let mut iter = versions.range(..=v).rev();
             let (v, start) = iter.next().expect("invariant"); // ok_or?
             let end = iter.next();
@@ -109,6 +111,9 @@ where
                 self.repository.commits(..)?
             }
         };
+
+        // get summary from repository and add to changeset.
+        // get canonical version – how? workspace config
 
         let mut changeset = Changeset::new(&self.workspace)?;
         changeset.extend(commits.flatten())?;
@@ -211,7 +216,7 @@ where
         T: Updatable,
     {
         // switch first!
-        let version = "0.0.4";
+        let version = "0.0.3";
         self.repository.branch(format!("release/v{version}"))?;
 
         for project in &mut self.workspace {

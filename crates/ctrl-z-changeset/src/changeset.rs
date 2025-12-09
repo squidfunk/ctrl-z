@@ -26,20 +26,19 @@
 //! Changeset.
 
 use ctrl_z_project::{Manifest, Workspace};
+use ctrl_z_repository::commit::trim_trailers;
 
 pub mod change;
 pub mod changelog;
 mod error;
 pub mod revision;
 pub mod scopes;
-pub mod summary;
 pub mod version;
 
 use change::Change;
 pub use error::{Error, Result};
 use revision::Revision;
 use scopes::Scopes;
-use summary::Summary;
 use version::Increment;
 
 // ----------------------------------------------------------------------------
@@ -60,8 +59,6 @@ pub struct Changeset<'a> {
     revisions: Vec<Revision<'a>>,
     /// Version increments.
     increments: Vec<Option<Increment>>,
-    /// Summary of changes.
-    summary: Option<Summary>,
 }
 
 // ----------------------------------------------------------------------------
@@ -92,14 +89,17 @@ impl Changeset<'_> {
             increments: vec![None; scopes.len()],
             scopes,
             revisions: Vec::new(),
-            summary: None,
         })
     }
 
-    /// Updates the changeset with the given summary.
+    /// Returns the summary.
+    ///
+    /// The summary is given by the commit's body of the first revision in the
+    /// changeset, trimming off any trailers like `Signed-off-by`.
     #[must_use]
-    pub fn with_summary(self, summary: Summary) -> Self {
-        Self { summary: Some(summary), ..self }
+    pub fn summary(&self) -> Option<&str> {
+        let commit = self.revisions.first()?.commit();
+        trim_trailers(commit.body()?)
     }
 }
 
@@ -121,12 +121,6 @@ impl Changeset<'_> {
     #[inline]
     pub fn increments(&self) -> &[Option<Increment>] {
         &self.increments
-    }
-
-    /// Returns a reference to the summary.
-    #[inline]
-    pub fn summary(&self) -> Option<&Summary> {
-        self.summary.as_ref()
     }
 
     /// Returns the number of revisions.

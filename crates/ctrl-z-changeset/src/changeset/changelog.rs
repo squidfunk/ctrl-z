@@ -31,7 +31,6 @@ use std::fmt;
 use super::change::Kind;
 use super::revision::Revision;
 use super::scopes::Scopes;
-use super::summary::Summary;
 use super::Changeset;
 
 mod section;
@@ -59,8 +58,6 @@ pub struct Changelog<'a> {
     scopes: &'a Scopes,
     /// Sections grouped by category.
     sections: BTreeMap<Category, Section<'a>>,
-    /// Summary of changes.
-    summary: Option<&'a Summary>,
 }
 
 // ----------------------------------------------------------------------------
@@ -72,7 +69,6 @@ impl<'a> Changeset<'a> {
     #[must_use]
     pub fn to_changelog(&'a self) -> Changelog<'a> {
         let mut changelog = Changelog {
-            summary: self.summary.as_ref(),
             scopes: &self.scopes,
             sections: BTreeMap::default(),
         };
@@ -154,14 +150,8 @@ impl<'a> Extend<&'a Revision<'a>> for Changelog<'a> {
 impl fmt::Display for Changelog<'_> {
     /// Formats the changelog for display.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if let Some(summary) = &self.summary {
-            summary.fmt(f)?;
-            f.write_str("\n\n")?;
-        }
-
-        // Write header if there are any sections
         if !self.sections.is_empty() {
-            f.write_str("## Changes")?;
+            f.write_str("## Changelog")?;
         }
 
         // Write all sections

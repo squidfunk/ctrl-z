@@ -23,79 +23,53 @@
 
 // ----------------------------------------------------------------------------
 
-//! Summary.
+//! Returns the summary of version in Markdown format.
 
-use std::fmt;
+use clap::Args;
+use semver::Version;
+use std::fmt::Debug;
+use std::fs;
+use std::path::PathBuf;
 
-mod builder;
+use ctrl_z_project::Cargo;
+use ctrl_z_versioning::Manager;
 
-pub use builder::Builder;
+use crate::cli::{Command, Result};
+use crate::Options;
 
 // ----------------------------------------------------------------------------
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Summary.
-#[derive(Debug)]
-pub struct Summary {
-    /// Body content.
-    body: Option<String>,
-}
-
-// ----------------------------------------------------------------------------
-// Implementations
-// ----------------------------------------------------------------------------
-
-impl Summary {
-    /// Creates a summary builder.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ctrl_z_changeset::Summary;
-    ///
-    /// // Create summary builder
-    /// let mut builder = Summary::builder();
-    #[inline]
-    #[must_use]
-    pub fn builder() -> Builder {
-        Builder::new()
-    }
-}
-
-#[allow(clippy::must_use_candidate)]
-impl Summary {
-    /// Returns the body content.
-    #[inline]
-    pub fn body(&self) -> Option<&str> {
-        self.body.as_deref()
-    }
+/// Returns the summary of version in Markdown format.
+#[derive(Args, Debug)]
+pub struct Arguments {
+    /// Version in x.y.z format
+    version: Version,
+    /// Output to file.
+    #[arg(short, long)]
+    output: Option<PathBuf>,
 }
 
 // ----------------------------------------------------------------------------
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl<S> From<S> for Summary
-where
-    S: AsRef<str>,
-{
-    /// Creates a summary from a string.
-    #[inline]
-    fn from(value: S) -> Self {
-        let mut builder = Self::builder();
-        builder.body(value);
-        builder.build()
-    }
-}
+impl Command for Arguments {
+    /// Executes the command.
+    fn execute(&self, options: Options) -> Result {
+        let manager = Manager::<Cargo>::new(options.directory)?;
+        let changeset = manager.changeset(Some(&self.version))?;
 
-// ----------------------------------------------------------------------------
-
-impl fmt::Display for Summary {
-    /// Formats the summary for display.
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if let Some(body) = &self.body {
-            body.trim().fmt(f)?;
+        // Write summary to standard out or file
+        let summary = changeset.summary().unwrap_or("");
+        if let Some(output) = &self.output {
+            // In order to be predictable and consistent, we always need to
+            // write the summary to a file, even though it may be empty
+            fs::create_dir_all(output.parent().expect("invariant"))?;
+            fs::write(output, summary)?;
+        } else if !summary.is_empty() {
+            println!("{summary}");
         }
 
         // No errors occurred

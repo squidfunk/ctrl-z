@@ -23,7 +23,7 @@
 
 // ----------------------------------------------------------------------------
 
-//! Returns the changelog of a version in Markdown format.
+//! Generate the changelog of a version in Markdown format.
 
 use clap::Args;
 use semver::Version;
@@ -41,11 +41,14 @@ use crate::Options;
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Returns the changelog of a version in Markdown format.
+/// Generate the changelog of a version in Markdown format.
 #[derive(Args, Debug)]
 pub struct Arguments {
     /// Version in x.y.z format
     version: Option<Version>,
+    /// Include version summary.
+    #[arg(short, long)]
+    summary: bool,
     /// Output to file.
     #[arg(short, long)]
     output: Option<PathBuf>,
@@ -61,8 +64,14 @@ impl Command for Arguments {
         let manager = Manager::<Cargo>::new(options.directory)?;
         let changeset = manager.changeset(self.version.as_ref())?;
 
-        // Write changelog to standard out or file
-        let changelog = changeset.to_changelog();
+        // Create changelog, and prepend version summary if desired
+        let mut changelog = changeset.to_changelog().to_string();
+        if self.summary {
+            let summary = changeset.summary().unwrap_or_default();
+            changelog = format!("{summary}\n\n{changelog}");
+        }
+
+        // Write to standard out or file
         if let Some(output) = &self.output {
             // In order to be predictable and consistent, we always need to
             // write the changelog to a file, even though it may be empty

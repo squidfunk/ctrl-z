@@ -55,6 +55,7 @@ const STYLES: Styles = Styles::styled()
 /// Command line interface.
 #[derive(Parser)]
 #[command(name = env!("CARGO_PKG_NAME"))]
+#[command(version = env!("CARGO_PKG_VERSION"))]
 #[command(about = env!("CARGO_PKG_DESCRIPTION"), long_about = None)]
 #[command(disable_help_subcommand = true)]
 #[command(styles = STYLES)]

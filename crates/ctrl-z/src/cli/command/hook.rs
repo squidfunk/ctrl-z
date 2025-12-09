@@ -39,7 +39,7 @@ mod commit_msg;
 /// Git hooks installation and usage.
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Validates commit message format.
+    /// Validate a commit message.
     CommitMsg(commit_msg::Arguments),
 }
 

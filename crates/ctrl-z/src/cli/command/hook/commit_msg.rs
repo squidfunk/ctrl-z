@@ -23,7 +23,7 @@
 
 // ----------------------------------------------------------------------------
 
-//! Validates commit message format.
+//! Validate a commit message.
 
 use clap::Args;
 use cliclack::{confirm, input, intro, outro, select};
@@ -40,7 +40,7 @@ use crate::Options;
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Validates commit message format.
+/// Validate a commit message.
 #[derive(Args, Debug)]
 pub struct Arguments {
     /// Path to commit message file.

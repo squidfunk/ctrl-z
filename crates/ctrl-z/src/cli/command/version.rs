@@ -30,10 +30,9 @@ use clap::Subcommand;
 use crate::cli::{Command, Result};
 use crate::Options;
 
+mod changed;
 mod changelog;
 mod create;
-mod packages;
-mod summary;
 
 // ----------------------------------------------------------------------------
 // Enums
@@ -42,14 +41,12 @@ mod summary;
 /// Versioning and release automation.
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Creates a new version and updates all packages.
+    /// Create a new version and updates all packages.
     Create(create::Arguments),
-    /// Returns the changelog of a version in Markdown format.
+    /// Generate the changelog of a version in Markdown format.
     Changelog(changelog::Arguments),
-    /// Returns the summary of a version in Markdown format.
-    Summary(summary::Arguments),
-    /// Returns the names of changed packages in topological order.
-    Packages(packages::Arguments),
+    /// List the names of changed packages in topological order.
+    Changed(changed::Arguments),
 }
 
 // ----------------------------------------------------------------------------
@@ -62,8 +59,7 @@ impl Command for Commands {
         match self {
             Commands::Changelog(args) => args.execute(options),
             Commands::Create(args) => args.execute(options),
-            Commands::Packages(args) => args.execute(options),
-            Commands::Summary(args) => args.execute(options),
+            Commands::Changed(args) => args.execute(options),
         }
     }
 }

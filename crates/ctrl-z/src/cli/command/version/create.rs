@@ -23,7 +23,7 @@
 
 // ----------------------------------------------------------------------------
 
-//! Creates a new version and updates all packages.
+//! Create a new version and updates all packages.
 
 use clap::Args;
 use cliclack::log::remark;
@@ -43,7 +43,7 @@ use crate::Options;
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Creates a new version and updates all packages.
+/// Create a new version and updates all packages.
 #[derive(Args, Debug)]
 pub struct Arguments {
     /// Use visual editor for release notes.

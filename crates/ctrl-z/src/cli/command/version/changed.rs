@@ -23,12 +23,11 @@
 
 // ----------------------------------------------------------------------------
 
-//! Returns the summary of version in Markdown format.
+//! List the names of changed packages in topological order.
 
 use clap::Args;
 use semver::Version;
-use std::fmt::Debug;
-use std::fs;
+use std::collections::BTreeSet;
 use std::path::PathBuf;
 
 use ctrl_z_project::Cargo;
@@ -41,11 +40,11 @@ use crate::Options;
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Returns the summary of version in Markdown format.
+/// List the names of changed packages in topological order.
 #[derive(Args, Debug)]
 pub struct Arguments {
     /// Version in x.y.z format
-    version: Version,
+    version: Option<Version>,
     /// Output to file.
     #[arg(short, long)]
     output: Option<PathBuf>,
@@ -59,20 +58,30 @@ impl Command for Arguments {
     /// Executes the command.
     fn execute(&self, options: Options) -> Result {
         let manager = Manager::<Cargo>::new(options.directory)?;
-        let changeset = manager.changeset(Some(&self.version))?;
+        let changeset = manager.changeset(self.version.as_ref())?;
 
-        // Write summary to standard out or file
-        let summary = changeset.summary().unwrap_or("");
-        if let Some(output) = &self.output {
-            // In order to be predictable and consistent, we always need to
-            // write the summary to a file, even though it may be empty
-            fs::create_dir_all(output.parent().expect("invariant"))?;
-            fs::write(output, summary)?;
-        } else if !summary.is_empty() {
-            println!("{summary}");
+        // collect all scopes
+        let mut scopes = BTreeSet::<usize>::new(); // why?
+        for revision in changeset.revisions() {
+            scopes.extend(revision.scopes());
         }
 
-        // No errors occurred
+        // create deps and determine correct order – @todo alarm when
+        // no packages is part of a bump _ just don't do a release!
+        let deps = manager.workspace().dependents().unwrap();
+        let increments = changeset.increments();
+
+        // traverse all nodes
+        let mut traversal = deps.graph.traverse(deps.graph.sources());
+        while let Some(node) = traversal.take() {
+            if scopes.contains(&node) && increments[node].is_some() {
+                let name = deps.graph[node].info().unwrap().0;
+                println!("{name}");
+            }
+            let _ = traversal.complete(node);
+        }
+
+        // @todo add file output
         Ok(())
     }
 }

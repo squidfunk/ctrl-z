@@ -32,7 +32,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
-use crate::project::manifest::{Dependencies, Manifest, Resolver};
+use crate::project::manifest::{Dependencies, Manifest};
 use crate::project::{Error, Result};
 
 mod dependency;
@@ -76,6 +76,18 @@ pub enum Cargo {
 // ----------------------------------------------------------------------------
 
 impl Manifest for Cargo {
+    /// Resolves the manifest path from the given path.
+    ///
+    /// This method just appends `Cargo.toml` to the given path, since this
+    /// is the only valid and supported name in the Rust ecosystem.
+    #[inline]
+    fn resolve<P>(path: P) -> Result<PathBuf>
+    where
+        P: AsRef<Path>,
+    {
+        Ok(path.as_ref().join("Cargo.toml"))
+    }
+
     /// Returns a reference to the name.
     #[inline]
     fn name(&self) -> Option<&str> {
@@ -104,20 +116,6 @@ impl Manifest for Cargo {
         } else {
             Cow::Borrowed(&[])
         }
-    }
-}
-
-impl Resolver for Cargo {
-    /// Resolves the manifest path from the given path.
-    ///
-    /// This method just appends `Cargo.toml` to the given path, since this
-    /// is the only valid and supported name in the Rust ecosystem.
-    #[inline]
-    fn resolve<P>(path: P) -> Result<PathBuf>
-    where
-        P: AsRef<Path>,
-    {
-        Ok(path.as_ref().join("Cargo.toml"))
     }
 }
 

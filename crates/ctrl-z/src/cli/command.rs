@@ -27,6 +27,8 @@
 
 use clap::Subcommand;
 
+use ctrl_z_project::Manifest;
+
 use crate::cli::Result;
 use crate::Options;
 
@@ -38,9 +40,12 @@ mod version;
 // ----------------------------------------------------------------------------
 
 /// Command.
-pub trait Command {
+pub trait Command<T>
+where
+    T: Manifest,
+{
     /// Executes the command.
-    fn execute(&self, options: Options) -> Result;
+    fn execute(&self, options: Options<T>) -> Result;
 }
 
 // ----------------------------------------------------------------------------
@@ -66,9 +71,12 @@ pub enum Commands {
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl Command for Commands {
+impl<T> Command<T> for Commands
+where
+    T: Manifest,
+{
     /// Executes the command.
-    fn execute(&self, options: Options) -> Result {
+    fn execute(&self, options: Options<T>) -> Result {
         match self {
             Commands::Version { command } => command.execute(options),
             Commands::Hook { command } => command.execute(options),

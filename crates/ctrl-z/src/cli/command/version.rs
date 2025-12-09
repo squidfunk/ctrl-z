@@ -27,12 +27,14 @@
 
 use clap::Subcommand;
 
+use ctrl_z_project::Manifest;
+
 use crate::cli::{Command, Result};
 use crate::Options;
 
-mod changed;
+// mod changed;
 mod changelog;
-mod create;
+// mod create;
 
 // ----------------------------------------------------------------------------
 // Enums
@@ -41,25 +43,28 @@ mod create;
 /// Versioning and release automation.
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Create a new version and updates all packages.
-    Create(create::Arguments),
+    // /// Create a new version and updates all packages.
+    // Create(create::Arguments),
     /// Generate the changelog of a version in Markdown format.
     Changelog(changelog::Arguments),
-    /// List the names of changed packages in topological order.
-    Changed(changed::Arguments),
+    // /// List the names of changed packages in topological order.
+    // Changed(changed::Arguments),
 }
 
 // ----------------------------------------------------------------------------
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl Command for Commands {
+impl<T> Command<T> for Commands
+where
+    T: Manifest,
+{
     /// Executes the command.
-    fn execute(&self, options: Options) -> Result {
+    fn execute(&self, options: Options<T>) -> Result {
         match self {
             Commands::Changelog(args) => args.execute(options),
-            Commands::Create(args) => args.execute(options),
-            Commands::Changed(args) => args.execute(options),
+            // Commands::Create(args) => args.execute(options),
+            // Commands::Changed(args) => args.execute(options),
         }
     }
 }

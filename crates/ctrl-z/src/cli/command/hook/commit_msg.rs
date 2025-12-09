@@ -32,6 +32,7 @@ use std::path::PathBuf;
 
 use ctrl_z_changeset::changelog::Category;
 use ctrl_z_changeset::Change;
+use ctrl_z_project::Manifest;
 
 use crate::cli::{Command, Result};
 use crate::Options;
@@ -51,9 +52,12 @@ pub struct Arguments {
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl Command for Arguments {
+impl<T> Command<T> for Arguments
+where
+    T: Manifest,
+{
     /// Executes the command.
-    fn execute(&self, options: Options) -> Result {
+    fn execute(&self, options: Options<T>) -> Result {
         let message = fs::read_to_string(&self.file)?;
 
         let line = message.lines().next().expect("invariant");

@@ -31,7 +31,7 @@ use semver::Version;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
-use ctrl_z_project::manifest::{Dependencies, Resolver};
+use ctrl_z_project::manifest::Dependencies;
 use ctrl_z_project::{Manifest, Workspace};
 use ctrl_z_repository::Repository;
 
@@ -61,7 +61,7 @@ where
 
 impl<T> Manager<T>
 where
-    T: Manifest + Resolver,
+    T: Manifest,
 {
     /// Creates a version manager at the given path.
     pub fn new<P>(path: P) -> Result<Self>

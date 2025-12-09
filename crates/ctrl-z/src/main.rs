@@ -26,6 +26,8 @@
 //! Command line interface.
 
 use clap::Parser;
+use ctrl_z_project::{Cargo, Manifest, Node};
+use ctrl_z_versioning::Manager;
 use std::path::PathBuf;
 
 mod cli;
@@ -36,11 +38,16 @@ use cli::{Cli, Command, Result};
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Command line options.
+/// Command line options. // @todo: rename into context!
 #[derive(Debug)]
-pub struct Options {
+pub struct Options<T>
+where
+    T: Manifest,
+{
     /// Working directory.
     directory: PathBuf,
+    /// Manager. // @todo rename this?
+    manager: Manager<T>,
 }
 
 // ----------------------------------------------------------------------------
@@ -50,5 +57,8 @@ pub struct Options {
 /// Entry point.
 fn main() -> Result {
     let cli = Cli::parse();
-    cli.command.execute(Options { directory: cli.directory })
+    cli.command.execute(Options {
+        directory: cli.directory.clone(), // @todo really?
+        manager: Manager::<Cargo>::new(cli.directory.clone())?,
+    })
 }

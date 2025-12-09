@@ -32,7 +32,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
-use crate::project::manifest::{Dependencies, Manifest, Resolver};
+use crate::project::manifest::{Dependencies, Manifest};
 use crate::project::{Error, Result};
 
 // ----------------------------------------------------------------------------
@@ -68,6 +68,18 @@ pub struct Node {
 // ----------------------------------------------------------------------------
 
 impl Manifest for Node {
+    /// Resolves the manifest path from the given path.
+    ///
+    /// This method just appends `package.json` to the given path, since this
+    /// is the only valid and supported name in the Node ecosystem.
+    #[inline]
+    fn resolve<P>(path: P) -> Result<PathBuf>
+    where
+        P: AsRef<Path>,
+    {
+        Ok(path.as_ref().join("package.json"))
+    }
+
     /// Returns a reference to the name.
     #[inline]
     fn name(&self) -> Option<&str> {
@@ -84,20 +96,6 @@ impl Manifest for Node {
     #[inline]
     fn members(&self) -> Cow<'_, [String]> {
         Cow::Borrowed(&self.workspaces)
-    }
-}
-
-impl Resolver for Node {
-    /// Resolves the manifest path from the given path.
-    ///
-    /// This method just appends `package.json` to the given path, since this
-    /// is the only valid and supported name in the Node ecosystem.
-    #[inline]
-    fn resolve<P>(path: P) -> Result<PathBuf>
-    where
-        P: AsRef<Path>,
-    {
-        Ok(path.as_ref().join("package.json"))
     }
 }
 

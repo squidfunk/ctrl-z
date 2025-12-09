@@ -53,13 +53,6 @@ pub trait Manifest: Debug + FromStr<Err = Error> {
     fn version(&self) -> Option<&Version>;
     /// Returns a reference to the members.
     fn members(&self) -> Cow<'_, [String]>;
-}
-
-/// Manifest resolver.
-///
-/// This is an additional trait to be added as a trait bound to [`Manifest`]
-/// in situations where the manifest path needs to be resolved.
-pub trait Resolver {
     /// Resolves the manifest path from the given path.
     ///
     /// Some ecosystems allow for multiple names of manifests. This trait keeps

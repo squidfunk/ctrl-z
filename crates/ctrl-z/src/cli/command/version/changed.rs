@@ -30,7 +30,7 @@ use semver::Version;
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 
-use ctrl_z_project::Cargo;
+use ctrl_z_project::Manifest;
 use ctrl_z_versioning::Manager;
 
 use crate::cli::{Command, Result};
@@ -54,10 +54,13 @@ pub struct Arguments {
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl Command for Arguments {
+impl<T> Command<T> for Arguments
+where
+    T: Manifest,
+{
     /// Executes the command.
-    fn execute(&self, options: Options) -> Result {
-        let manager = Manager::<Cargo>::new(options.directory)?;
+    fn execute(&self, options: Options<T>) -> Result {
+        let manager = Manager::<T>::new(options.directory)?;
         let changeset = manager.changeset(self.version.as_ref())?;
 
         // collect all scopes

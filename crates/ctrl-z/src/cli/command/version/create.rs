@@ -33,7 +33,7 @@ use std::io::Write;
 use tempfile::NamedTempFile;
 
 use ctrl_z_changeset::VersionExt;
-use ctrl_z_project::Cargo;
+use ctrl_z_project::Manifest;
 use ctrl_z_versioning::Manager;
 
 use crate::cli::{Command, Result};
@@ -55,10 +55,13 @@ pub struct Arguments {
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl Command for Arguments {
+impl<T> Command<T> for Arguments
+where
+    T: Manifest,
+{
     /// Executes the command.
-    fn execute(&self, options: Options) -> Result {
-        let mut manager = Manager::<Cargo>::new(options.directory)?;
+    fn execute(&self, options: Options<T>) -> Result {
+        let mut manager = Manager::<T>::new(options.directory)?;
         // @todo: ensure everything is clean!! no uncommitted changes.
 
         //

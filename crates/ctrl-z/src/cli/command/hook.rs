@@ -27,6 +27,8 @@
 
 use clap::Subcommand;
 
+use ctrl_z_project::Manifest;
+
 use crate::cli::{Command, Result};
 use crate::Options;
 
@@ -47,9 +49,12 @@ pub enum Commands {
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl Command for Commands {
+impl<T> Command<T> for Commands
+where
+    T: Manifest,
+{
     /// Executes the command.
-    fn execute(&self, options: Options) -> Result {
+    fn execute(&self, options: Options<T>) -> Result {
         match self {
             Commands::CommitMsg(args) => args.execute(options),
         }

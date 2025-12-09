@@ -28,7 +28,6 @@
 use std::collections::BTreeMap;
 use std::fmt;
 
-use super::change::Kind;
 use super::revision::Revision;
 use super::scopes::Scopes;
 use super::Changeset;

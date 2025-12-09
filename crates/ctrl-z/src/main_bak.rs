@@ -300,7 +300,7 @@ pub fn main() {
 
                 // outro("Completed").unwrap();
 
-                println!("increments {:?}", increments);
+                // println!("increments {:?}", increments);
 
                 // bumps - go through _all_ of them... start at sources...
                 // if the downstream package is not affected - skip the entire thing!

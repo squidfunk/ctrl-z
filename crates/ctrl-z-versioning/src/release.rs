@@ -172,7 +172,7 @@ where
             dep_bump.insert(bump); // insert earlier? or here?
             dep_bump.retain(|&b| b >= bump);
 
-            // @todo handle max bump!
+            // @todo handle max bumps!
 
             // if the original package is not bumped, we add all levels up to
             // the max bump / max dep bump.

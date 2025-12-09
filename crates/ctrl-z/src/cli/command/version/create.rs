@@ -23,7 +23,7 @@
 
 // ----------------------------------------------------------------------------
 
-//! Creates a new version.
+//! Creates a new version and updates all packages.
 
 use clap::Args;
 
@@ -37,7 +37,7 @@ use crate::Options;
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Creates a new version.
+/// Creates a new version and updates all packages.
 #[derive(Args, Debug)]
 pub struct Arguments {}
 

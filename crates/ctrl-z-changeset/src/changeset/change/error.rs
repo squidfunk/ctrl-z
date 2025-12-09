@@ -44,6 +44,9 @@ pub enum Error {
     /// Description has leading or trailing whitespace.
     #[error("description has leading or trailing whitespace")]
     Whitespace,
+    /// Description must not end with a period.
+    #[error("description must not end with a period")]
+    Sentence,
     /// Description must be lowercase.
     #[error("description must be lowercase")]
     Casing,

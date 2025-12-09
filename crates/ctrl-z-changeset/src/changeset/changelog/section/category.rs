@@ -38,7 +38,7 @@ pub enum Category {
     Breaking,
     /// Features.
     Feature,
-    /// Bugfixes.
+    /// Bug fixes.
     Fix,
     /// Performance improvements.
     Performance,
@@ -56,7 +56,7 @@ impl fmt::Display for Category {
         match self {
             Category::Breaking => f.write_str("Breaking changes"),
             Category::Feature => f.write_str("Features"),
-            Category::Fix => f.write_str("Bugfixes"),
+            Category::Fix => f.write_str("Bug fixes"),
             Category::Performance => f.write_str("Performance improvements"),
             Category::Refactor => f.write_str("Refactorings"),
         }

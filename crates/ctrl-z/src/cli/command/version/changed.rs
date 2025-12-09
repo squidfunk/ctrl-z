@@ -23,7 +23,7 @@
 
 // ----------------------------------------------------------------------------
 
-//! Returns the names of changed packages.
+//! Returns the names of changed packages in topological order.
 
 use clap::Args;
 use semver::Version;
@@ -40,7 +40,7 @@ use crate::Options;
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Returns the names of changed packages.
+/// Returns the names of changed packages in topological order.
 #[derive(Args, Debug)]
 pub struct Arguments {
     /// Version in x.y.z format

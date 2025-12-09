@@ -119,6 +119,11 @@ impl FromStr for Change {
             return Err(Error::Whitespace);
         }
 
+        // Ensure description is not a sentence, i.e., doesn't end with a period
+        if description.ends_with('.') {
+            return Err(Error::Sentence);
+        }
+
         // Ensure description is lowercase, unless it's an entire uppercase
         // word, e.g., an acronym like README, API, or URL
         if let Some(char) = description.chars().next() {

@@ -41,11 +41,11 @@ mod create;
 /// Versioning.
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Creates a new version.
+    /// Creates a new version and updates all packages.
     Create(create::Arguments),
-    /// Generates a version's changelog.
+    /// Generates a version's changelog in Markdown format.
     Changelog(changelog::Arguments),
-    /// Returns the names of changed packages.
+    /// Returns the names of changed packages in topological order.
     Changed(changed::Arguments),
 }
 

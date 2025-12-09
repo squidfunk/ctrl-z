@@ -23,7 +23,7 @@
 
 // ----------------------------------------------------------------------------
 
-//! Generates a version's changelog.
+//! Generates a version's changelog in Markdown format.
 
 use clap::Args;
 use semver::Version;
@@ -41,7 +41,7 @@ use crate::Options;
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Generates the changelog.
+/// Generates a version's changelog in Markdown format.
 #[derive(Args, Debug)]
 pub struct Arguments {
     /// Version in x.y.z format

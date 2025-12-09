@@ -50,12 +50,12 @@ pub trait Command {
 /// Commands.
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Versioning.
+    /// Versioning and release automation.
     Version {
         #[command(subcommand)]
         command: version::Commands,
     },
-    /// Git hooks.
+    /// Git hooks installation and usage.
     Hook {
         #[command(subcommand)]
         command: hook::Commands,

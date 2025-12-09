@@ -167,14 +167,6 @@ pub fn main() {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Hook { hook_type } => match hook_type {
-            Hook::CommitMsg { message_file } => {
-                handle_commit_msg_hook(&message_file);
-            }
-            Hook::Install => {
-                install_git_hooks();
-            }
-        },
         Commands::Tag { dry_run } => {
             if dry_run {
                 println!("Dry run: no changes will be made");

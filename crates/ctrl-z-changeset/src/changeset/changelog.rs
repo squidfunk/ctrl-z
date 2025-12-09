@@ -91,26 +91,16 @@ impl<'a> Changelog<'a> {
     pub fn add(&mut self, revision: &'a Revision<'a>) {
         let change = revision.change();
 
-        // Determine section title - not all types of changes are featured
-        // in the changelog, so we skip those that are not relevant
-        let category = if change.is_breaking() {
-            Category::Breaking
-        } else {
-            match change.kind() {
-                Kind::Feature => Category::Feature,
-                Kind::Fix => Category::Fix,
-                Kind::Performance => Category::Performance,
-                Kind::Refactor => Category::Refactor,
-                _ => return,
-            }
-        };
-
-        // Retrieve or create section and add revision - note that we need
-        // to pass the scopes for rendering, as only indices are stored
-        self.sections
-            .entry(category)
-            .or_insert_with(|| category.into())
-            .add(revision, self.scopes);
+        // Determine section category, create section and add revision - note
+        // that we need to pass the scopes for rendering, as only indices are
+        // stored, and not all types of changes are featured in the changelog,
+        // so we skip those that are not
+        if let Some(category) = change.into() {
+            self.sections
+                .entry(category)
+                .or_insert_with(|| category.into())
+                .add(revision, self.scopes);
+        }
     }
 }
 

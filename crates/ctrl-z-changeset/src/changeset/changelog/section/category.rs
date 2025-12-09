@@ -27,6 +27,9 @@
 
 use std::fmt;
 
+use crate::changeset::change::Kind;
+use crate::changeset::Change;
+
 // ----------------------------------------------------------------------------
 // Enums
 // ----------------------------------------------------------------------------
@@ -48,6 +51,34 @@ pub enum Category {
 
 // ----------------------------------------------------------------------------
 // Trait implementations
+// ----------------------------------------------------------------------------
+
+impl From<&Change> for Option<Category> {
+    /// Converts a change to a section category.
+    ///
+    /// This method can be used to check if a change belongs to a [`Section`][]
+    /// that will be featured in the [`Changelog`][] to be generated.
+    ///
+    /// [`Changelog`]: crate::changeset::changelog::Changelog
+    /// [`Section`]: crate::changeset::changelog::Section
+    fn from(change: &Change) -> Self {
+        let category = if change.is_breaking() {
+            Category::Breaking
+        } else {
+            match change.kind() {
+                Kind::Feature => Category::Feature,
+                Kind::Fix => Category::Fix,
+                Kind::Performance => Category::Performance,
+                Kind::Refactor => Category::Refactor,
+                _ => return None,
+            }
+        };
+
+        // Return category
+        Some(category)
+    }
+}
+
 // ----------------------------------------------------------------------------
 
 impl fmt::Display for Category {

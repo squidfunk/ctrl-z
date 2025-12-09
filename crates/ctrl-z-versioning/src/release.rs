@@ -210,6 +210,10 @@ where
     where
         T: Updatable,
     {
+        // switch first!
+        let version = "0.0.4";
+        self.repository.branch(format!("release/v{version}"))?;
+
         for project in &mut self.workspace {
             project
                 .update(
@@ -223,9 +227,6 @@ where
 
         // create new branch, commit to repo, then push everything.
 
-        let version = "0.0.4";
-
-        self.repository.branch(format!("release/v{version}"))?;
         self.repository.add("*")?;
 
         // @todo: here we need to prompt for the release notes - add main tag

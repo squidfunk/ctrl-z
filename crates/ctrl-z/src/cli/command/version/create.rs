@@ -98,7 +98,7 @@ impl Command for Arguments {
 
         let summary = prompt_commit_message(self.visual)?;
 
-        println!("summary: {}", prepend_lines_with_quote(&summary));
+        // println!("summary: {}", prepend_lines_with_quote(&summary));
         manager.update(versions, summary)?;
 
         // No errors occurred
@@ -114,16 +114,13 @@ fn prepend_lines_with_quote(text: &str) -> String {
 }
 
 fn prompt_commit_message(visual: bool) -> Result<String> {
-    // Create a temporary file with template
+    // Create a temporary file with template - read template and include string
+    // move this into our obligatory configuration file
     let mut temp = NamedTempFile::new()?;
     writeln!(
         temp,
         "## Summary\n\nDescription\n\n### Highlights\n\n- \n- \n\n"
-    )?; // where is the template?
-        // writeln!(temp, "# Edit the release message above")?;
-        // writeln!(temp, "# The first line is the commit summary")?;
-        // writeln!(temp, "# The changelog is included in the body")?;
-        // writeln!(temp, "# Lines starting with '#' will be ignored")?;
+    )?;
 
     // Get editor from environment or use default
     let editor = if visual {

@@ -46,6 +46,18 @@ impl Updatable for Cargo {
         update_package_version(&mut doc, versions);
         update_dependencies(&mut doc, versions);
 
+        // we need to wait for the cargo toml to catch up.
+
+        // // enforce waiting for Cargo.lock
+        let output = std::process::Command::new("cargo")
+            .arg("update")
+            .arg("--workspace")
+            .arg("--offline")
+            // .arg("--format-version=1")
+            // .current_dir(repo.path())
+            .output()
+            .unwrap();
+
         Ok(doc.to_string())
     }
 }

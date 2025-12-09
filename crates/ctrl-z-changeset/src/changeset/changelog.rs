@@ -32,7 +32,7 @@ use super::revision::Revision;
 use super::scopes::Scopes;
 use super::Changeset;
 
-mod section;
+pub mod section;
 
 use section::{Category, Section};
 

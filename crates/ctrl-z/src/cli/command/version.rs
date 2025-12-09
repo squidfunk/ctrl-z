@@ -23,53 +23,43 @@
 
 // ----------------------------------------------------------------------------
 
-//! Generates the changelog.
+//! Versioning.
 
-use clap::Args;
-use semver::Version;
-use std::fs;
-use std::path::PathBuf;
-
-use ctrl_z_project::Cargo;
-use ctrl_z_release::Release;
+use clap::Subcommand;
 
 use crate::cli::{Command, Result};
 use crate::Options;
 
+mod changed;
+mod changelog;
+mod create;
+
 // ----------------------------------------------------------------------------
-// Structs
+// Enums
 // ----------------------------------------------------------------------------
 
-/// Generates the changelog.
-#[derive(Args, Debug)]
-pub struct Arguments {
-    /// Version in x.y.z format
-    version: Option<Version>,
-    /// Output to file.
-    #[arg(short, long)]
-    output: Option<PathBuf>,
+/// Versioning.
+#[derive(Subcommand)]
+pub enum Commands {
+    /// Creates a new version.
+    Create(create::Arguments),
+    /// Generates a version's changelog.
+    Changelog(changelog::Arguments),
+    /// Returns the names of changed packages.
+    Changed(changed::Arguments),
 }
 
 // ----------------------------------------------------------------------------
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl Command for Arguments {
+impl Command for Commands {
     /// Executes the command.
     fn execute(&self, options: Options) -> Result {
-        let release = Release::<Cargo>::new(options.directory)?;
-        let changeset = release.changeset(self.version.as_ref())?;
-
-        // Write changelog to standard out or file
-        let changelog = changeset.to_changelog();
-        if let Some(output) = &self.output {
-            fs::create_dir_all(output.parent().expect("invariant"))?;
-            fs::write(output, changelog.to_string())?;
-        } else {
-            print!("{changelog}");
+        match self {
+            Commands::Changed(args) => args.execute(options),
+            Commands::Changelog(args) => args.execute(options),
+            Commands::Create(args) => args.execute(options),
         }
-
-        // No errors occurred
-        Ok(())
     }
 }

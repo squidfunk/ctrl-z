@@ -31,7 +31,7 @@ use crate::cli::Result;
 use crate::Options;
 
 mod hook;
-mod release;
+mod version;
 
 // ----------------------------------------------------------------------------
 // Traits
@@ -50,10 +50,10 @@ pub trait Command {
 /// Commands.
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Release management.
-    Release {
+    /// Versioning.
+    Version {
         #[command(subcommand)]
-        command: release::Commands,
+        command: version::Commands,
     },
     /// Git hooks.
     Hook {
@@ -70,7 +70,7 @@ impl Command for Commands {
     /// Executes the command.
     fn execute(&self, options: Options) -> Result {
         match self {
-            Commands::Release { command } => command.execute(options),
+            Commands::Version { command } => command.execute(options),
             Commands::Hook { command } => command.execute(options),
         }
     }

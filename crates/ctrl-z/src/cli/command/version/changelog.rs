@@ -23,43 +23,53 @@
 
 // ----------------------------------------------------------------------------
 
-//! Release management.
+//! Generates a version's changelog.
 
-use clap::Subcommand;
+use clap::Args;
+use semver::Version;
+use std::fs;
+use std::path::PathBuf;
+
+use ctrl_z_project::Cargo;
+use ctrl_z_release::Release;
 
 use crate::cli::{Command, Result};
 use crate::Options;
 
-mod changed;
-mod changelog;
-mod create;
-
 // ----------------------------------------------------------------------------
-// Enums
+// Structs
 // ----------------------------------------------------------------------------
 
-/// Release management.
-#[derive(Subcommand)]
-pub enum Commands {
-    /// Creates a new release.
-    Create(create::Arguments),
-    /// Generates the changelog.
-    Changelog(changelog::Arguments),
-    /// Returns the names of changed packages.
-    Changed(changed::Arguments),
+/// Generates the changelog.
+#[derive(Args, Debug)]
+pub struct Arguments {
+    /// Version in x.y.z format
+    version: Option<Version>,
+    /// Output to file.
+    #[arg(short, long)]
+    output: Option<PathBuf>,
 }
 
 // ----------------------------------------------------------------------------
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl Command for Commands {
+impl Command for Arguments {
     /// Executes the command.
     fn execute(&self, options: Options) -> Result {
-        match self {
-            Commands::Changed(args) => args.execute(options),
-            Commands::Changelog(args) => args.execute(options),
-            Commands::Create(args) => args.execute(options),
+        let release = Release::<Cargo>::new(options.directory)?;
+        let changeset = release.changeset(self.version.as_ref())?;
+
+        // Write changelog to standard out or file
+        let changelog = changeset.to_changelog();
+        if let Some(output) = &self.output {
+            fs::create_dir_all(output.parent().expect("invariant"))?;
+            fs::write(output, changelog.to_string())?;
+        } else {
+            print!("{changelog}");
         }
+
+        // No errors occurred
+        Ok(())
     }
 }

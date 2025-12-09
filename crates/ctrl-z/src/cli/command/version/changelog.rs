@@ -64,7 +64,7 @@ impl Command for Arguments {
         let manager = Manager::<Cargo>::new(options.directory)?;
         let changeset = manager.changeset(self.version.as_ref())?;
 
-        // Create changelog, and prepend version summary if desired
+        // Create changelog and prepend version summary if desired
         let mut changelog = changeset.to_changelog().to_string();
         if self.summary {
             let summary = changeset.summary().unwrap_or_default();
@@ -76,7 +76,7 @@ impl Command for Arguments {
             // In order to be predictable and consistent, we always need to
             // write the changelog to a file, even though it may be empty
             fs::create_dir_all(output.parent().expect("invariant"))?;
-            fs::write(output, changelog.to_string())?;
+            fs::write(output, changelog)?;
         } else if !changelog.is_empty() {
             println!("{changelog}");
         }

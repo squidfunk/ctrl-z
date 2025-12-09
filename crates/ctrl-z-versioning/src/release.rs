@@ -200,17 +200,6 @@ where
             }
         }
 
-        // for project in &mut self.workspace {
-        //     // project
-        //     //     .update(
-        //     //         &new_versions
-        //     //             .iter()
-        //     //             .map(|(k, v)| (k.as_str(), v.clone()))
-        //     //             .collect(),
-        //     //     )
-        //     //     .unwrap();
-        // }
-
         // @todo
         Ok(versions)
     }

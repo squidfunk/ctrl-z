@@ -47,11 +47,11 @@ pub mod node;
 /// why all methods of this trait return optional references. Ecosystems differ
 /// in how they implement these concepts (e.g. Rust and JavaScript).
 pub trait Manifest: Debug + FromStr<Err = Error> {
-    /// Returns the name.
+    /// Returns a reference to the name.
     fn name(&self) -> Option<&str>;
-    /// Returns the version.
+    /// Returns a reference to the version.
     fn version(&self) -> Option<&Version>;
-    /// Returns the members.
+    /// Returns a reference to the members.
     fn members(&self) -> Cow<'_, [String]>;
 }
 

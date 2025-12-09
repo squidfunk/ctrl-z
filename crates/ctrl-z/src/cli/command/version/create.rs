@@ -98,7 +98,6 @@ impl Command for Arguments {
 
         let summary = prompt_commit_message(self.visual)?;
 
-        // println!("summary: {}", prepend_lines_with_quote(&summary));
         manager.update(versions, summary)?;
 
         // No errors occurred
@@ -117,10 +116,7 @@ fn prompt_commit_message(visual: bool) -> Result<String> {
     // Create a temporary file with template - read template and include string
     // move this into our obligatory configuration file
     let mut temp = NamedTempFile::new()?;
-    writeln!(
-        temp,
-        "## Summary\n\nDescription\n\n### Highlights\n\n- \n- \n\n"
-    )?;
+    writeln!(temp, "## Summary\n\n...\n\n### Highlights\n\n- ...")?;
 
     // Get editor from environment or use default
     let editor = if visual {
@@ -136,7 +132,8 @@ fn prompt_commit_message(visual: bool) -> Result<String> {
         cmd.arg("--wait");
     }
     let status = cmd.status()?;
-
+    println!("status {:?}", status);
+    // check if the file is the same actually
     if !status.success() {
         std::process::exit(1);
         // return Err("Editor exited with non-zero status".into());

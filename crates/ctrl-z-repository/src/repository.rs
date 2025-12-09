@@ -27,6 +27,7 @@
 
 use std::fmt;
 use std::path::Path;
+use std::process::Command;
 
 pub mod commit;
 mod error;
@@ -96,6 +97,11 @@ impl Repository {
 
     /// Commits the staged changes with the given message.
     ///
+    /// Note that this method can't use the [`git2`] crate's `commit` logic, as
+    /// this makes it impossible to sign commits using GPG. For this reason, we
+    /// need to fallback to the `git` command line interface, committing the
+    /// changes the regular way.
+    ///
     /// # Errors
     ///
     /// This method returns [`Error::Git`] if the operation fails.
@@ -103,18 +109,26 @@ impl Repository {
     where
         M: AsRef<str>,
     {
-        let mut index = self.inner.index()?;
+        let status = Command::new("git")
+            .current_dir(self.path())
+            .args([
+                "commit",
+                "--cleanup=verbatim", // Preserve markdown formatting
+                "--signoff",          // Add `Signed-off-by` trailer
+                "--no-verify",        // Don't run commit hooks
+                "--message",
+                message.as_ref(),
+            ])
+            .status()
+            .map_err(|err| {
+                let message = format!("Failed to execute git: {err}",);
+                Error::Git(git2::Error::from_str(&message))
+            })?;
 
-        // Obtain signature and create commit
-        let signature = self.inner.signature()?;
-        self.inner.commit(
-            Some("HEAD"),
-            &signature,
-            &signature,
-            message.as_ref(),
-            &self.inner.find_tree(index.write_tree()?)?,
-            &[&self.inner.head()?.peel_to_commit()?],
-        )?;
+        //
+        if !status.success() {
+            return Err(Error::Git(git2::Error::from_str("Git commit failed")));
+        }
 
         // No errors occurred
         Ok(())
@@ -209,7 +223,7 @@ impl Repository {
 
 #[allow(clippy::must_use_candidate)]
 impl Repository {
-    /// Returns the repository path.
+    /// Returns a reference to the repository path.
     #[allow(clippy::missing_panics_doc)]
     #[inline]
     pub fn path(&self) -> &Path {

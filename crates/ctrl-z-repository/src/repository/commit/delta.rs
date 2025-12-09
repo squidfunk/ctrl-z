@@ -52,7 +52,7 @@ pub enum Delta {
 
 #[allow(clippy::must_use_candidate)]
 impl Delta {
-    /// Returns the path of the delta.
+    /// Returns a reference to the path of the delta.
     #[inline]
     pub fn path(&self) -> &PathBuf {
         match self {

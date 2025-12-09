@@ -32,12 +32,14 @@ pub mod changelog;
 mod error;
 pub mod revision;
 pub mod scopes;
+pub mod summary;
 pub mod version;
 
 use change::Change;
 pub use error::{Error, Result};
 use revision::Revision;
 use scopes::Scopes;
+use summary::Summary;
 use version::Increment;
 
 // ----------------------------------------------------------------------------
@@ -58,6 +60,8 @@ pub struct Changeset<'a> {
     revisions: Vec<Revision<'a>>,
     /// Version increments.
     increments: Vec<Option<Increment>>,
+    // /// Summary of changes.
+    // summary: Summary,
 }
 
 // ----------------------------------------------------------------------------
@@ -94,23 +98,29 @@ impl Changeset<'_> {
 
 #[allow(clippy::must_use_candidate)]
 impl Changeset<'_> {
-    /// Returns the scope set.
+    /// Returns a reference to the scope set.
     #[inline]
     pub fn scopes(&self) -> &Scopes {
         &self.scopes
     }
 
-    /// Returns the list of revisions.
+    /// Returns a reference to the list of revisions.
     #[inline]
     pub fn revisions(&self) -> &[Revision<'_>] {
         &self.revisions
     }
 
-    /// Returns the version increments.
+    /// Returns a reference to the version increments.
     #[inline]
     pub fn increments(&self) -> &[Option<Increment>] {
         &self.increments
     }
+
+    // /// Returns a reference to the summary.
+    // #[inline]
+    // pub fn summary(&self) -> &Summary {
+    //     &self.summary
+    // }
 
     /// Returns the number of revisions.
     #[inline]

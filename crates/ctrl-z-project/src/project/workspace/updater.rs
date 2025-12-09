@@ -48,13 +48,11 @@ impl Updatable for Cargo {
 
         // we need to wait for the cargo toml to catch up.
 
-        // // enforce waiting for Cargo.lock
+        // enforce waiting for Cargo.lock
         let output = std::process::Command::new("cargo")
             .arg("update")
             .arg("--workspace")
             .arg("--offline")
-            // .arg("--format-version=1")
-            // .current_dir(repo.path())
             .output()
             .unwrap();
 
@@ -99,6 +97,18 @@ impl Updatable for Node {
 
         let mut content = serde_json::to_string_pretty(&doc)?;
         content.push('\n');
+
+        // Try npm first
+        let npm_result = std::process::Command::new("npm")
+            .args(["install", "--package-lock-only", "--ignore-scripts"])
+            .output();
+
+        if let Ok(output) = npm_result {
+            if output.status.success() {
+                // @todo?
+            }
+        }
+
         Ok(content)
     }
 }

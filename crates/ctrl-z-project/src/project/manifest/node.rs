@@ -68,19 +68,19 @@ pub struct Node {
 // ----------------------------------------------------------------------------
 
 impl Manifest for Node {
-    /// Returns the name.
+    /// Returns a reference to the name.
     #[inline]
     fn name(&self) -> Option<&str> {
         Some(&self.name)
     }
 
-    /// Returns the version.
+    /// Returns a reference to the version.
     #[inline]
     fn version(&self) -> Option<&Version> {
         Some(&self.version)
     }
 
-    /// Returns the members.
+    /// Returns a reference to the members.
     #[inline]
     fn members(&self) -> Cow<'_, [String]> {
         Cow::Borrowed(&self.workspaces)

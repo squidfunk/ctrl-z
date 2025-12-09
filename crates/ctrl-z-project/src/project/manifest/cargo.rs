@@ -76,7 +76,7 @@ pub enum Cargo {
 // ----------------------------------------------------------------------------
 
 impl Manifest for Cargo {
-    /// Returns the name.
+    /// Returns a reference to the name.
     #[inline]
     fn name(&self) -> Option<&str> {
         if let Cargo::Package { package, .. } = self {
@@ -86,7 +86,7 @@ impl Manifest for Cargo {
         }
     }
 
-    /// Returns the version.
+    /// Returns a reference to the version.
     #[inline]
     fn version(&self) -> Option<&Version> {
         if let Cargo::Package { package, .. } = self {
@@ -96,7 +96,7 @@ impl Manifest for Cargo {
         }
     }
 
-    /// Returns the members.
+    /// Returns a reference to the members.
     #[inline]
     fn members(&self) -> Cow<'_, [String]> {
         if let Cargo::Workspace { workspace } = self {

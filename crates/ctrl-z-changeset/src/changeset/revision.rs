@@ -58,25 +58,25 @@ pub struct Revision<'a> {
 
 #[allow(clippy::must_use_candidate)]
 impl Revision<'_> {
-    /// Returns the original commit.
+    /// Returns a reference to the original commit.
     #[inline]
     pub fn commit(&self) -> &Commit<'_> {
         &self.commit
     }
 
-    /// Returns the computed change.
+    /// Returns a reference to the computed change.
     #[inline]
     pub fn change(&self) -> &Change {
         &self.change
     }
 
-    /// Returns the affected scope indices.
+    /// Returns a reference to the affected scope indices.
     #[inline]
     pub fn scopes(&self) -> &[usize] {
         &self.scopes
     }
 
-    /// Returns the relevant issues.
+    /// Returns a reference to the relevant issues.
     #[inline]
     pub fn issues(&self) -> &[u32] {
         &self.issues

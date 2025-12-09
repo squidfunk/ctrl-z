@@ -244,13 +244,13 @@ impl<T> Manager<T>
 where
     T: Manifest,
 {
-    /// Returns the repository.
+    /// Returns a reference to the repository.
     #[inline]
     pub fn repository(&self) -> &Repository {
         &self.repository
     }
 
-    /// Returns the workspace.
+    /// Returns a reference to the workspace.
     #[inline]
     pub fn workspace(&self) -> &Workspace<T> {
         &self.workspace

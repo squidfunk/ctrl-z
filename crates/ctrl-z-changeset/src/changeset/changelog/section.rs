@@ -58,6 +58,21 @@ impl From<Category> for Section<'_> {
     }
 }
 
+#[allow(clippy::must_use_candidate)]
+impl Section<'_> {
+    /// Returns the number of items.
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.items.len()
+    }
+
+    /// Returns whether there are any items.
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.items.is_empty()
+    }
+}
+
 // ----------------------------------------------------------------------------
 
 impl fmt::Display for Section<'_> {

@@ -111,4 +111,16 @@ impl Changeset<'_> {
     pub fn increments(&self) -> &[Option<Increment>] {
         &self.increments
     }
+
+    /// Returns the number of revisions.
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.revisions.len()
+    }
+
+    /// Returns whether there are any revisions.
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.revisions.is_empty()
+    }
 }

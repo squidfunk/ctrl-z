@@ -27,6 +27,7 @@
 
 use clap::Args;
 use semver::Version;
+use std::fmt::Debug;
 use std::fs;
 use std::path::PathBuf;
 
@@ -65,8 +66,8 @@ impl Command for Arguments {
         if let Some(output) = &self.output {
             fs::create_dir_all(output.parent().expect("invariant"))?;
             fs::write(output, changelog.to_string())?;
-        } else {
-            print!("{changelog}");
+        } else if !changelog.is_empty() {
+            println!("{changelog}");
         }
 
         // No errors occurred

@@ -114,6 +114,21 @@ impl<'a> Changelog<'a> {
     }
 }
 
+#[allow(clippy::must_use_candidate)]
+impl Changelog<'_> {
+    /// Returns the number of changes.
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.sections.values().map(Section::len).sum()
+    }
+
+    /// Returns whether there are any changes.
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.sections.values().all(Section::is_empty)
+    }
+}
+
 // ----------------------------------------------------------------------------
 // Trait implementations
 // ----------------------------------------------------------------------------

@@ -32,9 +32,9 @@ use super::revision::Revision;
 use super::scopes::Scopes;
 use super::Changeset;
 
-pub mod section;
+mod section;
 
-use section::{Category, Section};
+pub use section::{Category, Section};
 
 // ----------------------------------------------------------------------------
 // Structs

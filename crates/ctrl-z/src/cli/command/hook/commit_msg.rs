@@ -26,12 +26,11 @@
 //! Validate a commit message.
 
 use clap::Args;
-use cliclack::{confirm, input, intro, outro, select};
-use ctrl_z_changeset::change::Kind;
-use ctrl_z_changeset::changelog::section::Category;
+use cliclack::{confirm, input, outro};
 use std::fs;
 use std::path::PathBuf;
 
+use ctrl_z_changeset::changelog::Category;
 use ctrl_z_changeset::Change;
 
 use crate::cli::{Command, Result};

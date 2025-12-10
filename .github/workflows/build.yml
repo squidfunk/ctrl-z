@@ -1,0 +1,52 @@
+name: Build
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  build:
+    name: Build (${{ matrix.name }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        platform:
+          - name: Linux
+            os: ubuntu-latest
+            target: [x86_64, x86, aarch64, armv7]
+          - name: macOS
+            os: macos-latest
+            target: [x86_64, aarch64]
+          - name: Windows
+            os: windows-latest
+            target: [x64, x86]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Set up Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+
+      - name: Build binary
+        run: cargo build --release
+
+      - name: Rename binary
+        run: |
+          mkdir -p artifacts
+          cp \
+            target/${{ matrix.target }}/release/ctrl-z \
+            artifacts/ctrl-z-${{ matrix.target }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ctrl-z-${{ matrix.target }}
+          path: artifacts/ctrl-z-${{ matrix.target }}

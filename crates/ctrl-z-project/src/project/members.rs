@@ -105,7 +105,7 @@ where
         // file, and if successful, push nested paths iterator onto the stack
         match res
             .map(|path| path.join(&self.file))
-            .and_then(Project::<T>::read)
+            .and_then(Project::read)
         {
             Err(err) => Some(Err(err)),
             Ok(project) => {

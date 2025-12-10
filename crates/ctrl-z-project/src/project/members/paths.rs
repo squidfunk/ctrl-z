@@ -53,8 +53,8 @@ impl Iterator for Paths {
     /// Returns the next path.
     fn next(&mut self) -> Option<Self::Item> {
         if self.paths.is_empty() {
-            // Take next pattern from the stack, and expand it as a glob - if
-            // the pattern is invalid, we propagate the error
+            // Take next pattern from the stack and expand it as a glob, or
+            // propagate the error in case the pattern is invalid
             let paths = match glob(self.patterns.pop()?.to_str()?) {
                 Ok(paths) => paths,
                 Err(err) => return Some(Err(err.into())),

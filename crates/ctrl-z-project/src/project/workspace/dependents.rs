@@ -81,7 +81,7 @@ where
         }
 
         // Analyze dependencies between packages by iterating over all projects,
-        // and adding edges for each dependency found in the workspace
+        // and adding edges to each dependency that is part of the workspace
         let mut edges = Vec::new();
         for (n, project) in builder.nodes().iter().enumerate() {
             for name in project.manifest.dependencies() {
@@ -89,10 +89,8 @@ where
                     continue;
                 };
 
-                // Here, we're sure that this is a workspace project, so we can
-                // look for the node index of the dependency, and add an edge
-                // downstream from the project to its dependency. This ensures
-                // that the graph can be traversed topologically.
+                // Here, we're sure that this is a workspace project, so we look
+                // for the index of the dependency and link it to the project
                 let mut iter = builder.nodes().iter();
                 if let Some(m) = iter.position(|&next| next == dependency) {
                     edges.push((n, m));
@@ -101,7 +99,9 @@ where
         }
 
         // Create links between projects and their dependencies by adding all
-        // collected edges to the graph
+        // collected edges to the graph. Note that links are inverted, so that
+        // they point from dependencies to dependents, allowing for topological
+        // traversal that visits dependencies first.
         for (n, m) in edges {
             builder.add_edge(m, n, ())?;
         }

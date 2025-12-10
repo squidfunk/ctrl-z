@@ -21,48 +21,42 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
-name: Check
+name: Create tag
 
 on:
-  push:
-    branches:
-      - master
   pull_request:
+    types:
+      - closed
     branches:
       - master
+
+permissions:
+  contents: write # Required for tagging
 
 jobs:
-  checks:
-    name: Lint and format
+  tag:
+    name: Create tag on merged PR
+    if: |
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.head.ref, 'release/')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
-
-      - name: Set up Rust
-        uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: stable
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          fetch-depth: 0
 
-      - name: Run clippy
-        run: cargo clippy
+      - name: Determine version
+        id: version
+        run: |
+          BRANCH="${{ github.event.pull_request.head.ref }}"
+          VERSION=${BRANCH#release/}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Run rustfmt
-        run: find crates -name "*.rs" -exec rustfmt --check {} \;
-
-  security:
-    name: Security audit
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Set up Rust cache
-        uses: Swatinem/rust-cache@v2
-
-      - name: Install cargo-audit
-        run: cargo install cargo-audit
-
-      - name: Audit dependencies
-        run: cargo audit
-
+      - name: Create and push tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$VERSION" -m "Release $VERSION"
+          git push origin "$VERSION"

@@ -13,35 +13,35 @@ jobs:
         include:
           - name: Linux, x86_64
             os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
+            target: x86_64
             suffix: ""
           - name: Linux, x86
             os: ubuntu-latest
-            target: i686-unknown-linux-gnu
+            target: x86
             suffix: ""
           - name: Linux, aarch64
             os: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
+            target: aarch64
             suffix: ""
           - name: Linux, armv7
             os: ubuntu-latest
-            target: armv7-unknown-linux-gnueabihf
+            target: armv7
             suffix: ""
           - name: macOS, x86_64
             os: macos-latest
-            target: x86_64-apple-darwin
+            target: x86_64
             suffix: ""
           - name: macOS, aarch64
             os: macos-latest
-            target: aarch64-apple-darwin
+            target: aarch64
             suffix: ""
           - name: Windows, x64
             os: windows-latest
-            target: x86_64-pc-windows-msvc
+            target: x86
             # suffix: ".exe"
           - name: Windows, x86
             os: windows-latest
-            target: i686-pc-windows-msvc
+            target: x64
             # suffix: ".exe"
         # platform:
         #   - name: Linux

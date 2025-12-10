@@ -37,7 +37,7 @@ permissions:
 
 jobs:
   build:
-    name: Build (${{ matrix.name }})
+    name: Artifact (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:

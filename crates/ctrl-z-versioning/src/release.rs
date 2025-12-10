@@ -65,7 +65,8 @@ impl<T> Manager<T>
 where
     T: Manifest,
 {
-    /// Creates a version manager at the given path.
+    /// Creates a version manager at the given path. we might move this to the
+    /// // changset? it has project and repo as a dependency anyway,,,,
     pub fn new<P>(path: P) -> Result<Self>
     where
         P: AsRef<Path>,
@@ -96,10 +97,12 @@ where
                 return Err(Error::Version(v.clone()));
             }
 
+            // versions iter ...
+
             // how can I find orphaned tags?
 
             let mut iter = versions.range(..=v).rev();
-            let (v, start) = iter.next().expect("invariant"); // ok_or?
+            let (_, start) = iter.next().expect("invariant"); // ok_or?
             let end = iter.next();
             // println!("start: {:?}, end: {:?}", v, end);
             if let Some((_, end)) = end {

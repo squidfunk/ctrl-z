@@ -32,9 +32,9 @@ use ctrl_z_project::Manifest;
 use crate::cli::{Command, Result};
 use crate::Options;
 
-mod changed;
 mod changelog;
 mod create;
+mod packages;
 
 // ----------------------------------------------------------------------------
 // Enums
@@ -48,7 +48,7 @@ pub enum Commands {
     /// Generate the changelog of a version in Markdown format.
     Changelog(changelog::Arguments),
     /// List the names of changed packages in topological order.
-    Changed(changed::Arguments),
+    Packages(packages::Arguments),
 }
 
 // ----------------------------------------------------------------------------
@@ -64,7 +64,7 @@ where
         match self {
             Commands::Changelog(args) => args.execute(options),
             Commands::Create(args) => args.execute(options),
-            Commands::Changed(args) => args.execute(options),
+            Commands::Packages(args) => args.execute(options),
         }
     }
 }

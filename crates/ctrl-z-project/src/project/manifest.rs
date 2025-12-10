@@ -62,8 +62,8 @@ pub trait Manifest: Debug + FromStr<Err = Error> {
     ///
     /// # Errors
     ///
-    /// This method should return an error if the path cannot be resolved, or
-    /// if the file doesn't exist. Mechanics are up to the implementor.
+    /// This method must return an error if the path cannot be resolved, or if
+    /// the file doesn't exist. Mechanics are up to the implementor.
     fn resolve(path: &Path) -> Result<PathBuf, Error>;
 
     /// Returns a reference to the name.

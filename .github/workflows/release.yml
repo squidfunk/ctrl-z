@@ -32,13 +32,13 @@ permissions:
   contents: write # Required for releases
 
 jobs:
-  build:
-    uses: ./.github/workflows/build.yml
-    with:
-      ref: ${{ github.ref }}
+  # build:
+  #   uses: ./.github/workflows/build.yml
+  #   with:
+  #     ref: ${{ github.ref }}
 
   release:
-    needs: build
+    # needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts

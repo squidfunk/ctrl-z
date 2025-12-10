@@ -31,6 +31,7 @@ use std::collections::BTreeMap;
 use std::fmt;
 use std::ops::RangeBounds;
 
+use super::commit::Commits;
 use super::error::Result;
 use super::id::Id;
 use super::Repository;
@@ -45,7 +46,9 @@ use super::Repository;
 /// are ordered chronologically, so iteration and range queries are simple. Each
 /// version is mapped to the identifier of its corresponding commit, so commits
 /// can be obtained to query for changes between two versions.
-pub struct Versions {
+pub struct Versions<'a> {
+    /// Repository.
+    repository: &'a Repository,
     /// Versions and their corresponding commit identifiers.
     tags: BTreeMap<Version, Id>,
 }
@@ -67,7 +70,7 @@ impl Repository {
     /// This method returns [`Error::Git`][] if the operation fails.
     ///
     /// [`Error::Git`]: crate::repository::Error::Git
-    pub fn versions(&self) -> Result<Versions> {
+    pub fn versions(&self) -> Result<Versions<'_>> {
         let tags = self.inner.tag_names(Some("v[0-9]*.[0-9]*.[0-9]**"))?;
         let iter = tags.iter().flatten().map(|name| {
             let version = name.trim_start_matches('v').parse()?;
@@ -76,13 +79,20 @@ impl Repository {
 
         // Collect and return version set
         let tags = iter.collect::<Result<_>>()?;
-        Ok(Versions { tags })
+        Ok(Versions { repository: self, tags })
     }
 }
 
 // ----------------------------------------------------------------------------
 
-impl Versions {
+impl Versions<'_> {
+    /// Returns the commit identifier for the given version.
+    #[inline]
+    #[must_use]
+    pub fn get(&self, version: &Version) -> Option<&Id> {
+        self.tags.get(version)
+    }
+
     /// Returns whether the version set contains the given version.
     #[inline]
     #[must_use]
@@ -96,15 +106,24 @@ impl Versions {
     where
         R: RangeBounds<Version>,
     {
+        // we don't range iter over the version set BUT over the commits!
         self.tags.range(range)
     }
+
+    // /// Returns an iterator over the commits at the head of the repository.
+    // pub fn head(&self) -> Result<Commits<'_>> {
+    //     // @todo maybe we should rename versions
+
+    // }
+
+    // Select? get?
 }
 
 // ----------------------------------------------------------------------------
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl fmt::Debug for Versions {
+impl fmt::Debug for Versions<'_> {
     /// Formats the version set for debugging.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Versions")

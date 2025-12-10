@@ -34,7 +34,8 @@ use super::Repository;
 mod delta;
 mod iter;
 
-pub use delta::Delta;
+pub use delta::{Delta, Deltas};
+pub use iter::Commits;
 
 // ----------------------------------------------------------------------------
 // Structs

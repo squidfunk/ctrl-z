@@ -111,7 +111,7 @@ impl VersionExt for Version {
         version
     }
 
-    /// Returns the highest possible bump for the version.
+    /// Returns the highest possible increment for the version.
     ///
     /// This method returns the highest possible increment for this version,
     /// taking into account special handling for `0.0.z` and `0.y.z` ranges.

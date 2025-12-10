@@ -1,3 +1,26 @@
+# Copyright (c) 2025 Zensical and contributors
+
+# SPDX-License-Identifier: MIT
+# Third-party contributions licensed under DCO
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+# IN THE SOFTWARE.
+
 name: Build
 
 on:
@@ -10,7 +33,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        include: # @todo source this from JSON?
+        include:
           - name: Linux, x86_64
             os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
@@ -37,16 +60,6 @@ jobs:
           - name: macOS, aarch64
             os: macos-latest
             target: aarch64-apple-darwin
-        # platform:
-        #   - name: Linux
-        #     os: ubuntu-latest
-        #     target: [x86_64, x86, aarch64, armv7]
-        #   - name: macOS
-        #     os: macos-latest
-        #     target: [x86_64, aarch64]
-        #   - name: Windows
-        #     os: windows-latest
-        #     target: [x64, x86]
 
     steps:
       - name: Checkout repository
@@ -62,14 +75,20 @@ jobs:
         with:
           key: ${{ matrix.target }}
 
-      - name: Build binary
+      - name: Build artifact
         run: cargo build --release
 
-      - name: Rename binary
+      - name: Rename artifact
         run: |
           mkdir -p artifacts
           cp \
             target/release/ctrl-z${{ matrix.suffix }} \
+            artifacts/ctrl-z-${{ matrix.target }}${{ matrix.suffix }}
+
+      - name: Create artifact attestation
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: >
             artifacts/ctrl-z-${{ matrix.target }}${{ matrix.suffix }}
 
       - name: Upload artifact

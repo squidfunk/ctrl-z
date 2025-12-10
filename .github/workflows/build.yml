@@ -79,9 +79,10 @@ jobs:
         run: cargo build --release
 
       - name: Rename artifact
+        shell: bash
         run: |
           mkdir -p artifacts
-          cp \
+          mv \
             target/release/ctrl-z${{ matrix.suffix }} \
             artifacts/ctrl-z-${{ matrix.target }}${{ matrix.suffix }}
 

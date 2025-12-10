@@ -10,39 +10,33 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        include:
+        include: # @todo source this from JSON?
           - name: Linux, x86_64
             os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            suffix: ""
           - name: Linux, x86
             os: ubuntu-latest
             target: i686-unknown-linux-gnu
-            suffix: ""
           - name: Linux, aarch64
             os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
-            suffix: ""
           - name: Linux, armv7
             os: ubuntu-latest
             target: armv7-unknown-linux-gnueabihf
-            suffix: ""
-          - name: macOS, x86_64
-            os: macos-latest
-            target: x86_64-apple-darwin
-            suffix: ""
-          - name: macOS, aarch64
-            os: macos-latest
-            target: aarch64-apple-darwin
-            suffix: ""
           - name: Windows, x64
             os: windows-latest
             target: x86_64-pc-windows-msvc
-            # suffix: ".exe"
+            suffix: .exe
           - name: Windows, x86
             os: windows-latest
             target: i686-pc-windows-msvc
-            # suffix: ".exe"
+            suffix: .exe
+          - name: macOS, x86_64
+            os: macos-latest
+            target: x86_64-apple-darwin
+          - name: macOS, aarch64
+            os: macos-latest
+            target: aarch64-apple-darwin
         # platform:
         #   - name: Linux
         #     os: ubuntu-latest
@@ -75,8 +69,8 @@ jobs:
         run: |
           mkdir -p artifacts
           cp \
-            target/${{ matrix.target }}/release/ctrl-z \
-            artifacts/ctrl-z-${{ matrix.target }}
+            target/release/ctrl-z${{ matrix.suffix }} \
+            artifacts/ctrl-z-${{ matrix.target }}${{ matrix.suffix }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

@@ -94,11 +94,12 @@ jobs:
       - name: Create artifact attestation
         uses: actions/attest-build-provenance@v1
         with:
+          show-summary: false
           subject-path: >
             artifacts/ctrl-z-${{ matrix.target }}${{ matrix.suffix }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ctrl-z-${{ matrix.target }}
-          path: artifacts/ctrl-z-${{ matrix.target }}
+          name: ctrl-z-${{ matrix.target }}${{ matrix.suffix }}
+          path: artifacts/ctrl-z-${{ matrix.target }}${{ matrix.suffix }}

@@ -27,8 +27,6 @@
 
 use clap::Args;
 use semver::Version;
-use std::collections::BTreeSet;
-use std::path::PathBuf;
 
 use ctrl_z_project::Manifest;
 use ctrl_z_versioning::Manager;
@@ -45,9 +43,6 @@ use crate::Options;
 pub struct Arguments {
     /// Version in x.y.z format
     version: Option<Version>,
-    /// Output to file.
-    #[arg(short, long)]
-    output: Option<PathBuf>,
 }
 
 // ----------------------------------------------------------------------------
@@ -63,25 +58,15 @@ where
         let manager = Manager::<T>::new(options.directory)?;
         let changeset = manager.changeset(self.version.as_ref())?;
 
-        // collect all scopes
-        let mut scopes = BTreeSet::<usize>::new(); // why?
-        for revision in changeset.revisions() {
-            scopes.extend(revision.scopes());
-        }
-
-        // create deps and determine correct order – @todo alarm when
-        // no packages is part of a bump _ just don't do a release!
-        let deps = manager.workspace().dependents().unwrap();
+        // Obtain version increments, which denote which packages have changed,
+        // and traverse dependents to list changed packages in topological order
         let increments = changeset.increments();
-
-        // traverse all nodes
-        let mut traversal = deps.graph.traverse(deps.graph.sources());
-        while let Some(node) = traversal.take() {
-            if scopes.contains(&node) && increments[node].is_some() {
-                let name = deps.graph[node].name().unwrap();
+        let dependents = manager.workspace().dependents()?;
+        for node in &dependents {
+            if increments[node].is_some() {
+                let name = dependents[node].name().expect("invariant");
                 println!("{name}");
             }
-            let _ = traversal.complete(node);
         }
 
         // @todo add file output

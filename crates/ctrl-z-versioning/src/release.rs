@@ -25,12 +25,12 @@
 
 //! Version manager.
 
-use ctrl_z_changeset::{Changeset, Increment, VersionExt};
-use ctrl_z_project::workspace::updater::Updatable;
 use semver::Version;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
+use ctrl_z_changeset::{Changeset, Increment, VersionExt};
+use ctrl_z_project::workspace::updater::Updatable;
 use ctrl_z_project::{Manifest, Workspace};
 use ctrl_z_repository::Repository;
 
@@ -57,6 +57,9 @@ where
 // ----------------------------------------------------------------------------
 // Implementations
 // ----------------------------------------------------------------------------
+
+// @todo: do we need a separate error? unclear... maybe we move this to project+
+// itslf, and also move the updater there...? but this would mean a dep to repo
 
 impl<T> Manager<T>
 where

@@ -28,8 +28,6 @@
 use clap::Args;
 use semver::Version;
 use std::fmt::Debug;
-use std::fs;
-use std::path::PathBuf;
 
 use ctrl_z_project::Manifest;
 use ctrl_z_versioning::Manager;
@@ -49,9 +47,6 @@ pub struct Arguments {
     /// Include version summary.
     #[arg(short, long)]
     summary: bool,
-    /// Output to file.
-    #[arg(short, long)]
-    output: Option<PathBuf>,
 }
 
 // ----------------------------------------------------------------------------
@@ -74,17 +69,8 @@ where
             changelog = format!("{summary}\n\n{changelog}");
         }
 
-        // Write to standard out or file
-        if let Some(output) = &self.output {
-            // In order to be predictable and consistent, we always need to
-            // write the changelog to a file, even though it may be empty
-            fs::create_dir_all(output.parent().expect("invariant"))?;
-            fs::write(output, changelog)?;
-        } else if !changelog.is_empty() {
-            println!("{changelog}");
-        }
-
-        // No errors occurred
+        // Write to standard out
+        println!("{changelog}");
         Ok(())
     }
 }

@@ -150,8 +150,8 @@ where
         for node in dependents.graph.traverse(changed) {
             let project = &dependents.graph[node];
 
-            // Project info + bump
-            let (name, current_version) = project.info().expect("invariant");
+            let name = project.name().expect("invariant");
+            let current_version = project.version().expect("invariant");
             let bump = increments[node];
 
             // determine the max bump levels by deps. this dictates the number
@@ -193,8 +193,8 @@ where
         for (index, increment) in increments.iter().enumerate() {
             if let Some(increment) = increment {
                 let project = &dependents.graph[index];
-                let info = project.info().expect("invariant");
-                let (name, current_version) = info;
+                let name = project.name().expect("invariant");
+                let current_version = project.version().expect("invariant");
 
                 let new_version = current_version.bump(*increment);
                 versions.insert(name.to_string(), new_version);

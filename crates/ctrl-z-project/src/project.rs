@@ -81,22 +81,36 @@ where
         })
     }
 
-    /// Returns the name and version of the project.
-    ///
-    /// This method is provided for convenience, in order to extract the name
-    /// and version of a project with one method call. Some projects that are
-    /// part of a [`Workspace`] might not define those fields, since they are
-    /// solely hosts of further projects, e.g. Cargo workspaces.
-    ///
-    /// [`Workspace`]: crate::project::workspace::Workspace
+    /// Returns a reference to the name.
     #[inline]
-    pub fn info(&self) -> Option<(&str, &Version)> {
-        Some((self.manifest.name()?, self.manifest.version()?))
+    pub fn name(&self) -> Option<&str> {
+        self.manifest.name()
+    }
+
+    /// Returns a reference to the version.
+    #[inline]
+    pub fn version(&self) -> Option<&Version> {
+        self.manifest.version()
     }
 }
 
 // ----------------------------------------------------------------------------
 // Trait implementations
+// ----------------------------------------------------------------------------
+
+impl<T> PartialEq for Project<T>
+where
+    T: Manifest,
+{
+    /// Compares two projects for equality.
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        self.path == other.path
+    }
+}
+
+impl<T> Eq for Project<T> where T: Manifest {}
+
 // ----------------------------------------------------------------------------
 
 impl<T> IntoIterator for Project<T>
@@ -122,7 +136,7 @@ where
 {
     /// Formats the project for display.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let Some((name, version)) = self.info() else {
+        let (Some(name), Some(version)) = (self.name(), self.version()) else {
             return f.write_str("(workspace)");
         };
 

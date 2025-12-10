@@ -1433,7 +1433,6 @@ dependencies = [
 [[package]]
 name = "zrx"
 version = "0.0.3"
-source = "git+https://github.com/zensical/zrx#4a551596ee93d78fadae35a57796e14a940d4d23"
 dependencies = [
  "zrx-diagnostic",
  "zrx-executor",
@@ -1448,12 +1447,10 @@ dependencies = [
 [[package]]
 name = "zrx-diagnostic"
 version = "0.0.1"
-source = "git+https://github.com/zensical/zrx#4a551596ee93d78fadae35a57796e14a940d4d23"
 
 [[package]]
 name = "zrx-executor"
 version = "0.0.1"
-source = "git+https://github.com/zensical/zrx#4a551596ee93d78fadae35a57796e14a940d4d23"
 dependencies = [
  "crossbeam",
  "thiserror",
@@ -1462,7 +1459,6 @@ dependencies = [
 [[package]]
 name = "zrx-graph"
 version = "0.0.1"
-source = "git+https://github.com/zensical/zrx#4a551596ee93d78fadae35a57796e14a940d4d23"
 dependencies = [
  "ahash",
  "thiserror",
@@ -1471,7 +1467,6 @@ dependencies = [
 [[package]]
 name = "zrx-id"
 version = "0.0.3"
-source = "git+https://github.com/zensical/zrx#4a551596ee93d78fadae35a57796e14a940d4d23"
 dependencies = [
  "globset",
  "percent-encoding",
@@ -1482,12 +1477,10 @@ dependencies = [
 [[package]]
 name = "zrx-path"
 version = "0.0.1"
-source = "git+https://github.com/zensical/zrx#4a551596ee93d78fadae35a57796e14a940d4d23"
 
 [[package]]
 name = "zrx-scheduler"
 version = "0.0.1"
-source = "git+https://github.com/zensical/zrx#4a551596ee93d78fadae35a57796e14a940d4d23"
 dependencies = [
  "ahash",
  "crossbeam",
@@ -1503,7 +1496,6 @@ dependencies = [
 [[package]]
 name = "zrx-store"
 version = "0.0.1"
-source = "git+https://github.com/zensical/zrx#4a551596ee93d78fadae35a57796e14a940d4d23"
 dependencies = [
  "ahash",
  "litemap",
@@ -1513,7 +1505,6 @@ dependencies = [
 [[package]]
 name = "zrx-stream"
 version = "0.0.1"
-source = "git+https://github.com/zensical/zrx#4a551596ee93d78fadae35a57796e14a940d4d23"
 dependencies = [
  "ahash",
  "thiserror",

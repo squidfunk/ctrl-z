@@ -78,7 +78,7 @@ where
         let mut traversal = deps.graph.traverse(deps.graph.sources());
         while let Some(node) = traversal.take() {
             if scopes.contains(&node) && increments[node].is_some() {
-                let name = deps.graph[node].info().unwrap().0;
+                let name = deps.graph[node].name().unwrap();
                 println!("{name}");
             }
             let _ = traversal.complete(node);

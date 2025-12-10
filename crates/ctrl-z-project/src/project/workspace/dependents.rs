@@ -23,8 +23,10 @@
 
 // ----------------------------------------------------------------------------
 
-//! Iterator over dependents in a workspace.
+//! Workspace dependents.
 
+use std::ops::Index;
+use zrx::graph::traversal::IntoIter;
 use zrx::graph::Graph;
 
 use crate::project::manifest::Manifest;
@@ -36,7 +38,7 @@ use super::Workspace;
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Iterator over dependents in a workspace.
+/// Workspace dependents.
 #[derive(Debug)]
 pub struct Dependents<'a, T>
 where
@@ -50,51 +52,105 @@ where
 // Structs
 // ----------------------------------------------------------------------------
 
-// pub struct
-
-// we might just number the packages,
-
 impl<T> Workspace<T>
 where
     T: Manifest,
 {
-    /// @todo cleanup
+    /// Returns the dependents of a workspace.
+    ///
+    /// This method creates a graph that links projects in a workspace with
+    /// their inner-workspace dependencies, allowing to perform a topological
+    /// traversal. Handling packages in the right order it absolutely essential
+    /// for correct versioning and release management.
+    ///
+    /// # Errors
+    ///
+    /// This method returns [`Error::Graph`][], if the graph could not be
+    /// constructed, which should practically never happen.
+    ///
+    /// [`Error::Graph`]: crate::project::Error::Graph
     pub fn dependents(&self) -> Result<Dependents<'_, T>> {
         let mut builder = Graph::builder();
+
+        // Collect all packages in the workspace, which are all projects that
+        // have a dedicated name and version, and add them as nodes
         for project in self.projects.values() {
-            // If the project's manifest includes a name, we must treat it as a
-            // dedicated package. This does not hold for workspaces in Rust.
             if project.manifest.name().is_some() {
                 builder.add_node(project);
             }
         }
 
+        // Analyze dependencies between packages by iterating over all projects,
+        // and adding edges for each dependency found in the workspace
         let mut edges = Vec::new();
-        let projects = builder.nodes();
-        for (n, project) in projects.iter().enumerate() {
+        for (n, project) in builder.nodes().iter().enumerate() {
             for name in project.manifest.dependencies() {
-                // find the dependency in the workspace
-                if let Some(dependency) = self.get(name) {
-                    // get the actual dependency
-                    if let Some(m) = projects.iter().position(|candidate| {
-                        candidate.manifest.name() == dependency.manifest.name()
-                    }) {
-                        edges.push((n, m));
-                    }
+                let Some(dependency) = self.get(name) else {
+                    continue;
+                };
+
+                // Here, we're sure that this is a workspace project, so we can
+                // look for the node index of the dependency, and add an edge
+                // downstream from the project to its dependency. This ensures
+                // that the graph can be traversed topologically.
+                let mut iter = builder.nodes().iter();
+                if let Some(m) = iter.position(|&next| next == dependency) {
+                    edges.push((n, m));
                 }
             }
         }
 
+        // Create links between projects and their dependencies by adding all
+        // collected edges to the graph
         for (n, m) in edges {
             builder.add_edge(m, n, ())?;
         }
 
-        // this is only necessary for propagation of versions...
-        // let builder = Graph::builder();
-        let graph = builder.build();
-        Ok(Dependents { graph })
+        // Create and return dependents
+        Ok(Dependents { graph: builder.build() })
     }
+}
 
-    // now, a function that emits a project and a version bump, and
-    // expects to return another version bump, then returns all bumps?
+// ----------------------------------------------------------------------------
+
+impl<T> Dependents<'_, T>
+where
+    T: Manifest,
+{
+    /// Creates an iterator over the dependents in the workspace.
+    pub fn iter(&self) -> IntoIter {
+        self.into_iter()
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Trait implementations
+// ----------------------------------------------------------------------------
+
+impl<'a, T> Index<usize> for Dependents<'a, T>
+where
+    T: Manifest,
+{
+    type Output = &'a Project<T>;
+
+    /// Returns the project at the given index.
+    #[inline]
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.graph[index]
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+impl<'a, T> IntoIterator for &'a Dependents<'a, T>
+where
+    T: Manifest,
+{
+    type Item = usize;
+    type IntoIter = IntoIter;
+
+    /// Creates an iterator over the dependents in the workspace.
+    fn into_iter(self) -> Self::IntoIter {
+        self.graph.traverse(self.graph.sources()).into_iter()
+    }
 }

@@ -44,13 +44,16 @@ pub mod node;
 ///
 /// Manifests are packages and workspaces – sometimes one or the other, and
 /// sometimes both at the same time, depending on the ecosystem. This is also
-/// why several methods of this trait return optional references – cosystems
+/// why several methods of this trait return optional references – ecosystems
 /// differ in how they implement these concepts (e.g. Rust and Node).
 ///
 /// Note that manifests only return the names of their dependencies, not their
 /// version requirements, since we only require inner-workspace dependencies,
 /// which we resolve as part of workspace resolution. Also, some ecosystems
 /// like Rust support inheriting version requirements from the workspace.
+///
+/// Think of this trait as being an adapter into an ecosystem-specific manifest
+/// format, providing just enough information for version management.
 pub trait Manifest: Debug + FromStr<Err = Error> {
     /// Resolves the manifest path from the given path.
     ///

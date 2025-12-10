@@ -106,8 +106,11 @@ where
     /// Returns a reference to the project with the given name.
     #[inline]
     #[must_use]
-    pub fn get(&self, name: &str) -> Option<&Project<T>> {
-        self.projects.get(self.packages.get(name)?)
+    pub fn get<N>(&self, name: N) -> Option<&Project<T>>
+    where
+        N: AsRef<str>,
+    {
+        self.projects.get(self.packages.get(name.as_ref())?)
     }
 
     /// Creates an iterator over the workspace.

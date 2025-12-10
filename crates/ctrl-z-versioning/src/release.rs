@@ -80,6 +80,9 @@ where
 
     // @todo with_options(dry run?)
 
+    // we should move this iterator to the repository, then we dont need this
+    // method...
+
     /// obtain changelog... - we should deduce version outside! otherwise, its ehead
     /// // @todo: maybe we should pass version in the options...
     pub fn changeset(

@@ -83,15 +83,12 @@ impl Updatable for Node {
                 }
             }
 
-            // Update dependencies sections
-            for section in
-                ["dependencies", "devDependencies", "peerDependencies"]
+            // Update dependencies sections - only normal deps for now
+            if let Some(deps) = obj
+                .get_mut("dependencies")
+                .and_then(|value| value.as_object_mut())
             {
-                if let Some(deps) =
-                    obj.get_mut(section).and_then(|value| value.as_object_mut())
-                {
-                    update_npm_dependency_table(deps, versions);
-                }
+                update_npm_dependency_table(deps, versions);
             }
         }
 

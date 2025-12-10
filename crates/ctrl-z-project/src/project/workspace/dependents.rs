@@ -27,7 +27,7 @@
 
 use zrx::graph::Graph;
 
-use crate::project::manifest::{Dependencies, Manifest};
+use crate::project::manifest::Manifest;
 use crate::project::{Project, Result};
 
 use super::Workspace;
@@ -56,7 +56,7 @@ where
 
 impl<T> Workspace<T>
 where
-    T: Manifest + Dependencies,
+    T: Manifest,
 {
     /// @todo cleanup
     pub fn dependents(&self) -> Result<Dependents<'_, T>> {
@@ -72,9 +72,10 @@ where
         let mut edges = Vec::new();
         let projects = builder.nodes();
         for (n, project) in projects.iter().enumerate() {
-            for (name, _) in project.manifest.dependencies() {
+            for name in project.manifest.dependencies() {
                 // find the dependency in the workspace
                 if let Some(dependency) = self.get(name) {
+                    // get the actual dependency
                     if let Some(m) = projects.iter().position(|candidate| {
                         candidate.manifest.name() == dependency.manifest.name()
                     }) {

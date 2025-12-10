@@ -101,7 +101,7 @@ where
 
         let summary = prompt_commit_message(self.visual)?;
 
-        manager.update(versions, summary)?;
+        // manager.update(versions, summary)?;
 
         // No errors occurred
         Ok(())

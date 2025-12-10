@@ -25,14 +25,14 @@
 
 //! Cargo manifest.
 
-use semver::{Version, VersionReq};
+use semver::Version;
 use serde::Deserialize;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
-use crate::project::manifest::{Dependencies, Manifest};
+use crate::project::manifest::Manifest;
 use crate::project::{Error, Result};
 
 mod dependency;
@@ -77,15 +77,9 @@ pub enum Cargo {
 
 impl Manifest for Cargo {
     /// Resolves the manifest path from the given path.
-    ///
-    /// This method just appends `Cargo.toml` to the given path, since this
-    /// is the only valid and supported name in the Rust ecosystem.
     #[inline]
-    fn resolve<P>(path: P) -> Result<PathBuf>
-    where
-        P: AsRef<Path>,
-    {
-        Ok(path.as_ref().join("Cargo.toml"))
+    fn resolve(path: &Path) -> Result<PathBuf> {
+        Ok(path.join("Cargo.toml"))
     }
 
     /// Returns a reference to the name.
@@ -117,21 +111,17 @@ impl Manifest for Cargo {
             Cow::Borrowed(&[])
         }
     }
-}
 
-// @todo
-impl Dependencies for Cargo {
-    fn dependencies(
-        &self,
-    ) -> impl Iterator<Item = (&String, Option<&VersionReq>)> {
+    /// Creates an iterator over the dependencies.
+    #[inline]
+    fn dependencies(&self) -> impl Iterator<Item = &str> {
         let dependencies = match self {
             Cargo::Package { dependencies, .. } => dependencies,
             Cargo::Workspace { workspace } => &workspace.dependencies,
         };
 
-        dependencies
-            .iter()
-            .map(|(name, dependency)| (name, dependency.version()))
+        // Return iterator over dependency names
+        dependencies.keys().map(String::as_str)
     }
 }
 

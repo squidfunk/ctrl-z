@@ -59,6 +59,6 @@ fn main() -> Result {
     let cli = Cli::parse();
     cli.command.execute(Options {
         directory: cli.directory.clone(), // @todo really?
-        manager: Manager::<Cargo>::new(cli.directory.clone())?,
+        manager: Manager::<Cargo>::new(cli.directory.clone())?, // @todo how to node?
     })
 }

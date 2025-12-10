@@ -32,7 +32,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
-use crate::project::manifest::{Dependencies, Manifest};
+use crate::project::manifest::Manifest;
 use crate::project::{Error, Result};
 
 // ----------------------------------------------------------------------------
@@ -58,9 +58,6 @@ pub struct Node {
     /// Package dependencies.
     #[serde(default)]
     pub dependencies: BTreeMap<String, VersionReq>,
-    /// Package development dependencies.
-    #[serde(default)]
-    pub dev_dependencies: BTreeMap<String, VersionReq>,
 }
 
 // ----------------------------------------------------------------------------
@@ -69,15 +66,9 @@ pub struct Node {
 
 impl Manifest for Node {
     /// Resolves the manifest path from the given path.
-    ///
-    /// This method just appends `package.json` to the given path, since this
-    /// is the only valid and supported name in the Node ecosystem.
     #[inline]
-    fn resolve<P>(path: P) -> Result<PathBuf>
-    where
-        P: AsRef<Path>,
-    {
-        Ok(path.as_ref().join("package.json"))
+    fn resolve(path: &Path) -> Result<PathBuf> {
+        Ok(path.join("package.json"))
     }
 
     /// Returns a reference to the name.
@@ -97,18 +88,11 @@ impl Manifest for Node {
     fn members(&self) -> Cow<'_, [String]> {
         Cow::Borrowed(&self.workspaces)
     }
-}
 
-impl Dependencies for Node {
-    // @todo
-    fn dependencies(
-        &self,
-    ) -> impl Iterator<Item = (&String, Option<&VersionReq>)> {
-        // self.dependencies.iter().map(||)
-
-        self.dependencies
-            .iter()
-            .map(|(name, version)| (name, Some(version)))
+    /// Creates an iterator over the dependencies.
+    #[inline]
+    fn dependencies(&self) -> impl Iterator<Item = &str> {
+        self.dependencies.keys().map(String::as_str)
     }
 }
 

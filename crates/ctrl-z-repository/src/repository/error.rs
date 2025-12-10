@@ -25,7 +25,7 @@
 
 //! Repository error.
 
-use std::{io, result};
+use std::{io, process, result};
 use thiserror::Error;
 
 // ----------------------------------------------------------------------------
@@ -44,6 +44,9 @@ pub enum Error {
     /// Version error.
     #[error(transparent)]
     Semver(#[from] semver::Error),
+    /// Process exited with status.
+    #[error("process exited with status {0}")]
+    Status(process::ExitStatus),
     /// Invalid bound.
     #[error("invalid bound")]
     Bound,

@@ -119,15 +119,12 @@ impl Repository {
                 "--message",
                 message.as_ref(),
             ])
-            .status()
-            .map_err(|err| {
-                let message = format!("Failed to execute git: {err}",);
-                Error::Git(git2::Error::from_str(&message))
-            })?;
+            .status()?;
 
-        //
+        // Wrap non-zero exit status as error - switch to `ExitStatusError` when
+        // #84908 is stable – https://github.com/rust-lang/rust/issues/84908
         if !status.success() {
-            return Err(Error::Git(git2::Error::from_str("Git commit failed")));
+            return Err(Error::Status(status));
         }
 
         // No errors occurred

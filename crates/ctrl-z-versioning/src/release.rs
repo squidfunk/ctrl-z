@@ -31,7 +31,6 @@ use semver::Version;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
-use ctrl_z_project::manifest::Dependencies;
 use ctrl_z_project::{Manifest, Workspace};
 use ctrl_z_repository::Repository;
 
@@ -126,7 +125,6 @@ where
     // this should be called recommendation!?
     pub fn bump<F>(&self, mut f: F) -> Result<BTreeMap<String, Version>>
     where
-        T: Dependencies, // @todo move into manifest
         F: FnMut(
             &str,
             &Version,
@@ -153,9 +151,7 @@ where
             let project = &dependents.graph[node];
 
             // Project info + bump
-            let info = project.info().expect("invariant");
-            let (name, current_version) = info;
-
+            let (name, current_version) = project.info().expect("invariant");
             let bump = increments[node];
 
             // determine the max bump levels by deps. this dictates the number
@@ -209,6 +205,8 @@ where
         Ok(versions)
     }
 
+    // we should use the versions thing as applyable to a workspace.
+    // it should also consume the workspace
     pub fn update(
         &mut self, versions: BTreeMap<String, Version>, summary: String,
     ) -> Result<()>

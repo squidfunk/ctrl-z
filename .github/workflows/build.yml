@@ -61,6 +61,11 @@ jobs:
             os: macos-latest
             target: aarch64-apple-darwin
 
+    permissions:
+      contents: write
+      attestations: write  # Required for attestations
+      id-token: write      # Required for OIDC
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5

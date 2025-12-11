@@ -102,7 +102,7 @@ jobs:
               target/release/ctrl-z${{ matrix.suffix }}
           else
             tar -czf artifacts/ctrl-z-${{ matrix.target }}.tar.gz -C \
-              target/release ctrl-z${{ matrix.suffix }}
+              target/release/ctrl-z${{ matrix.suffix }}
           fi
           rm target/release/ctrl-z${{ matrix.suffix }}
 

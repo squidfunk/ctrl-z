@@ -93,23 +93,28 @@ jobs:
       - name: Build artifact
         run: cargo build --release
 
-      - name: Rename artifact
+      - name: Prepare artifact for upload
         shell: bash
         run: |
           mkdir -p artifacts
-          mv \
-            target/release/ctrl-z${{ matrix.suffix }} \
-            artifacts/ctrl-z-${{ matrix.target }}${{ matrix.suffix }}
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            zip -j artifacts/ctrl-z-${{ matrix.target }}.zip \
+              target/release/ctrl-z${{ matrix.suffix }}
+          else
+            tar -czf artifacts/ctrl-z-${{ matrix.target }}.tar.gz -C \
+              target/release ctrl-z${{ matrix.suffix }}
+          fi
+          rm target/release/ctrl-z${{ matrix.suffix }}
 
       - name: Create artifact attestation
         uses: actions/attest-build-provenance@v1
         with:
           show-summary: false
           subject-path: >
-            artifacts/ctrl-z-${{ matrix.target }}${{ matrix.suffix }}
+            artifacts/*
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ctrl-z-${{ matrix.target }}${{ matrix.suffix }}
-          path: artifacts/ctrl-z-${{ matrix.target }}${{ matrix.suffix }}
+          path: artifacts/*

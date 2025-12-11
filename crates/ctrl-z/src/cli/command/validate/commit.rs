@@ -79,7 +79,7 @@ where
                 continue;
             }
 
-            // if file, then interactively
+            // if file, then interactively - @todo
             if self.file.is_some() {
                 let confirm2 = confirm("Is this commit related to an issue?")
                     .initial_value(true)

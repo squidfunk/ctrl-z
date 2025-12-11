@@ -3,7 +3,7 @@
 name: Download ctrl-z binary
 description: Download and unpack the ctrl-z binary for CI
 runs:
-  using: "composite"
+  using: composite
   steps:
     - shell: bash
       run: |

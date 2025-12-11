@@ -93,16 +93,14 @@ jobs:
       - name: Build artifact
         run: cargo build --release
 
-      - name: create artifact archive
+      - name: Create artifact archive
         shell: bash
         run: |
           mkdir -p artifacts
           if [[ "${{ runner.os }}" == "Windows" ]]; then
-            pwsh -c @"
-              Compress-Archive
-                -Path target/release/ctrl-z${{ matrix.suffix }}
-                -DestinationPath artifacts/ctrl-z-${{ matrix.target }}.zip
-            "@
+            pwsh -c "Compress-Archive `
+              -Path target/release/ctrl-z${{ matrix.suffix }} `
+              -DestinationPath artifacts/ctrl-z-${{ matrix.target }}.zip"
           else
             tar -czf artifacts/ctrl-z-${{ matrix.target }}.tar.gz -C \
               target/release ctrl-z${{ matrix.suffix }}

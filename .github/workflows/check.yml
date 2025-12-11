@@ -67,7 +67,7 @@ jobs:
         run: find crates -name "*.rs" -exec rustfmt --check {} \;
 
   security:
-    name: Security audit
+    name: Audit
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

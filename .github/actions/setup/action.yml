@@ -1,0 +1,11 @@
+name: Download ctrl-z binary
+description: Download and unpack the ctrl-z binary for CI
+runs:
+  using: "composite"
+  steps:
+    - shell: bash
+      run: |
+        curl -sSL https://github.com/squidfunk/ctrl-z/releases/download/v0.0.24/ctrl-z-x86_64-unknown-linux-gnu.tar.gz -o ctrl-z.tar.gz
+        tar -xzf ctrl-z.tar.gz
+        chmod +x ctrl-z
+        echo "$PWD" >> $GITHUB_PATH

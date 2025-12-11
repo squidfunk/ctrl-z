@@ -96,8 +96,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # ctrl-z version changelog -s ${{ needs.tag.outputs.version }} > notes.txt
-          echo "foo" > notes.txt
+          ctrl-z version changelog -s ${{ needs.tag.outputs.version }} > notes.txt
           gh release create ${{ needs.tag.outputs.version }} \
             --title "${{ needs.tag.outputs.version }}" \
             --notes-file notes.txt \

@@ -24,6 +24,7 @@
 name: Commit
 
 on:
+  push:
   pull_request:
     types:
       - opened
@@ -54,6 +55,7 @@ jobs:
           head="${{ github.event.pull_request.head.sha }}"
           echo "Getting commits from ${base}..${head}"
           git log "${base}..${head}" --pretty=format:"%s" > commits.txt
+          cat commits.txt
 
       - name: Validate commit messages
         run: |

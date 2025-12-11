@@ -32,8 +32,8 @@ on:
       - master
 
 jobs:
-  checks:
-    name: Lint and format
+  clippy:
+    name: Clippy
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -46,6 +46,18 @@ jobs:
 
       - name: Run clippy
         run: cargo clippy
+
+  format:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
 
       - name: Run rustfmt
         run: find crates -name "*.rs" -exec rustfmt --check {} \;

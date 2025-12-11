@@ -23,40 +23,83 @@
 
 // ----------------------------------------------------------------------------
 
-//! Git hooks installation and usage.
+//! Validate a commit message.
 
-use clap::Subcommand;
+use clap::Args;
+use cliclack::{confirm, input, outro};
+use std::fs;
+use std::path::PathBuf;
 
+use ctrl_z_changeset::changelog::Category;
+use ctrl_z_changeset::Change;
 use ctrl_z_project::Manifest;
 
 use crate::cli::{Command, Result};
 use crate::Options;
 
-mod commit_msg;
-
 // ----------------------------------------------------------------------------
-// Enums
+// Structs
 // ----------------------------------------------------------------------------
 
-/// Git hooks installation and usage.
-#[derive(Subcommand)]
-pub enum Commands {
-    /// Validate a commit message.
-    CommitMsg(commit_msg::Arguments),
+/// Validate a commit message.
+#[derive(Args, Debug)]
+pub struct Arguments {
+    /// Path to commit message file.
+    file: Option<PathBuf>,
 }
 
 // ----------------------------------------------------------------------------
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl<T> Command<T> for Commands
+impl<T> Command<T> for Arguments
 where
     T: Manifest,
 {
     /// Executes the command.
     fn execute(&self, options: Options<T>) -> Result {
-        match self {
-            Commands::CommitMsg(args) => args.execute(options),
+        let message = if let Some(ref file) = self.file {
+            fs::read_to_string(file)?
+        } else {
+            use std::io::{self, Read};
+            let mut buf = String::new();
+            io::stdin().read_to_string(&mut buf)?;
+            buf
+        };
+
+        for line in message.lines() {
+            let change: Change = match line.parse() {
+                Ok(c) => c,
+                Err(e) => {
+                    eprintln!("Invalid commit message line: {e}");
+                    continue;
+                }
+            };
+            if <Option<Category>>::from(&change).is_none() {
+                continue;
+            }
+
+            // if file, then interactively
+            if self.file.is_some() {
+                let confirm2 = confirm("Is this commit related to an issue?")
+                    .initial_value(true)
+                    .interact()?;
+
+                if confirm2 {
+                    let issue: u32 = input("What's the number of the issue?")
+                        .placeholder("e.g. 123")
+                        .interact()?;
+
+                    confirm("Does the commit resolve the issue?")
+                        .initial_value(false)
+                        .interact()?;
+                }
+            }
+
+            // @todo: how to add it to the message?
+            outro("Added ")?;
         }
+
+        Ok(())
     }
 }

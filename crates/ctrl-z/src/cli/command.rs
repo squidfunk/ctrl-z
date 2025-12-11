@@ -32,7 +32,7 @@ use ctrl_z_project::Manifest;
 use crate::cli::Result;
 use crate::Options;
 
-mod hook;
+mod validate;
 mod version;
 
 // ----------------------------------------------------------------------------
@@ -55,15 +55,15 @@ where
 /// Commands.
 #[derive(Subcommand)]
 pub enum Commands {
+    /// Validation and linting.
+    Validate {
+        #[command(subcommand)]
+        command: validate::Commands,
+    },
     /// Versioning and release automation.
     Version {
         #[command(subcommand)]
         command: version::Commands,
-    },
-    /// Git hooks installation and usage.
-    Hook {
-        #[command(subcommand)]
-        command: hook::Commands,
     },
 }
 
@@ -79,7 +79,7 @@ where
     fn execute(&self, options: Options<T>) -> Result {
         match self {
             Commands::Version { command } => command.execute(options),
-            Commands::Hook { command } => command.execute(options),
+            Commands::Validate { command } => command.execute(options),
         }
     }
 }

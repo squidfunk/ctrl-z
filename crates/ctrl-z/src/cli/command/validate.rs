@@ -23,74 +23,40 @@
 
 // ----------------------------------------------------------------------------
 
-//! Validate a commit message.
+//! Validate and linting.
 
-use clap::Args;
-use cliclack::{confirm, input, outro};
-use std::fs;
-use std::path::PathBuf;
+use clap::Subcommand;
 
-use ctrl_z_changeset::changelog::Category;
-use ctrl_z_changeset::Change;
 use ctrl_z_project::Manifest;
 
 use crate::cli::{Command, Result};
 use crate::Options;
 
+mod commit;
+
 // ----------------------------------------------------------------------------
-// Structs
+// Enums
 // ----------------------------------------------------------------------------
 
-/// Validate a commit message.
-#[derive(Args, Debug)]
-pub struct Arguments {
-    /// Path to commit message file.
-    file: PathBuf,
+/// Validate and linting.
+#[derive(Subcommand)]
+pub enum Commands {
+    /// Validate a commit message.
+    Commit(commit::Arguments),
 }
 
 // ----------------------------------------------------------------------------
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl<T> Command<T> for Arguments
+impl<T> Command<T> for Commands
 where
     T: Manifest,
 {
     /// Executes the command.
     fn execute(&self, options: Options<T>) -> Result {
-        let message = fs::read_to_string(&self.file)?;
-
-        let line = message.lines().next().expect("invariant");
-
-        let change: Change = line.parse()?;
-        if <Option<Category>>::from(&change).is_none() {
-            return Ok(());
+        match self {
+            Commands::Commit(args) => args.execute(options),
         }
-
-        // confirm("Is this commit related to an issue?")
-
-        // intro("Commit message validation")?;
-        let confirm2 = confirm("Is this commit related to an issue?")
-            .initial_value(true)
-            .interact()?;
-
-        if confirm2 {
-            let issue: u32 = input("What's the number of the issue?") // fmt
-                .placeholder("e.g. 123")
-                .interact()?;
-
-            confirm("Does the commit resolve the issue?")
-                .initial_value(false)
-                .interact()?;
-        }
-
-        outro("Added ")?;
-
-        // ensure commit is signed...
-
-        // let
-
-        // load the file!
-        Ok(())
     }
 }

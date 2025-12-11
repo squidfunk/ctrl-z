@@ -43,7 +43,7 @@ jobs:
       startsWith(github.event.pull_request.head.ref, 'release/')
     uses: ./.github/workflows/build.yml
     with:
-      ref: ${{ github.ref }}
+      ref: ${{ github.event.pull_request.merge_commit_sha }}
 
   tag:
     name: Create tag

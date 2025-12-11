@@ -24,7 +24,6 @@
 name: Commit
 
 on:
-  push:
   pull_request:
     types:
       - opened
@@ -39,6 +38,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
       # define this as a github action INSIDE the ctrl-z repo!
@@ -55,7 +55,6 @@ jobs:
           head="${{ github.event.pull_request.head.sha }}"
           echo "Getting commits from ${base}..${head}"
           git log "${base}..${head}" --pretty=format:"%s" > commits.txt
-          cat commits.txt
 
       - name: Validate commit messages
         run: |

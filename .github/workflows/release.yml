@@ -83,6 +83,9 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.merge_commit_sha }}
 
+      - name: Set up ctrl-z
+        uses: ./.github/actions/setup
+
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
@@ -93,9 +96,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          ctrl-z version changelog -s ${{ needs.tag.outputs.version }} > notes.txt
           gh release create ${{ needs.tag.outputs.version }} \
             --title "${{ needs.tag.outputs.version }}" \
-            --notes "Some notes here..." \
+            --notes-file notes.txt \
             --draft
 
       - name: Upload release artifacts

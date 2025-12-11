@@ -43,6 +43,7 @@ use crate::Options;
 #[derive(Args, Debug)]
 pub struct Arguments {
     /// Version in x.y.z format
+    #[arg(value_parser = parse_version)]
     version: Option<Version>,
     /// Include version summary.
     #[arg(short, long)]
@@ -73,4 +74,9 @@ where
         println!("{changelog}");
         Ok(())
     }
+}
+
+fn parse_version(s: &str) -> Result<Version> {
+    let s = s.strip_prefix('v').unwrap_or(s);
+    Version::parse(s).map_err(Into::into)
 }

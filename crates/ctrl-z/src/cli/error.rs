@@ -45,6 +45,9 @@ pub enum Error {
     /// Change error.
     #[error(transparent)]
     Change(#[from] change::Error),
+    /// Verison error.
+    #[error(transparent)]
+    Version(#[from] semver::Error),
     /// Project error.
     #[error(transparent)]
     Project(#[from] project::Error),

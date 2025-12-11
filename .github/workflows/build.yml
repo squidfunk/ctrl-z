@@ -93,17 +93,16 @@ jobs:
       - name: Build artifact
         run: cargo build --release
 
-      - name: Prepare artifact for upload
+      - name: create artifact archive
         shell: bash
         run: |
-          ls -lha target/release
           mkdir -p artifacts
           if [[ "${{ runner.os }}" == "Windows" ]]; then
             zip -j artifacts/ctrl-z-${{ matrix.target }}.zip \
               target/release/ctrl-z${{ matrix.suffix }}
           else
             tar -czf artifacts/ctrl-z-${{ matrix.target }}.tar.gz -C \
-              target/release/ctrl-z${{ matrix.suffix }}
+              target/release ctrl-z${{ matrix.suffix }}
           fi
           rm target/release/ctrl-z${{ matrix.suffix }}
 

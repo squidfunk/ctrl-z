@@ -51,6 +51,9 @@ jobs:
           echo "Getting commits from ${base}..${head}"
           git log "${base}..${head}" --pretty=format:"%s" > commits.txt
 
+      - run: |
+          cat commits.txt
+
       - name: Validate commit messages
         run: |
           while IFS= read -r commit; do

@@ -93,18 +93,22 @@ jobs:
       - name: Build artifact
         run: cargo build --release
 
-      - name: Create artifact archive
+      - name: Create artifact archive (Unix)
         shell: bash
+        if: runner.os != 'Windows'
         run: |
           mkdir -p artifacts
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
-            pwsh -c "Compress-Archive `
-              -Path target/release/ctrl-z${{ matrix.suffix }} `
-              -DestinationPath artifacts/ctrl-z-${{ matrix.target }}.zip"
-          else
-            tar -czf artifacts/ctrl-z-${{ matrix.target }}.tar.gz -C \
-              target/release ctrl-z${{ matrix.suffix }}
-          fi
+          tar -czf artifacts/ctrl-z-${{ matrix.target }}.tar.gz -C \
+            target/release ctrl-z${{ matrix.suffix }}
+
+      - name: Create artifact archive (Windows)
+        shell: bash
+        if: runner.os == 'Windows'
+        run: |
+          mkdir -p artifacts
+          Compress-Archive `
+            -Path target/release/ctrl-z${{ matrix.suffix }} `
+              DestinationPath artifacts/ctrl-z-${{ matrix.target }}.zip
 
       - name: Create artifact attestation
         uses: actions/attest-build-provenance@v1

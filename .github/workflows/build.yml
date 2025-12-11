@@ -96,6 +96,7 @@ jobs:
       - name: Prepare artifact for upload
         shell: bash
         run: |
+          ls -lha target/release
           mkdir -p artifacts
           if [[ "${{ runner.os }}" == "Windows" ]]; then
             zip -j artifacts/ctrl-z-${{ matrix.target }}.zip \

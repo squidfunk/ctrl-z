@@ -21,7 +21,7 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
-name: Create release
+name: Release
 
 on:
   pull_request:
@@ -32,6 +32,8 @@ on:
 
 permissions:
   contents: write # Required for releases
+
+# here needs to be an if: ...
 
 jobs:
   # build:
@@ -49,6 +51,14 @@ jobs:
           ref: ${{ github.event.pull_request.merge_commit_sha }}
           fetch-depth: 0
 
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: List all artifacts
+        run: ls -lhR artifacts
+
       - name: Determine version
         id: version
         run: |
@@ -63,14 +73,6 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag -a "$VERSION" -m "Release $VERSION"
           git push origin "$VERSION"
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-
-      - name: List artifacts
-        run: ls -lhR artifacts
 
       - name: Create release
         run: |

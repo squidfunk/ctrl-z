@@ -24,6 +24,10 @@
 name: Release
 
 on:
+  # temp
+  push:
+    branches:
+      - master
   pull_request:
     types:
       - closed

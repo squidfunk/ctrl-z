@@ -40,10 +40,10 @@ permissions:
 # here needs to be an if: ...
 
 jobs:
-  # build:
-  #   uses: ./.github/workflows/build.yml
-  #   with:
-  #     ref: ${{ github.ref }}
+  build:
+    uses: ./.github/workflows/build.yml
+    with:
+      ref: ${{ github.ref }}
 
   release:
     # needs: build

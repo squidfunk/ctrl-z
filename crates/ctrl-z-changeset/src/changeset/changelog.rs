@@ -63,10 +63,10 @@ pub struct Changelog<'a> {
 // Implementations
 // ----------------------------------------------------------------------------
 
-impl<'a> Changeset<'a> {
+impl Changeset<'_> {
     /// Creates a changelog from the changeset.
     #[must_use]
-    pub fn to_changelog(&'a self) -> Changelog<'a> {
+    pub fn to_changelog(&self) -> Changelog<'_> {
         let mut changelog = Changelog {
             scopes: &self.scopes,
             sections: BTreeMap::default(),

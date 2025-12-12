@@ -91,7 +91,7 @@ jobs:
           key: ${{ matrix.target }}
 
       - name: Build artifact
-        run: cargo build --release
+        run: cargo build --release --locked
 
       - name: Create artifact archive (Unix)
         shell: bash

@@ -28,6 +28,7 @@
 use std::{io, result};
 use thiserror::Error;
 
+use ctrl_z_changeset as changeset;
 use ctrl_z_changeset::change;
 use ctrl_z_project as project;
 use ctrl_z_versioning as versioning;
@@ -45,6 +46,9 @@ pub enum Error {
     /// Change error.
     #[error(transparent)]
     Change(#[from] change::Error),
+    /// Changeset error.
+    #[error(transparent)]
+    Changeset(#[from] changeset::Error),
     /// Verison error.
     #[error(transparent)]
     Version(#[from] semver::Error),

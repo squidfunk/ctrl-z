@@ -50,9 +50,6 @@ pub enum Error {
     /// Description must be lowercase.
     #[error("description must be lowercase")]
     Casing,
-    /// Signature missing.
-    #[error("signature missing")]
-    Signature,
 }
 
 // ----------------------------------------------------------------------------

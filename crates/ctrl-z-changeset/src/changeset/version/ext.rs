@@ -25,7 +25,7 @@
 
 //! Version extensions.
 
-use semver::{BuildMetadata, Prerelease, Version};
+use semver::{BuildMetadata, Error, Prerelease, Version};
 
 use super::increment::Increment;
 
@@ -35,8 +35,18 @@ use super::increment::Increment;
 
 /// Extension of [`Version`].
 pub trait VersionExt {
+    /// Parses a version from a string, allowing for an optional `v` prefix.
+    ///
+    /// # Errors
+    ///
+    /// This method returns [`Error`] if parsing fails.
+    fn from_str_loose(value: &str) -> Result<Version, Error> {
+        value.trim_start_matches('v').parse()
+    }
+
     /// Returns the next version after applying the given increment.
     fn bump(&self, increment: Increment) -> Version;
+
     /// Returns the highest possible increment for the version.
     fn max_bump(&self) -> Increment;
 }

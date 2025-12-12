@@ -63,15 +63,26 @@ where
         let manager = Manager::<T>::new(options.directory)?;
         let changeset = manager.changeset(self.version.as_ref())?;
 
-        // Create changelog and prepend version summary if desired
-        let mut changelog = changeset.to_changelog().to_string();
+        // Create temporary vector for writing - as we need to be particularly
+        // careful about line feeds, we first collect everything to write
+        let mut temp = Vec::new();
         if self.summary {
-            let summary = changeset.summary().unwrap_or_default();
-            changelog = format!("{summary}\n\n{changelog}");
+            temp.push(changeset.summary()?);
         }
 
-        // Write to standard out
-        println!("{changelog}");
+        // Only write to standard out if the changeset is not empty, in order
+        // to mitigate writing of empty lines
+        if !changeset.is_empty() {
+            let changelog = changeset.to_changelog().to_string();
+            temp.push(&changelog);
+
+            // Write to standard out
+            if !temp.is_empty() {
+                println!("{}", temp.join("\n\n"));
+            }
+        }
+
+        // No errors occurred
         Ok(())
     }
 }

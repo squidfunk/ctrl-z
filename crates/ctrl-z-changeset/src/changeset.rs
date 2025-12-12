@@ -70,10 +70,8 @@ impl Changeset<'_> {
     ///
     /// # Errors
     ///
-    /// This method returns [`Error::Scopes`][] if the scope set can't be built
+    /// This method returns [`Error::Scopes`] if the scope set can't be built
     /// from the workspace, which should practically never happen.
-    ///
-    /// [`Error::Scopes`]: crate::changeset::Error::Scopes
     pub fn new<T>(workspace: &Workspace<T>) -> Result<Self>
     where
         T: Manifest,
@@ -94,12 +92,23 @@ impl Changeset<'_> {
 
     /// Returns the summary.
     ///
-    /// The summary is given by the commit's body of the first revision in the
+    /// The summary is given by the commit's body of the latest revision in the
     /// changeset, trimming off any trailers like `Signed-off-by`.
-    #[must_use]
-    pub fn summary(&self) -> Option<&str> {
-        let commit = self.revisions.first()?.commit();
-        trim_trailers(commit.body()?)
+    ///
+    /// # Errors
+    ///
+    /// This method returns [`Error::Summary`] if no summary can be extracted,
+    /// so either there are no revisions, or the latest commit has no body. We
+    /// deliberately turn this into an error to ensure that the release process
+    /// can always rely on a summary being present.
+    pub fn summary(&self) -> Result<&str> {
+        let iter = self.revisions.first();
+        let summary = iter
+            .and_then(|revision| revision.commit().body())
+            .ok_or(Error::Summary)?;
+
+        // Trim trailers and return summary
+        Ok(trim_trailers(summary)?.trim())
     }
 }
 

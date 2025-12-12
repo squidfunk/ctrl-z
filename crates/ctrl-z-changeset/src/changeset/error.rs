@@ -48,6 +48,9 @@ pub enum Error {
     /// Scope set error.
     #[error(transparent)]
     Scopes(#[from] scopes::Error),
+    /// Summary missing.
+    #[error("summary missing")]
+    Summary,
 }
 
 // ----------------------------------------------------------------------------

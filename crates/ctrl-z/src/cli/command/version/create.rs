@@ -64,8 +64,8 @@ where
         let mut manager = Manager::<T>::new(options.directory)?;
         // @todo: ensure everything is clean!! no uncommitted changes.
 
-        let changeset = manager.changeset(None);
-        println!("changeset: {:?}", changeset);
+        // let changeset = manager.changeset(None);
+        // println!("changeset: {:?}", changeset);
 
         //
         intro("")?;

@@ -32,6 +32,7 @@ use ctrl_z_project::Manifest;
 use crate::cli::Result;
 use crate::Options;
 
+mod list;
 mod validate;
 mod version;
 
@@ -55,6 +56,8 @@ where
 /// Commands.
 #[derive(Debug, Subcommand)]
 pub enum Commands {
+    /// List the names of all packages in topological order.
+    List(list::Arguments),
     /// Validation and linting.
     Validate {
         #[command(subcommand)]
@@ -78,6 +81,7 @@ where
     /// Executes the command.
     fn execute(&self, options: Options<T>) -> Result {
         match self {
+            Commands::List(args) => args.execute(options),
             Commands::Version { command } => command.execute(options),
             Commands::Validate { command } => command.execute(options),
         }

@@ -46,7 +46,7 @@ mod list;
 pub enum Commands {
     /// Create a new version and updates all packages.
     Create(create::Arguments),
-    /// List all versions.
+    /// List versions in reverse chronological order.
     List(list::Arguments),
     /// Generate the changelog of a version in Markdown format.
     Changelog(changelog::Arguments),

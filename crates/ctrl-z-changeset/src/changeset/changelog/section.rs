@@ -47,16 +47,8 @@ pub struct Section<'a> {
 }
 
 // ----------------------------------------------------------------------------
-// Trait implementations
+// Implementations
 // ----------------------------------------------------------------------------
-
-impl From<Category> for Section<'_> {
-    /// Creates a section from a category.
-    #[inline]
-    fn from(category: Category) -> Self {
-        Self { category, items: Vec::new() }
-    }
-}
 
 #[allow(clippy::must_use_candidate)]
 impl Section<'_> {
@@ -70,6 +62,18 @@ impl Section<'_> {
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.items.is_empty()
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Trait implementations
+// ----------------------------------------------------------------------------
+
+impl From<Category> for Section<'_> {
+    /// Creates a section from a category.
+    #[inline]
+    fn from(category: Category) -> Self {
+        Self { category, items: Vec::new() }
     }
 }
 

@@ -23,52 +23,43 @@
 
 // ----------------------------------------------------------------------------
 
-//! Versioning and release automation.
+//! List versions in reverse chronological order.
 
-use clap::Subcommand;
+use clap::Args;
+use std::fmt::Debug;
 
 use ctrl_z_project::Manifest;
+use ctrl_z_versioning::Manager;
 
 use crate::cli::{Command, Result};
 use crate::Options;
 
-mod changed;
-mod changelog;
-mod create;
-mod list;
-
 // ----------------------------------------------------------------------------
-// Enums
+// Structs
 // ----------------------------------------------------------------------------
 
-/// Versioning and release automation.
-#[derive(Debug, Subcommand)]
-pub enum Commands {
-    /// Create a new version and updates all packages.
-    Create(create::Arguments),
-    /// List all versions.
-    List(list::Arguments),
-    /// Generate the changelog of a version in Markdown format.
-    Changelog(changelog::Arguments),
-    /// List the names of changed packages in topological order.
-    Changed(changed::Arguments),
-}
+/// List versions in reverse chronological order.
+#[derive(Args, Debug)]
+pub struct Arguments {}
 
 // ----------------------------------------------------------------------------
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl<T> Command<T> for Commands
+impl<T> Command<T> for Arguments
 where
     T: Manifest,
 {
     /// Executes the command.
     fn execute(&self, options: Options<T>) -> Result {
-        match self {
-            Commands::Changed(args) => args.execute(options),
-            Commands::Changelog(args) => args.execute(options),
-            Commands::Create(args) => args.execute(options),
-            Commands::List(args) => args.execute(options),
+        let manager = Manager::<T>::new(options.directory)?;
+
+        let versions = manager.repository().versions().unwrap();
+        for (version, _) in versions.iter() {
+            println!("v{version}");
         }
+
+        // No errors occurred
+        Ok(())
     }
 }

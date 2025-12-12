@@ -35,6 +35,12 @@ use super::increment::Increment;
 
 /// Extension of [`Version`].
 pub trait VersionExt {
+    /// Returns the next version after applying the given increment.
+    fn bump(&self, increment: Increment) -> Version;
+
+    /// Returns the highest possible increment for the version.
+    fn max_bump(&self) -> Increment;
+
     /// Parses a version from a string, allowing for an optional `v` prefix.
     ///
     /// # Errors
@@ -43,12 +49,6 @@ pub trait VersionExt {
     fn from_str_with_prefix(value: &str) -> Result<Version, Error> {
         value.trim_start_matches('v').parse()
     }
-
-    /// Returns the next version after applying the given increment.
-    fn bump(&self, increment: Increment) -> Version;
-
-    /// Returns the highest possible increment for the version.
-    fn max_bump(&self) -> Increment;
 }
 
 // ----------------------------------------------------------------------------

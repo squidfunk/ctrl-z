@@ -119,6 +119,10 @@ impl Versions<'_> {
     // Select? get?
 
     // iterator over commit in specific version
+
+    pub fn iter(&self) -> impl Iterator<Item = (&Version, &Id)> {
+        self.tags.iter().rev()
+    }
 }
 
 // ----------------------------------------------------------------------------

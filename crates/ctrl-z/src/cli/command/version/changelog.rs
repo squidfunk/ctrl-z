@@ -63,18 +63,21 @@ where
         let manager = Manager::<T>::new(options.directory)?;
         let changeset = manager.changeset(self.version.as_ref())?;
 
-        // Create queue for writing to standard out - as we are particularly
+        // Create queue for writing to standard out - since we are particularly
         // careful about line feeds, we collect everything before writing
         let mut queue = Vec::new();
         if self.summary {
             queue.push(changeset.summary()?);
         }
 
-        // Only write to standard out if the changeset is not empty, in order
-        // to mitigate writing of empty lines, which is just odd
-        if !changeset.is_empty() {
-            let changelog = changeset.to_changelog().to_string();
-            queue.push(&changelog);
+        // Only write to standard out if the changelog is not empty, which can
+        // happen despite changes being present - this happens when changes do
+        // not touch published artifacts, as they solely improve on formatting,
+        // documentation, or the build setup.
+        let changelog = changeset.to_changelog();
+        if !changelog.is_empty() {
+            let value = changelog.to_string();
+            queue.push(&value);
 
             // Got something to say
             if !queue.is_empty() {

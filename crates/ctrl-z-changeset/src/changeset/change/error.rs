@@ -41,15 +41,18 @@ pub enum Error {
     /// Invalid kind.
     #[error("invalid kind")]
     Kind,
-    /// Description has leading or trailing whitespace.
-    #[error("description has leading or trailing whitespace")]
+    /// Message has leading or trailing whitespace.
+    #[error("message has leading or trailing whitespace")]
     Whitespace,
-    /// Description must not end with a period.
-    #[error("description must not end with a period")]
-    Sentence,
-    /// Description must be lowercase.
-    #[error("description must be lowercase")]
+    /// Message must be lowercase.
+    #[error("message must be lowercase")]
     Casing,
+    /// Message must not end with punctuation.
+    #[error("message must not end with punctuation")]
+    Punctuation,
+    /// Message must not contain issue reference.
+    #[error("message must not contain issue reference")]
+    Reference,
 }
 
 // ----------------------------------------------------------------------------

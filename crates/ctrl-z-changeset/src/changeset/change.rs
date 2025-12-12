@@ -43,8 +43,8 @@ pub use kind::Kind;
 pub struct Change {
     /// Change kind.
     kind: Kind,
-    /// Change description.
-    description: String,
+    /// Change summary.
+    summary: String,
     /// Change is breaking.
     is_breaking: bool,
 }
@@ -61,10 +61,10 @@ impl Change {
         self.kind
     }
 
-    /// Returns the change description.
+    /// Returns the change summary.
     #[inline]
-    pub fn description(&self) -> &str {
-        &self.description
+    pub fn summary(&self) -> &str {
+        &self.summary
     }
 
     /// Returns whether the change is breaking.
@@ -97,12 +97,12 @@ impl FromStr for Change {
     /// use ctrl_z_changeset::Change;
     ///
     /// // Create change from string
-    /// let change: Change = "fix: description".parse()?;
+    /// let change: Change = "fix: summary".parse()?;
     /// # Ok(())
     /// # }
     /// ```
     fn from_str(value: &str) -> Result<Self> {
-        let Some((kind, description)) = value.split_once(": ") else {
+        let Some((kind, summary)) = value.split_once(": ") else {
             return Err(Error::Format);
         };
 
@@ -113,22 +113,17 @@ impl FromStr for Change {
             None => (Kind::from_str(kind)?, false),
         };
 
-        // Ensure description has no leading or trailing whitespace, as we need
-        // to be as strict as possible with the format of commit messages
-        if description != description.trim() {
+        // Ensure summary has no leading or trailing whitespace, as we want to
+        // be as strict as possible with the format of commit messages
+        if summary != summary.trim() {
             return Err(Error::Whitespace);
         }
 
-        // Ensure description is not a sentence, i.e., doesn't end with a period
-        if description.ends_with('.') {
-            return Err(Error::Sentence);
-        }
-
-        // Ensure description is lowercase, unless it's an entire uppercase
-        // word, e.g., an acronym like README, API, or URL
-        if let Some(char) = description.chars().next() {
+        // Ensure summary is lowercase, unless it's an entire uppercase word,
+        // e.g., an acronym like README, API, HTTP, or URL
+        if let Some(char) = summary.chars().next() {
             if char.is_uppercase() {
-                let word = description.split_whitespace().next().unwrap_or("");
+                let word = summary.split_whitespace().next().unwrap_or("");
                 let is_acronym = word
                     .chars()
                     .all(|char| !char.is_alphabetic() || char.is_uppercase());
@@ -140,9 +135,25 @@ impl FromStr for Change {
             }
         }
 
+        // Ensure summary does not end with sentenceending punctuation, as the
+        // changelog should read as a short list of bullet points
+        if summary.ends_with(['.', '!', '?', ',', ';', ':']) {
+            return Err(Error::Punctuation);
+        }
+
+        // Ensure summary doesn't contain an issue or pull request reference as
+        // those should be moved into the commit message body
+        if let Some(rest) = summary.split(" #").nth(1) {
+            if let Some(word) = rest.split_whitespace().next() {
+                if word.chars().all(|char| char.is_ascii_digit()) {
+                    return Err(Error::Reference);
+                }
+            }
+        }
+
         // Return change
-        let description = description.to_string();
-        Ok(Change { kind, description, is_breaking })
+        let summary = summary.to_string();
+        Ok(Change { kind, summary, is_breaking })
     }
 }
 
@@ -156,9 +167,9 @@ impl fmt::Display for Change {
             f.write_char('!')?;
         }
 
-        // Write description
+        // Write summary
         f.write_str(": ")?;
-        self.description.fmt(f)
+        self.summary.fmt(f)
     }
 }
 
@@ -177,29 +188,29 @@ mod tests {
 
         #[test]
         fn handles_non_breaking() -> Result {
-            let change = Change::from_str("fix: description")?;
+            let change = Change::from_str("fix: summary")?;
             assert_eq!(change.kind, Kind::Fix);
             assert_eq!(change.is_breaking, false);
-            assert_eq!(change.description, "description");
+            assert_eq!(change.summary, "summary");
             Ok(())
         }
 
         #[test]
         fn handles_breaking() -> Result {
-            let change = Change::from_str("fix!: description")?;
+            let change = Change::from_str("fix!: summary")?;
             assert_eq!(change.kind, Kind::Fix);
             assert_eq!(change.is_breaking, true);
-            assert_eq!(change.description, "description");
+            assert_eq!(change.summary, "summary");
             Ok(())
         }
 
         #[test]
         fn errors_on_invalid_format() {
             for format in [
-                "fix:description",
-                "fix:  description",
-                "fix :description",
-                "fix description",
+                "fix:summary",
+                "fix:  summary",
+                "fix :summary",
+                "fix summary",
             ] {
                 let res = Change::from_str(format);
                 assert!(matches!(res, Err(Error::Format)));
@@ -209,9 +220,9 @@ mod tests {
         #[test]
         fn errors_on_invalid_kind() {
             for format in [
-                " fix: description", // fmt
-                "fix : description",
-                "fxi: description",
+                " fix: summary", // fmt
+                "fix : summary",
+                "fxi: summary",
             ] {
                 let res = Change::from_str(format);
                 assert!(matches!(res, Err(Error::Kind)));

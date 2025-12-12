@@ -95,10 +95,10 @@ impl fmt::Display for Item<'_> {
             }
         }
 
-        // Retrieve change and write description
+        // Retrieve change and write summary
         let change = self.revision.change();
         f.write_str(" – ")?;
-        f.write_str(change.description())?;
+        f.write_str(change.summary())?;
 
         // Write relevant issues
         if !self.issues.is_empty() {

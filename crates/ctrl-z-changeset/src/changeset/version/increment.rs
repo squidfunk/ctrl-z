@@ -60,7 +60,7 @@ impl Change {
     /// use ctrl_z_changeset::{Change, Increment};
     ///
     /// // Create increment from change
-    /// let change: Change = "fix: description".parse()?;
+    /// let change: Change = "fix: summary".parse()?;
     /// assert_eq!(change.as_increment(), Some(Increment::Patch));
     /// # Ok(())
     /// # }
@@ -115,14 +115,14 @@ mod tests {
 
         #[test]
         fn handles_non_breaking() -> Result {
-            let change = Change::from_str("fix: description")?;
+            let change = Change::from_str("fix: summary")?;
             assert_eq!(change.as_increment(), Some(Increment::Patch));
             Ok(())
         }
 
         #[test]
         fn handles_breaking() -> Result {
-            let change = Change::from_str("fix!: description")?;
+            let change = Change::from_str("fix!: summary")?;
             assert_eq!(change.as_increment(), Some(Increment::Major));
             Ok(())
         }

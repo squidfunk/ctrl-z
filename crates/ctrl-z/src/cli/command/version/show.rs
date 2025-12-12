@@ -23,40 +23,51 @@
 
 // ----------------------------------------------------------------------------
 
-//! Validate and linting.
+//! Show current version.
 
-use clap::Subcommand;
+use clap::Args;
+use std::fmt::Debug;
 
 use ctrl_z_project::Manifest;
+use ctrl_z_versioning::Manager;
 
 use crate::cli::{Command, Result};
 use crate::Options;
 
-mod commit;
-
 // ----------------------------------------------------------------------------
-// Enums
+// Structs
 // ----------------------------------------------------------------------------
 
-/// Validate and linting.
-#[derive(Debug, Subcommand)]
-pub enum Commands {
-    /// Validate a commit message.
-    Commit(commit::Arguments),
-}
+/// Show current version.
+#[derive(Args, Debug)]
+pub struct Arguments {}
 
 // ----------------------------------------------------------------------------
 // Trait implementations
 // ----------------------------------------------------------------------------
 
-impl<T> Command<T> for Commands
+impl<T> Command<T> for Arguments
 where
     T: Manifest,
 {
     /// Executes the command.
     fn execute(&self, options: Options<T>) -> Result {
-        match self {
-            Commands::Commit(args) => args.execute(options),
-        }
+        let manager = Manager::<T>::new(options.directory)?;
+
+        // @todo print latest version...
+
+        // no, so this is just the version from the tags!?
+
+        // command to list all versions...!?
+
+        let v = manager.repository().versions().unwrap();
+        println!("{:#?}", v);
+
+        // let changeset = manager.changeset(self.version.as_ref())?;
+
+        // manager.
+
+        // No errors occurred
+        Ok(())
     }
 }

@@ -35,14 +35,17 @@ use crate::Options;
 mod changelog;
 mod create;
 mod packages;
+mod show;
 
 // ----------------------------------------------------------------------------
 // Enums
 // ----------------------------------------------------------------------------
 
 /// Versioning and release automation.
-#[derive(Subcommand)]
+#[derive(Debug, Subcommand)]
 pub enum Commands {
+    /// Show current version.
+    Show(show::Arguments),
     /// Create a new version and updates all packages.
     Create(create::Arguments),
     /// Generate the changelog of a version in Markdown format.
@@ -65,6 +68,7 @@ where
             Commands::Changelog(args) => args.execute(options),
             Commands::Create(args) => args.execute(options),
             Commands::Packages(args) => args.execute(options),
+            Commands::Show(args) => args.execute(options),
         }
     }
 }

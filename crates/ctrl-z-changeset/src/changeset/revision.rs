@@ -112,7 +112,7 @@ impl<'a> Changeset<'a> {
                     cmp::max(self.increments[index], increment);
             }
 
-            // Next, try to find issue references in the description, denoted
+            // Next, try to find issue references in the commit body, denoted
             // by a hash sign followed by a number, e.g., "#123"
             let issues = commit.body().map(parse_issues).unwrap_or_default();
 

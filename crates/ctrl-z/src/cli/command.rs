@@ -53,7 +53,7 @@ where
 // ----------------------------------------------------------------------------
 
 /// Commands.
-#[derive(Subcommand)]
+#[derive(Debug, Subcommand)]
 pub enum Commands {
     /// Validation and linting.
     Validate {

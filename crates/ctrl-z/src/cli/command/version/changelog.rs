@@ -27,7 +27,6 @@
 
 use clap::Args;
 use semver::Version;
-use std::fmt::Debug;
 
 use ctrl_z_changeset::VersionExt;
 use ctrl_z_project::Manifest;

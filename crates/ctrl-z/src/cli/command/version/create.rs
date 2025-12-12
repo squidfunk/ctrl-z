@@ -99,6 +99,8 @@ where
 
         outro("")?;
 
+        println!("versions: {:?}", versions);
+
         let summary = prompt_commit_message(self.visual)?;
 
         // manager.update(versions, summary)?;

@@ -28,6 +28,7 @@
 use clap::Args;
 use semver::Version;
 
+use ctrl_z_changeset::VersionExt;
 use ctrl_z_project::Manifest;
 use ctrl_z_versioning::Manager;
 
@@ -42,6 +43,7 @@ use crate::Options;
 #[derive(Args, Debug)]
 pub struct Arguments {
     /// Version in x.y.z format
+    #[arg(value_parser = Version::from_str_with_prefix)]
     version: Option<Version>,
 }
 

@@ -29,6 +29,7 @@ use clap::Args;
 use semver::Version;
 use std::fmt::Debug;
 
+use ctrl_z_changeset::VersionExt;
 use ctrl_z_project::Manifest;
 use ctrl_z_versioning::Manager;
 
@@ -43,7 +44,7 @@ use crate::Options;
 #[derive(Args, Debug)]
 pub struct Arguments {
     /// Version in x.y.z format
-    #[arg(value_parser = parse_version)]
+    #[arg(value_parser = Version::from_str_with_prefix)]
     version: Option<Version>,
     /// Include version summary.
     #[arg(short, long)]
@@ -85,9 +86,4 @@ where
         // No errors occurred
         Ok(())
     }
-}
-
-fn parse_version(s: &str) -> Result<Version> {
-    let s = s.strip_prefix('v').unwrap_or(s);
-    Version::parse(s).map_err(Into::into)
 }

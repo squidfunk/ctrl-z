@@ -40,7 +40,7 @@ pub trait VersionExt {
     /// # Errors
     ///
     /// This method returns [`Error`] if parsing fails.
-    fn from_str_loose(value: &str) -> Result<Version, Error> {
+    fn from_str_with_prefix(value: &str) -> Result<Version, Error> {
         value.trim_start_matches('v').parse()
     }
 

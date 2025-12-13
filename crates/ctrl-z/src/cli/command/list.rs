@@ -59,8 +59,7 @@ where
     fn execute(&self, options: Options<T>) -> Result {
         let manager = Manager::<T>::new(options.directory)?;
 
-        // Obtain version increments, which denote which packages have changed,
-        // and traverse dependents to list changed packages in topological order
+        // @todo
         let dependents = manager.workspace().dependents()?;
         for node in &dependents {
             let name = dependents[node].name().expect("invariant");

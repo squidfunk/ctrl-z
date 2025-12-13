@@ -102,9 +102,8 @@ impl Changeset<'_> {
     /// deliberately turn this into an error to ensure that the release process
     /// can always rely on a summary being present.
     pub fn summary(&self) -> Result<&str> {
-        let option = self.revisions.first();
-        println!("option: {:#?}", option);
-        let summary = option
+        let opt = self.revisions.first();
+        let summary = opt
             .and_then(|revision| revision.commit().body())
             .ok_or(Error::Summary)?;
 

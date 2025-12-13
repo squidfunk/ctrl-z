@@ -94,8 +94,8 @@ where
         // to their paths in order to resolve projects by package name
         let projects = iter.collect::<Result<BTreeMap<_, _>>>()?;
         let iter = projects.iter().filter_map(|(path, project)| {
-            let option = project.manifest.name();
-            option.map(|name| (name.to_string(), path.clone()))
+            let opt = project.manifest.name();
+            opt.map(|name| (name.to_string(), path.clone()))
         });
 
         // Collect packages and return workspace

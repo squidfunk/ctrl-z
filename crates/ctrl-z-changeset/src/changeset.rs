@@ -107,8 +107,11 @@ impl Changeset<'_> {
             .and_then(|revision| revision.commit().body())
             .ok_or(Error::Summary)?;
 
-        // Trim trailers and return summary
-        Ok(trim_trailers(summary)?.trim())
+        // Trim trailers and ensure non-empty summary
+        let summary = trim_trailers(summary)?.trim();
+        (!summary.is_empty())
+            .then_some(summary)
+            .ok_or(Error::Summary)
     }
 }
 

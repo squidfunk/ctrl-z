@@ -132,7 +132,7 @@ jobs:
 
       - name: Publish to crates.io
         run: |
-          ctrl-z version changed | while read -r package; do
+          ctrl-z version changed $VERSION | while read -r package; do
             cargo publish --package $package --no-verify --locked --dry-run
           done
         env:

@@ -30,7 +30,7 @@ use clap::Subcommand;
 use ctrl_z_project::Manifest;
 
 use crate::cli::Result;
-use crate::Options;
+use crate::Context;
 
 mod list;
 mod validate;
@@ -46,7 +46,7 @@ where
     T: Manifest,
 {
     /// Executes the command.
-    fn execute(&self, options: Options<T>) -> Result;
+    fn execute(&self, context: Context<T>) -> Result;
 }
 
 // ----------------------------------------------------------------------------
@@ -79,11 +79,11 @@ where
     T: Manifest,
 {
     /// Executes the command.
-    fn execute(&self, options: Options<T>) -> Result {
+    fn execute(&self, context: Context<T>) -> Result {
         match self {
-            Commands::List(args) => args.execute(options),
-            Commands::Version { command } => command.execute(options),
-            Commands::Validate { command } => command.execute(options),
+            Commands::List(args) => args.execute(context),
+            Commands::Version { command } => command.execute(context),
+            Commands::Validate { command } => command.execute(context),
         }
     }
 }

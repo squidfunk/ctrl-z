@@ -26,9 +26,9 @@
 //! Command line interface.
 
 use clap::Parser;
-use ctrl_z_project::{Cargo, Manifest, Node};
-use ctrl_z_versioning::Manager;
-use std::path::PathBuf;
+
+use ctrl_z_project::{Cargo, Manifest, Workspace};
+use ctrl_z_repository::Repository;
 
 mod cli;
 
@@ -38,16 +38,16 @@ use cli::{Cli, Command, Result};
 // Structs
 // ----------------------------------------------------------------------------
 
-/// Command line options. // @todo: rename into context!
+/// Command line context.
 #[derive(Debug)]
-pub struct Options<T>
+pub struct Context<T>
 where
     T: Manifest,
 {
-    /// Working directory.
-    directory: PathBuf,
-    /// Manager. // @todo rename this?
-    manager: Manager<T>,
+    /// Repository.
+    repository: Repository,
+    /// Workspace.
+    workspace: Workspace<T>,
 }
 
 // ----------------------------------------------------------------------------
@@ -56,9 +56,19 @@ where
 
 /// Entry point.
 fn main() -> Result {
-    let cli = Cli::parse();
-    cli.command.execute(Options {
-        directory: cli.directory.clone(), // @todo really?
-        manager: Manager::<Cargo>::new(cli.directory.clone())?, // @todo how to node?
-    })
+    // try parse?
+    let cli = Cli::parse(); // try aprse maybe?
+
+    let repository = Repository::open(cli.directory)?;
+    match cli.command.execute(Context {
+        workspace: Workspace::<Cargo>::resolve(repository.path())?,
+        repository,
+    }) {
+        Ok(()) => Ok(()),
+        Err(err) => {
+            // use env logger?
+            eprintln!("Error: {}", err);
+            std::process::exit(1)
+        }
+    }
 }

@@ -29,10 +29,9 @@ use clap::Args;
 use std::fmt::Debug;
 
 use ctrl_z_project::Manifest;
-use ctrl_z_repository::Repository;
 
 use crate::cli::{Command, Result};
-use crate::Options;
+use crate::Context;
 
 // ----------------------------------------------------------------------------
 // Structs
@@ -55,12 +54,10 @@ where
     T: Manifest,
 {
     /// Executes the command.
-    fn execute(&self, options: Options<T>) -> Result {
-        let repository = Repository::open(options.directory)?;
-
-        // Resolve and list all versions, or abort after writing the latest
+    fn execute(&self, context: Context<T>) -> Result {
+        // Resolve and list all versions, and abort after writing the latest
         // version to standard out if only the latest version is requested
-        let versions = repository.versions()?;
+        let versions = context.repository.versions()?;
         for (version, _) in &versions {
             println!("v{version}");
             if self.latest {

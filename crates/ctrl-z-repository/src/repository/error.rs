@@ -50,6 +50,9 @@ pub enum Error {
     /// Invalid bound.
     #[error("invalid bound")]
     Bound,
+    /// Invalid version.
+    #[error("invalid version")]
+    Version,
 }
 
 // ----------------------------------------------------------------------------

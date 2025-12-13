@@ -29,11 +29,10 @@ use clap::Args;
 use semver::Version;
 
 use ctrl_z_changeset::{Changeset, VersionExt};
-use ctrl_z_project::{Manifest, Workspace};
-use ctrl_z_repository::Repository;
+use ctrl_z_project::Manifest;
 
 use crate::cli::{Command, Result};
-use crate::Options;
+use crate::Context;
 
 // ----------------------------------------------------------------------------
 // Structs
@@ -56,14 +55,11 @@ where
     T: Manifest,
 {
     /// Executes the command.
-    fn execute(&self, options: Options<T>) -> Result {
-        let repository = Repository::open(options.directory)?;
-        let workspace = Workspace::<T>::resolve(repository.path())?;
-
-        // Resolve versions and create changeset, and determine all commits
+    fn execute(&self, context: Context<T>) -> Result {
+        // Resolve versions and create changeset, then determine all commits
         // that are either part of the given version or yet unreleased
-        let versions = repository.versions()?;
-        let mut changeset = Changeset::new(&workspace)?;
+        let versions = context.repository.versions()?;
+        let mut changeset = Changeset::new(&context.workspace)?;
         if let Some(version) = &self.version {
             changeset.extend(versions.commits(version)?.flatten())?;
         } else {
@@ -73,7 +69,7 @@ where
         // Obtain version increments, which denote which packages have changed,
         // and traverse dependents to list changed packages in topological order
         let increments = changeset.increments();
-        let dependents = workspace.dependents()?;
+        let dependents = context.workspace.dependents()?;
         for node in &dependents {
             if increments[node].is_some() {
                 let name = dependents[node].name().expect("invariant");

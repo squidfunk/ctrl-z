@@ -26,14 +26,11 @@
 //! List the names of all packages in topological order.
 
 use clap::Args;
-use semver::Version;
 
-use ctrl_z_changeset::VersionExt;
-use ctrl_z_project::{Manifest, Workspace};
-use ctrl_z_repository::Repository;
+use ctrl_z_project::Manifest;
 
 use crate::cli::{Command, Result};
-use crate::Options;
+use crate::Context;
 
 // ----------------------------------------------------------------------------
 // Structs
@@ -41,11 +38,7 @@ use crate::Options;
 
 /// List the names of all packages in topological order.
 #[derive(Args, Debug)]
-pub struct Arguments {
-    /// Version in x.y.z format
-    #[arg(value_parser = Version::from_str_with_prefix)]
-    version: Option<Version>,
-}
+pub struct Arguments {}
 
 // ----------------------------------------------------------------------------
 // Trait implementations
@@ -56,12 +49,8 @@ where
     T: Manifest,
 {
     /// Executes the command.
-    fn execute(&self, options: Options<T>) -> Result {
-        let repository = Repository::open(options.directory)?;
-        let workspace = Workspace::<T>::resolve(repository.path())?;
-
-        // List workspace dependents in topological order
-        let dependents = workspace.dependents()?;
+    fn execute(&self, context: Context<T>) -> Result {
+        let dependents = context.workspace.dependents()?;
         for node in &dependents {
             let name = dependents[node].name().expect("invariant");
             println!("{name}");

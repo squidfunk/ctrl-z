@@ -37,7 +37,7 @@ use ctrl_z_project::Manifest;
 use ctrl_z_versioning::Manager;
 
 use crate::cli::{Command, Result};
-use crate::Options;
+use crate::Context;
 
 // ----------------------------------------------------------------------------
 // Structs
@@ -60,59 +60,59 @@ where
     T: Manifest,
 {
     /// Executes the command.
-    fn execute(&self, options: Options<T>) -> Result {
-        let mut manager = Manager::<T>::new(options.directory)?;
-        let changeset = manager.changeset(None)?;
-        if changeset.is_empty() {
-            println!("Nothing to release");
-            return Ok(());
-        }
+    fn execute(&self, context: Context<T>) -> Result {
+        // let mut manager = Manager::<T>::new(options.directory)?;
+        // let changeset = manager.changeset(None)?;
+        // if changeset.is_empty() {
+        //     println!("Nothing to release");
+        //     return Ok(());
+        // }
 
-        // head determine all commits that we should then pass to a function that
-        // walks through them and determines all version bumps.
-        let versions = manager.repository().versions().unwrap();
-        for x in versions.unreleased().unwrap() {
-            println!("- {:?}", x);
-        }
+        // // head determine all commits that we should then pass to a function that
+        // // walks through them and determines all version bumps.
+        // let versions = manager.repository().versions().unwrap();
+        // for x in versions.unreleased().unwrap() {
+        //     println!("- {:?}", x);
+        // }
 
-        //
-        intro("")?;
+        // //
+        // intro("")?;
 
-        let versions = manager.bump(|name, version, bumps| {
-            if bumps.len() == 1 {
-                // @todo is the expext right here?
-                let increment = bumps[0].expect("invariant");
+        // let versions = manager.bump(|name, version, bumps| {
+        //     if bumps.len() == 1 {
+        //         // @todo is the expext right here?
+        //         let increment = bumps[0].expect("invariant");
 
-                let x = format!(
-                    "{}\n{}",
-                    name,
-                    style(version.bump(increment)).dim()
-                ); // denote what bumped
-                remark(x)?;
+        //         let x = format!(
+        //             "{}\n{}",
+        //             name,
+        //             style(version.bump(increment)).dim()
+        //         ); // denote what bumped
+        //         remark(x)?;
 
-                // Just keep the incrmen as is.. - todo...
-                return Ok(Some(increment));
-            }
+        //         // Just keep the incrmen as is.. - todo...
+        //         return Ok(Some(increment));
+        //     }
 
-            //
-            let mut builder =
-                bumps.iter().fold(select(name), |builder, &bump| {
-                    if let Some(next) = bump {
-                        builder.item(Some(next), version.bump(next), next)
-                    } else {
-                        builder.item(None, version, "current")
-                    }
-                });
+        //     //
+        //     let mut builder =
+        //         bumps.iter().fold(select(name), |builder, &bump| {
+        //             if let Some(next) = bump {
+        //                 builder.item(Some(next), version.bump(next), next)
+        //             } else {
+        //                 builder.item(None, version, "current")
+        //             }
+        //         });
 
-            //
-            Ok(builder.interact()?)
-        })?;
+        //     //
+        //     Ok(builder.interact()?)
+        // })?;
 
-        outro("")?;
+        // outro("")?;
 
-        println!("versions: {:?}", versions);
+        // println!("versions: {:?}", versions);
 
-        let summary = prompt_commit_message(self.visual)?;
+        // let summary = prompt_commit_message(self.visual)?;
 
         // manager.update(versions, summary)?;
 

@@ -26,7 +26,7 @@
 //! Version set.
 
 use semver::Version;
-use std::collections::btree_map::{IntoIter, Iter, Range};
+use std::collections::btree_map::{Iter, Range};
 use std::collections::BTreeMap;
 use std::fmt;
 use std::iter::Rev;
@@ -111,8 +111,12 @@ impl Versions<'_> {
         self.tags.range(range)
     }
 
-    // @todo naming...
+    // @todo naming... - or commits iter? repository.version?
     pub fn commits(&self, version: &Version) -> Result<Commits<'_>> {
+        if !self.tags.contains_key(version) {
+            return Err(Error::Version);
+        }
+
         let mut iter = self.tags.range(..=version).rev();
         if let Some((_, start)) = iter.next() {
             if let Some((_, end)) = iter.next() {
@@ -121,7 +125,7 @@ impl Versions<'_> {
                 self.repository.commits(start..)
             }
         } else {
-            Err(Error::Bound)
+            Err(Error::Version)
         }
     }
 

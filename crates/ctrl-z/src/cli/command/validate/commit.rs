@@ -25,6 +25,7 @@
 
 //! Validate a commit message.
 
+use clap::error::ErrorFormatter;
 use clap::Args;
 use cliclack::{confirm, input, outro};
 use std::fs;
@@ -35,7 +36,7 @@ use ctrl_z_changeset::Change;
 use ctrl_z_project::Manifest;
 
 use crate::cli::{Command, Result};
-use crate::Options;
+use crate::Context;
 
 // ----------------------------------------------------------------------------
 // Structs
@@ -57,7 +58,7 @@ where
     T: Manifest,
 {
     /// Executes the command.
-    fn execute(&self, options: Options<T>) -> Result {
+    fn execute(&self, context: Context<T>) -> Result {
         let message = if let Some(ref file) = self.file {
             fs::read_to_string(file)?
         } else {
@@ -72,7 +73,7 @@ where
                 Ok(c) => c,
                 Err(e) => {
                     eprintln!("Invalid commit message line: {e}");
-                    continue;
+                    std::process::exit(1);
                 }
             };
             if <Option<Category>>::from(&change).is_none() {
@@ -95,6 +96,10 @@ where
                         .interact()?;
                 }
             }
+
+            // add things to commit message. lets try that..
+
+            // @todo valid commit message
 
             // @todo: how to add it to the message?
             outro("Added ")?;

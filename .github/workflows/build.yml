@@ -114,8 +114,7 @@ jobs:
         uses: actions/attest-build-provenance@v1
         with:
           show-summary: false
-          subject-path: >
-            artifacts/*
+          subject-path: artifacts/*
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

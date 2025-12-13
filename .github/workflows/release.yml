@@ -109,14 +109,12 @@ jobs:
       - name: Upload release artifacts
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release upload $VERSION artifacts/*
+        run: gh release upload $VERSION artifacts/*
 
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release edit $VERSION --draft=false
+        run: gh release edit $VERSION --draft=false
 
   publish:
     name: Publish
@@ -130,7 +128,6 @@ jobs:
           ref: ${{ github.event.pull_request.merge_commit_sha }}
 
       - name: Publish to crates.io
-        run: |
-          cargo publish --dry-run --locked
+        run: cargo publish --dry-run --locked
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}

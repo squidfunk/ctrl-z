@@ -27,7 +27,7 @@
 
 use clap::Parser;
 
-use ctrl_z_project::{Cargo, Manifest, Workspace};
+use ctrl_z_project::{Cargo, Manifest, Node, Workspace};
 use ctrl_z_repository::Repository;
 
 mod cli;
@@ -57,16 +57,26 @@ where
 /// Entry point.
 fn main() -> Result {
     // try parse?
-    let cli = Cli::parse(); // try aprse maybe?
+    let cli = Cli::parse(); // try parse maybe?
+    let repository = Repository::open(&cli.directory)?;
 
-    let repository = Repository::open(cli.directory)?;
-    match cli.command.execute(Context {
-        workspace: Workspace::<Cargo>::resolve(repository.path())?,
-        repository,
-    }) {
-        Ok(()) => Ok(()),
+    if let Ok(workspace) = Workspace::<Cargo>::resolve(repository.path()) {
+        try_exec(repository, workspace, &cli);
+    }
+
+    if let Ok(workspace) = Workspace::<Node>::resolve(repository.path()) {
+        try_exec(repository, workspace, &cli);
+    }
+
+    Ok(()) // ltodo
+}
+
+fn try_exec<T: Manifest>(
+    repository: Repository, workspace: Workspace<T>, cli: &Cli,
+) -> ! {
+    match cli.command.execute(Context { repository, workspace }) {
+        Ok(()) => std::process::exit(0),
         Err(err) => {
-            // use env logger?
             eprintln!("Error: {}", err);
             std::process::exit(1)
         }

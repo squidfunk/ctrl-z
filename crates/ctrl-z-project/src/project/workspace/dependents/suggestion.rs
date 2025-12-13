@@ -38,7 +38,7 @@ use super::Dependents;
 // ----------------------------------------------------------------------------
 
 /// Version increment suggestion.
-pub struct Bump<'a, T>
+pub struct Suggestion<'a, T>
 where
     T: Manifest,
 {
@@ -56,10 +56,14 @@ impl<T> Dependents<'_, T>
 where
     T: Manifest,
 {
+    /// Invokes the given function with version increment suggestions.
     ///
+    /// # Errors
+    ///
+    /// This method passes through errors returned by the given function.
     pub fn bump<F>(&self, increments: &mut [Option<Increment>], f: F) -> Result
     where
-        F: Fn(Bump<'_, T>) -> Result<Option<Increment>>,
+        F: Fn(Suggestion<'_, T>) -> Result<Option<Increment>>,
     {
         // Determine the node indices of all packages with increments, as those
         // are the nodes from which we start the topological traversal of the
@@ -85,7 +89,7 @@ where
 
             // Compile the suggested version increments, and invoke the given
             // function with the bump recommendation for the caller to decide
-            increments[node] = f(Bump {
+            increments[node] = f(Suggestion {
                 project: self.graph[node],
                 increments: &options.into_iter().collect::<Vec<_>>(),
             })?;
@@ -99,7 +103,7 @@ where
 // ----------------------------------------------------------------------------
 
 #[allow(clippy::must_use_candidate)]
-impl<T> Bump<'_, T>
+impl<T> Suggestion<'_, T>
 where
     T: Manifest,
 {

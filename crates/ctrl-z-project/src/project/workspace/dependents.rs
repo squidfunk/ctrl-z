@@ -34,9 +34,9 @@ use crate::project::{Project, Result};
 
 use super::Workspace;
 
-mod bump;
+mod suggestion;
 
-pub use bump::Bump;
+pub use suggestion::Suggestion;
 
 // ----------------------------------------------------------------------------
 // Structs

@@ -68,49 +68,64 @@ where
         changeset.extend(versions.unreleased()?.flatten())?;
 
         // Obtain version increments, which denote which packages have changed,
-        // and traverse dependents to list changed packages in topological order
+        // and abort immediately if there are no changes to release
         let mut increments = changeset.increments().to_vec();
+        if increments.iter().all(Option::is_none) {
+            println!("no changes..."); // @todo
+            return Ok(());
+        }
+
+        // @todo only run this when something changed...
+        intro(style("Select version increments").dim())?;
+
+        //
         let dependents = context.workspace.dependents()?;
+        dependents.bump(&mut increments, |suggestion| {
+            let bumps = suggestion.increments();
+            let name = suggestion.project().name().expect("invariant");
+            let version = suggestion.project().version().expect("invariant");
 
-        // //
-        // intro("")?;
+            // yes, keep this...
+            if suggestion.increments().len() == 1 {
+                // @todo is the expext right here?
+                let increment = bumps[0].expect("invariant");
 
-        dependents.bump(&mut increments, |bump| {
-            // do something
-            Ok(None)
+                let x = format!(
+                    "{}\n{}",
+                    name,
+                    style(version.bump(increment)).dim()
+                ); // denote what bumped
+                remark(x)?;
+
+                // Just keep the incrmen as is.. - todo...
+                return Ok(Some(increment));
+            }
+
+            //
+            let mut builder =
+                bumps.iter().fold(select(name), |builder, &bump| {
+                    if let Some(next) = bump {
+                        builder.item(Some(next), version.bump(next), next)
+                    } else {
+                        builder.item(None, version, "current")
+                    }
+                });
+
+            let x = builder.interact()?;
+            println!("selected: {x:?}");
+
+            //
+            Ok(x)
         })?;
 
         // let versions = manager.bump(|name, version, bumps| {
-        //     if bumps.len() == 1 {
-        //         // @todo is the expext right here?
-        //         let increment = bumps[0].expect("invariant");
-
-        //         let x = format!(
-        //             "{}\n{}",
-        //             name,
-        //             style(version.bump(increment)).dim()
-        //         ); // denote what bumped
-        //         remark(x)?;
-
-        //         // Just keep the incrmen as is.. - todo...
-        //         return Ok(Some(increment));
-        //     }
-
-        //     //
-        //     let mut builder =
-        //         bumps.iter().fold(select(name), |builder, &bump| {
-        //             if let Some(next) = bump {
-        //                 builder.item(Some(next), version.bump(next), next)
-        //             } else {
-        //                 builder.item(None, version, "current")
-        //             }
-        //         });
-
-        //     //
-        //     Ok(builder.interact()?)
         // })?;
 
-        // outro("")?;
+        outro("Done")?;
+
+        println!("increments {:#?}", increments);
+
+        // now, apply the given version increments to the project.
 
         // println!("versions: {:?}", versions);
 

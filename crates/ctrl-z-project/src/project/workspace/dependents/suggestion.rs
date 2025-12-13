@@ -68,18 +68,17 @@ where
         // Determine the node indices of all packages with increments, as those
         // are the nodes from which we start the topological traversal of the
         // workspace graph. If there're dependencies between those packages,
-        // the traversal ensures that those are respected as well.
+        // the traversal ensures that their order is respected as well.
         let iter = increments.iter().enumerate();
         let sources =
             iter.filter_map(|(index, increment)| increment.map(|_| index));
 
-        // Create a copy of the version increments, so we can propagate the
-        // version increments transitively to inner-workspace dependencies
-        let mut increments = increments.to_vec();
+        // Traverse the graph in topological order, so version increments as
+        // chose by the caller are correctly propagated to dependents
         let incoming = self.graph.topology().incoming();
         for node in self.graph.traverse(sources) {
-            // Obtain the types of version increments of all dependencies, and
-            // collect them into a set, so the caller can select the increment
+            // Obtain the unique version increments of all dependencies, and
+            // collect them into a set for selection through the caller
             let mut options = BTreeSet::from_iter([increments[node]]);
             for &dependency in &incoming[node] {
                 if increments[dependency] > increments[node] {
@@ -87,8 +86,8 @@ where
                 }
             }
 
-            // Compile the suggested version increments, and invoke the given
-            // function with the bump recommendation for the caller to decide
+            // Collect the suggested version increments, and invoke the given
+            // function, remembering the returned version increment
             increments[node] = f(Suggestion {
                 project: self.graph[node],
                 increments: &options.into_iter().collect::<Vec<_>>(),

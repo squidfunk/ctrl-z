@@ -43,6 +43,11 @@ pub trait VersionExt {
 
     /// Parses a version from a string, allowing for an optional `v` prefix.
     ///
+    /// Internally, versions are represented without the `v` prefix, but when
+    /// parsing from user input, it's common to include it, since all git tags
+    /// are prefixed with `v` for easier discoverability and discernability.
+    /// For this reason, the CLI encourages the use of the `v` prefix.
+    ///
     /// # Errors
     ///
     /// This method returns [`Error`] if parsing fails.

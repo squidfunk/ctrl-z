@@ -40,7 +40,11 @@ use crate::Options;
 
 /// List versions in reverse chronological order.
 #[derive(Args, Debug)]
-pub struct Arguments {}
+pub struct Arguments {
+    /// Show only the latest version.
+    #[arg(short, long)]
+    latest: bool,
+}
 
 // ----------------------------------------------------------------------------
 // Trait implementations
@@ -57,6 +61,9 @@ where
         let versions = manager.repository().versions().unwrap();
         for (version, _) in versions.iter() {
             println!("v{version}");
+            if self.latest {
+                break;
+            }
         }
 
         // No errors occurred

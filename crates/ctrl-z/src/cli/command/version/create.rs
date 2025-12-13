@@ -62,10 +62,11 @@ where
     /// Executes the command.
     fn execute(&self, options: Options<T>) -> Result {
         let mut manager = Manager::<T>::new(options.directory)?;
-        // @todo: ensure everything is clean!! no uncommitted changes.
-
-        // let changeset = manager.changeset(None);
-        // println!("changeset: {:?}", changeset);
+        let changeset = manager.changeset(None)?;
+        if changeset.is_empty() {
+            println!("Nothing to release");
+            return Ok(());
+        }
 
         //
         intro("")?;

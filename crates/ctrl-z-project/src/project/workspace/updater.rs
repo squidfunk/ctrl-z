@@ -27,6 +27,9 @@ where
 // versions are here... first, we refactor this stuff here...
 pub type Versions<'a> = BTreeMap<&'a str, Version>;
 
+// or, we create an Updater from a worksapce + increments,
+// and this updater can then be passed content strings. its parameizted over T.
+
 pub trait Updatable {
     fn update<S>(content: S, versions: &Versions) -> Result<String>
     where

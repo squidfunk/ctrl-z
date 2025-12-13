@@ -122,6 +122,7 @@ where
     T: Manifest,
 {
     /// Creates an iterator over the dependents in the workspace.
+    #[must_use]
     pub fn iter(&self) -> IntoIter {
         self.into_iter()
     }

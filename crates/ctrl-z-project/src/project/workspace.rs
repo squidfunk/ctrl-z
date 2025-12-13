@@ -35,7 +35,8 @@ use super::Project;
 
 pub mod dependents;
 mod packages;
-pub mod updater; // @todo
+pub mod updater;
+pub mod writer; // @todo
 
 // ----------------------------------------------------------------------------
 // Structs

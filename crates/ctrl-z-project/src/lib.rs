@@ -25,6 +25,8 @@
 
 //! Project utilities.
 
+#![allow(clippy::match_same_arms)]
+
 mod project;
 
 pub use project::manifest::cargo::Cargo;

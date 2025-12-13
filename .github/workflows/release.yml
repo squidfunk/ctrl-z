@@ -133,6 +133,6 @@ jobs:
 
       - name: Publish to crates.io
         run: |
-          cargo publish --locked
+          cargo publish --dry-run --locked
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}

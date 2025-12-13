@@ -28,9 +28,9 @@
 use clap::Args;
 use semver::Version;
 
-use ctrl_z_changeset::VersionExt;
-use ctrl_z_project::Manifest;
-use ctrl_z_versioning::Manager;
+use ctrl_z_changeset::{Changeset, VersionExt};
+use ctrl_z_project::{Manifest, Workspace};
+use ctrl_z_repository::Repository;
 
 use crate::cli::{Command, Result};
 use crate::Options;
@@ -60,8 +60,18 @@ where
 {
     /// Executes the command.
     fn execute(&self, options: Options<T>) -> Result {
-        let manager = Manager::<T>::new(options.directory)?;
-        let changeset = manager.changeset(self.version.as_ref())?;
+        let repository = Repository::open(options.directory)?;
+        let versions = repository.versions()?;
+
+        // Resolve workspace and create changeset, and determine all commits
+        // that are either part of the given version or yet unreleased
+        let workspace = Workspace::<T>::resolve(repository.path())?;
+        let mut changeset = Changeset::new(&workspace)?;
+        if let Some(version) = &self.version {
+            changeset.extend(versions.commits(version)?.flatten())?;
+        } else {
+            changeset.extend(versions.unreleased()?.flatten())?;
+        }
 
         // Create queue for writing to standard out - since we are particularly
         // careful about line feeds, we collect everything before writing

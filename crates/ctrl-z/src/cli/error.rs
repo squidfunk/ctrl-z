@@ -31,6 +31,7 @@ use thiserror::Error;
 use ctrl_z_changeset as changeset;
 use ctrl_z_changeset::change;
 use ctrl_z_project as project;
+use ctrl_z_repository as repository;
 use ctrl_z_versioning as versioning;
 
 // ----------------------------------------------------------------------------
@@ -43,18 +44,23 @@ pub enum Error {
     /// I/O error.
     #[error(transparent)]
     Io(#[from] io::Error),
-    /// Change error.
+    /// Version error.
     #[error(transparent)]
-    Change(#[from] change::Error),
+    Version(#[from] semver::Error),
     /// Changeset error.
     #[error(transparent)]
     Changeset(#[from] changeset::Error),
-    /// Verison error.
-    #[error(transparent)]
-    Version(#[from] semver::Error),
     /// Project error.
     #[error(transparent)]
     Project(#[from] project::Error),
+    /// Repository error.
+    #[error(transparent)]
+    Repository(#[from] repository::Error),
+
+    // @todo – can we encapuslate the errors below?
+    /// Change error.
+    #[error(transparent)]
+    Change(#[from] change::Error),
     /// Versioning error.
     #[error(transparent)]
     Versioning(#[from] versioning::Error),

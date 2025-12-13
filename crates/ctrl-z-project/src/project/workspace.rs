@@ -103,6 +103,21 @@ where
         Ok(Self { path: root, projects, packages })
     }
 
+    /// Attempts to resolve a workspace at the given path.
+    ///
+    /// # Errors
+    ///
+    /// This method returns [`Error::Io`][], if the workspace could not be read.
+    ///
+    /// [`Error::Io`]: crate::project::Error::Io
+    #[inline]
+    pub fn resolve<P>(path: P) -> Result<Self>
+    where
+        P: AsRef<Path>,
+    {
+        Self::read(T::resolve(path.as_ref())?)
+    }
+
     /// Returns a reference to the project with the given name.
     #[inline]
     #[must_use]

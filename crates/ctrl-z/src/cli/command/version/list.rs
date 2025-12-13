@@ -29,7 +29,7 @@ use clap::Args;
 use std::fmt::Debug;
 
 use ctrl_z_project::Manifest;
-use ctrl_z_versioning::Manager;
+use ctrl_z_repository::Repository;
 
 use crate::cli::{Command, Result};
 use crate::Options;
@@ -56,10 +56,12 @@ where
 {
     /// Executes the command.
     fn execute(&self, options: Options<T>) -> Result {
-        let manager = Manager::<T>::new(options.directory)?;
+        let repository = Repository::open(options.directory)?;
+        let versions = repository.versions()?;
 
-        let versions = manager.repository().versions().unwrap();
-        for (version, _) in versions.iter() {
+        // List all versions, or abort after writing the first version to
+        // standard out in case only the latest version should be written
+        for (version, _) in &versions {
             println!("v{version}");
             if self.latest {
                 break;

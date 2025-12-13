@@ -68,6 +68,13 @@ where
             return Ok(());
         }
 
+        // head determine all commits that we should then pass to a function that
+        // walks through them and determines all version bumps.
+        let versions = manager.repository().versions().unwrap();
+        for x in versions.unreleased().unwrap() {
+            println!("- {:?}", x);
+        }
+
         //
         intro("")?;
 

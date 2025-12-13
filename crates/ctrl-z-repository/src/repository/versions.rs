@@ -26,13 +26,14 @@
 //! Version set.
 
 use semver::Version;
-use std::collections::btree_map::Range;
+use std::collections::btree_map::{IntoIter, Iter, Range};
 use std::collections::BTreeMap;
 use std::fmt;
+use std::iter::Rev;
 use std::ops::RangeBounds;
 
 use super::commit::Commits;
-use super::error::Result;
+use super::error::{Error, Result};
 use super::id::Id;
 use super::Repository;
 
@@ -110,23 +111,50 @@ impl Versions<'_> {
         self.tags.range(range)
     }
 
-    // /// Returns an iterator over the commits at the head of the repository.
-    // pub fn head(&self) -> Result<Commits<'_>> {
-    //     // @todo maybe we should rename versions
+    // @todo naming...
+    pub fn commits(&self, version: &Version) -> Result<Commits<'_>> {
+        let mut iter = self.tags.range(..=version).rev();
+        if let Some((_, start)) = iter.next() {
+            if let Some((_, end)) = iter.next() {
+                self.repository.commits(start..end)
+            } else {
+                self.repository.commits(start..)
+            }
+        } else {
+            Err(Error::Bound)
+        }
+    }
 
-    // }
+    /// Creates an iterator over unreleased commits in the repository.
+    pub fn unreleased(&self) -> Result<Commits<'_>> {
+        let mut iter = self.tags.range(..).rev();
+        if let Some((_, end)) = iter.next() {
+            self.repository.commits(..end)
+        } else {
+            self.repository.commits(..)
+        }
+    }
 
-    // Select? get?
-
-    // iterator over commit in specific version
-
+    /// Creates an iterator over the version set.
     pub fn iter(&self) -> impl Iterator<Item = (&Version, &Id)> {
-        self.tags.iter().rev()
+        self.into_iter()
     }
 }
 
 // ----------------------------------------------------------------------------
 // Trait implementations
+// ----------------------------------------------------------------------------
+
+impl<'a> IntoIterator for &'a Versions<'a> {
+    type Item = (&'a Version, &'a Id);
+    type IntoIter = Rev<Iter<'a, Version, Id>>;
+
+    /// Creates an iterator over the version set.
+    fn into_iter(self) -> Self::IntoIter {
+        self.tags.iter().rev()
+    }
+}
+
 // ----------------------------------------------------------------------------
 
 impl fmt::Debug for Versions<'_> {

@@ -75,7 +75,10 @@ where
         // //
         // intro("")?;
 
-        dependents.bump(&mut increments, |bump| Ok(None))?;
+        dependents.bump(&mut increments, |bump| {
+            // do something
+            Ok(None)
+        })?;
 
         // let versions = manager.bump(|name, version, bumps| {
         //     if bumps.len() == 1 {

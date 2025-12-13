@@ -61,11 +61,11 @@ where
     /// Executes the command.
     fn execute(&self, options: Options<T>) -> Result {
         let repository = Repository::open(options.directory)?;
-        let versions = repository.versions()?;
-
-        // Resolve workspace and create changeset, and determine all commits
-        // that are either part of the given version or yet unreleased
         let workspace = Workspace::<T>::resolve(repository.path())?;
+
+        // Resolve versions and create changeset, and determine all commits
+        // that are either part of the given version or yet unreleased
+        let versions = repository.versions()?;
         let mut changeset = Changeset::new(&workspace)?;
         if let Some(version) = &self.version {
             changeset.extend(versions.commits(version)?.flatten())?;

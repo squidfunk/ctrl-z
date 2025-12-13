@@ -29,8 +29,8 @@ use clap::Args;
 use semver::Version;
 
 use ctrl_z_changeset::VersionExt;
-use ctrl_z_project::Manifest;
-use ctrl_z_versioning::Manager;
+use ctrl_z_project::{Manifest, Workspace};
+use ctrl_z_repository::Repository;
 
 use crate::cli::{Command, Result};
 use crate::Options;
@@ -57,10 +57,11 @@ where
 {
     /// Executes the command.
     fn execute(&self, options: Options<T>) -> Result {
-        let manager = Manager::<T>::new(options.directory)?;
+        let repository = Repository::open(options.directory)?;
+        let workspace = Workspace::<T>::resolve(repository.path())?;
 
-        // @todo
-        let dependents = manager.workspace().dependents()?;
+        // List workspace dependents in topological order
+        let dependents = workspace.dependents()?;
         for node in &dependents {
             let name = dependents[node].name().expect("invariant");
             println!("{name}");

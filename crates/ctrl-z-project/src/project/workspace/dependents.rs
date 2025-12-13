@@ -60,7 +60,7 @@ where
     ///
     /// This method creates a graph that links projects in a workspace with
     /// their inner-workspace dependencies, allowing to perform a topological
-    /// traversal. Handling packages in the right order it absolutely essential
+    /// traversal. Handling packages in the right order is absolutely essential
     /// for correct versioning and release management.
     ///
     /// # Errors

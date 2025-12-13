@@ -57,10 +57,10 @@ where
     /// Executes the command.
     fn execute(&self, options: Options<T>) -> Result {
         let repository = Repository::open(options.directory)?;
-        let versions = repository.versions()?;
 
-        // List all versions, or abort after writing the first version to
-        // standard out in case only the latest version should be written
+        // Resolve and list all versions, or abort after writing the latest
+        // version to standard out if only the latest version is requested
+        let versions = repository.versions()?;
         for (version, _) in &versions {
             println!("v{version}");
             if self.latest {

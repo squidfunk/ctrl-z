@@ -76,7 +76,7 @@ where
         // intro("")?;
 
         dependents.bump(&mut increments, |bump| {
-            // do something blub blub
+            // do something
             Ok(None)
         })?;
 

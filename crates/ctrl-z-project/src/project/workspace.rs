@@ -33,7 +33,7 @@ use super::error::Result;
 use super::manifest::Manifest;
 use super::Project;
 
-mod dependents;
+pub mod dependents;
 mod packages;
 pub mod updater; // @todo
 

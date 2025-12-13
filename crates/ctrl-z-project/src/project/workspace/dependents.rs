@@ -34,6 +34,10 @@ use crate::project::{Project, Result};
 
 use super::Workspace;
 
+mod bump;
+
+pub use bump::Bump;
+
 // ----------------------------------------------------------------------------
 // Structs
 // ----------------------------------------------------------------------------
@@ -45,7 +49,7 @@ where
     T: Manifest,
 {
     /// Workspace graph.
-    pub graph: Graph<&'a Project<T>>, // @todo pub temp
+    graph: Graph<&'a Project<T>>,
 }
 
 // ----------------------------------------------------------------------------

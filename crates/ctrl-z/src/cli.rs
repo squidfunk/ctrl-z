@@ -31,11 +31,16 @@ use clap::Parser;
 use std::env;
 use std::path::PathBuf;
 
+use ctrl_z_project::{Manifest, Workspace};
+use ctrl_z_repository::Repository;
+
 mod command;
 mod error;
 
 pub use command::{Command, Commands};
-pub use error::{Error, Result};
+pub use error::Result;
+
+use crate::Context;
 
 // ----------------------------------------------------------------------------
 // Constants
@@ -65,7 +70,26 @@ pub struct Cli {
     pub directory: PathBuf,
     /// Commands.
     #[command(subcommand)]
-    pub command: Commands,
+    command: Commands,
+}
+
+// ----------------------------------------------------------------------------
+// Implementations
+// ----------------------------------------------------------------------------
+
+impl Cli {
+    pub fn execute<T>(self, repository: Repository, workspace: Workspace<T>)
+    where
+        T: Manifest,
+    {
+        match self.command.execute(Context { repository, workspace }) {
+            Ok(()) => std::process::exit(0),
+            Err(err) => {
+                eprintln!("Error: {}", err);
+                std::process::exit(1)
+            }
+        }
+    }
 }
 
 // ----------------------------------------------------------------------------

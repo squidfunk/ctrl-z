@@ -25,6 +25,7 @@
 
 //! Changeset.
 
+use ctrl_z_project::version::Increment;
 use ctrl_z_project::{Manifest, Workspace};
 use ctrl_z_repository::commit::trim_trailers;
 
@@ -33,13 +34,11 @@ pub mod changelog;
 mod error;
 pub mod revision;
 pub mod scopes;
-pub mod version;
 
 use change::Change;
 pub use error::{Error, Result};
 use revision::Revision;
 use scopes::Scopes;
-use version::Increment;
 
 // ----------------------------------------------------------------------------
 // Structs

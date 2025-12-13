@@ -42,5 +42,4 @@ ctrl-z-project.workspace = true
 ctrl-z-repository.workspace = true
 
 globset.workspace = true
-semver.workspace = true
 thiserror.workspace = true

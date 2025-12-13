@@ -32,9 +32,9 @@ use console::style;
 use std::io::Write;
 use tempfile::NamedTempFile;
 
-use ctrl_z_changeset::VersionExt;
+use ctrl_z_changeset::Changeset;
+use ctrl_z_project::version::VersionExt;
 use ctrl_z_project::Manifest;
-use ctrl_z_versioning::Manager;
 
 use crate::cli::{Command, Result};
 use crate::Context;
@@ -61,22 +61,21 @@ where
 {
     /// Executes the command.
     fn execute(&self, context: Context<T>) -> Result {
-        // let mut manager = Manager::<T>::new(options.directory)?;
-        // let changeset = manager.changeset(None)?;
-        // if changeset.is_empty() {
-        //     println!("Nothing to release");
-        //     return Ok(());
-        // }
+        // Resolve versions and create changeset, then determine all commits
+        // that were added after the latest version was released
+        let versions = context.repository.versions()?;
+        let mut changeset = Changeset::new(&context.workspace)?;
+        changeset.extend(versions.unreleased()?.flatten())?;
 
-        // // head determine all commits that we should then pass to a function that
-        // // walks through them and determines all version bumps.
-        // let versions = manager.repository().versions().unwrap();
-        // for x in versions.unreleased().unwrap() {
-        //     println!("- {:?}", x);
-        // }
+        // Obtain version increments, which denote which packages have changed,
+        // and traverse dependents to list changed packages in topological order
+        let mut increments = changeset.increments().to_vec();
+        let dependents = context.workspace.dependents()?;
 
         // //
         // intro("")?;
+
+        dependents.bump(&mut increments, |bump| Ok(None))?;
 
         // let versions = manager.bump(|name, version, bumps| {
         //     if bumps.len() == 1 {

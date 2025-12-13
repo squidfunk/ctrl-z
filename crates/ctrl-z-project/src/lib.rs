@@ -27,8 +27,9 @@
 
 mod project;
 
-pub use project::manifest::cargo::{self, Cargo};
-pub use project::manifest::node::{self, Node};
+pub use project::manifest::cargo::Cargo;
+pub use project::manifest::node::Node;
 pub use project::manifest::{self, Manifest};
+pub use project::version;
 pub use project::workspace::{self, Workspace};
 pub use project::{Error, Project, Result};

@@ -32,7 +32,7 @@ use ctrl_z_repository::Repository;
 
 mod cli;
 
-use cli::{Cli, Command, Result};
+use cli::{Cli, Result};
 
 // ----------------------------------------------------------------------------
 // Structs
@@ -61,24 +61,11 @@ fn main() -> Result {
     let repository = Repository::open(&cli.directory)?;
 
     if let Ok(workspace) = Workspace::<Cargo>::resolve(repository.path()) {
-        try_exec(repository, workspace, &cli);
-    }
-
-    if let Ok(workspace) = Workspace::<Node>::resolve(repository.path()) {
-        try_exec(repository, workspace, &cli);
+        cli.execute(repository, workspace);
+    } else if let Ok(workspace) = Workspace::<Node>::resolve(repository.path())
+    {
+        cli.execute(repository, workspace);
     }
 
     Ok(()) // ltodo
-}
-
-fn try_exec<T: Manifest>(
-    repository: Repository, workspace: Workspace<T>, cli: &Cli,
-) -> ! {
-    match cli.command.execute(Context { repository, workspace }) {
-        Ok(()) => std::process::exit(0),
-        Err(err) => {
-            eprintln!("Error: {}", err);
-            std::process::exit(1)
-        }
-    }
 }

@@ -28,6 +28,8 @@
 use std::fmt::{self, Write};
 use std::str::FromStr;
 
+use ctrl_z_project::version::Increment;
+
 mod error;
 mod kind;
 
@@ -52,6 +54,42 @@ pub struct Change {
 // ----------------------------------------------------------------------------
 // Implementations
 // ----------------------------------------------------------------------------
+
+impl Change {
+    /// Returns the corresponding version increment.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # fn main() -> Result<(), Box<dyn Error>> {
+    /// use ctrl_z_changeset::{Change, Increment};
+    ///
+    /// // Create increment from change
+    /// let change: Change = "fix: summary".parse()?;
+    /// assert_eq!(change.as_increment(), Some(Increment::Patch));
+    /// # Ok(())
+    /// # }
+    /// ```
+    #[must_use]
+    pub fn as_increment(&self) -> Option<Increment> {
+        let increment = match self.kind() {
+            Kind::Feature => Increment::Minor,
+            Kind::Fix => Increment::Patch,
+            Kind::Performance => Increment::Patch,
+            Kind::Refactor => Increment::Patch,
+            _ => return None,
+        };
+
+        // If a version increment is determined, check for breaking changes,
+        // as they must always lead to a major version increment
+        if self.is_breaking() {
+            Some(Increment::Major)
+        } else {
+            Some(increment)
+        }
+    }
+}
 
 #[allow(clippy::must_use_candidate)]
 impl Change {

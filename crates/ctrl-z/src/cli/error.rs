@@ -29,10 +29,8 @@ use std::{io, result};
 use thiserror::Error;
 
 use ctrl_z_changeset as changeset;
-use ctrl_z_changeset::change;
 use ctrl_z_project as project;
 use ctrl_z_repository as repository;
-use ctrl_z_versioning as versioning;
 
 // ----------------------------------------------------------------------------
 // Enums
@@ -56,14 +54,6 @@ pub enum Error {
     /// Repository error.
     #[error(transparent)]
     Repository(#[from] repository::Error),
-
-    // @todo – can we encapuslate the errors below?
-    /// Change error.
-    #[error(transparent)]
-    Change(#[from] change::Error),
-    /// Versioning error.
-    #[error(transparent)]
-    Versioning(#[from] versioning::Error),
 }
 
 // ----------------------------------------------------------------------------

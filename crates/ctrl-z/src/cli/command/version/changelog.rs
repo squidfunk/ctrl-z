@@ -28,7 +28,8 @@
 use clap::Args;
 use semver::Version;
 
-use ctrl_z_changeset::{Changeset, VersionExt};
+use ctrl_z_changeset::Changeset;
+use ctrl_z_project::version::VersionExt;
 use ctrl_z_project::Manifest;
 
 use crate::cli::{Command, Result};

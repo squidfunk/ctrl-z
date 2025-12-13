@@ -29,7 +29,6 @@ use semver::Version;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
-use ctrl_z_changeset::{Changeset, Increment, VersionExt};
 use ctrl_z_project::workspace::updater::Updatable;
 use ctrl_z_project::{Manifest, Workspace};
 use ctrl_z_repository::Repository;
@@ -79,194 +78,122 @@ where
         })
     }
 
-    // @todo with_options(dry run?)
+    // // this should be called recommendation!?
+    // pub fn bump<F>(&self, mut f: F) -> Result<BTreeMap<String, Version>>
+    // where
+    //     F: FnMut(
+    //         &str,
+    //         &Version,
+    //         &[Option<Increment>],
+    //     ) -> Result<Option<Increment>>,
+    // {
+    //     // obtain the ids of all packages
 
-    // we should move this iterator to the repository, then we dont need this
-    // method...
+    //     let changeset = self.changeset(None)?; // what if changeset is empty?
+    //     let dependents = self.workspace.dependents()?;
 
-    /// obtain changelog... - we should deduce version outside! otherwise, its ehead
-    /// // @todo: maybe we should pass version in the options...
-    pub fn changeset(
-        &self, version: Option<&Version>,
-    ) -> Result<Changeset<'_>> {
-        let versions = self.repository.versions()?;
+    //     // increments are equal to the number of packaes, so we obtain the
+    //     // index of the packages that changed, which are precisely the node
+    //     // indices in the dependency graph
+    //     let mut increments = changeset.increments().to_vec();
+    //     let changed = increments
+    //         .iter()
+    //         .enumerate()
+    //         .filter_map(|(index, increment)| increment.map(|_| index));
 
-        // use version!
-        let commits = if let Some(v) = version {
-            if !versions.contains(v) {
-                return Err(Error::Version(v.clone()));
-            }
+    //     // no dependencis?
+    //     let incoming = dependents.graph.topology().incoming();
+    //     for node in dependents.graph.traverse(changed) {
+    //         let project = &dependents.graph[node];
 
-            // versions iter ...
+    //         let name = project.name().expect("invariant");
+    //         let current_version = project.version().expect("invariant");
+    //         let bump = increments[node];
 
-            // how can I find orphaned tags?
+    //         // determine the max bump levels by deps. this dictates the number
+    //         // of options that we currently have
+    //         let mut dep_bump = BTreeSet::new();
+    //         for &dep in &incoming[node] {
+    //             dep_bump.insert(increments[dep]);
+    //         }
 
-            let mut iter = versions.range(..=v).rev();
-            let (_, start) = iter.next().expect("invariant"); // ok_or?
-            let end = iter.next();
-            // println!("start: {:?}, end: {:?}", v, end);
-            if let Some((_, end)) = end {
-                self.repository.commits(start..end)?
-            } else {
-                self.repository.commits(start..)?
-            }
-        } else {
-            let mut iter = versions.range(..).rev();
-            let end = iter.next();
-            if let Some((_, end)) = end {
-                self.repository.commits(..end)?
-            } else {
-                self.repository.commits(..)?
-            }
-        };
+    //         if dep_bump.is_empty() {
+    //             // no deps! just use the exact bump!
+    //             increments[node] = f(name, current_version, &[bump])?;
+    //             // update the increment!
+    //             continue;
+    //         }
 
-        // testssss
+    //         // now, filter all things from dep_bump taht is smaller than the
+    //         // current bump
+    //         // println!("dep_bump before filter: {:?}", dep_bump);
+    //         dep_bump.insert(bump); // insert earlier? or here?
+    //         dep_bump.retain(|&b| b >= bump);
 
-        // get summary from repository and add to changeset.
-        // get canonical version – how? workspace config
+    //         // @todo handle max bumps!
 
-        let mut changeset = Changeset::new(&self.workspace)?;
-        changeset.extend(commits.flatten())?;
-        Ok(changeset)
-    }
+    //         // if the original package is not bumped, we add all levels up to
+    //         // the max bump / max dep bump.
 
-    //
-    pub fn changed(&self) {}
+    //         increments[node] = f(
+    //             name,
+    //             current_version,
+    //             &dep_bump.into_iter().collect::<Vec<_>>(),
+    //         )?;
+    //     }
 
-    // this should be called recommendation!?
-    pub fn bump<F>(&self, mut f: F) -> Result<BTreeMap<String, Version>>
-    where
-        F: FnMut(
-            &str,
-            &Version,
-            &[Option<Increment>],
-        ) -> Result<Option<Increment>>,
-    {
-        // obtain the ids of all packages
+    //     // now, do the actual bumps? apply it to the worksapce...?
+    //     // for project in self.workspace.iter_mut() {}
 
-        let changeset = self.changeset(None)?; // what if changeset is empty?
-        let dependents = self.workspace.dependents()?;
+    //     let mut versions = BTreeMap::new();
+    //     for (index, increment) in increments.iter().enumerate() {
+    //         if let Some(increment) = increment {
+    //             let project = &dependents.graph[index];
+    //             let name = project.name().expect("invariant");
+    //             let current_version = project.version().expect("invariant");
 
-        // increments are equal to the number of packaes, so we obtain the
-        // index of the packages that changed, which are precisely the node
-        // indices in the dependency graph
-        let mut increments = changeset.increments().to_vec();
-        let changed = increments
-            .iter()
-            .enumerate()
-            .filter_map(|(index, increment)| increment.map(|_| index));
+    //             let new_version = current_version.bump(*increment);
+    //             versions.insert(name.to_string(), new_version);
+    //         }
+    //     }
 
-        // no dependencis?
-        let incoming = dependents.graph.topology().incoming();
-        for node in dependents.graph.traverse(changed) {
-            let project = &dependents.graph[node];
+    //     // @todo
+    //     Ok(versions)
+    // }
 
-            let name = project.name().expect("invariant");
-            let current_version = project.version().expect("invariant");
-            let bump = increments[node];
+    // // we should use the versions thing as applyable to a workspace.
+    // // it should also consume the workspace
+    // pub fn update(
+    //     &mut self, versions: BTreeMap<String, Version>, summary: String,
+    // ) -> Result<()>
+    // where
+    //     T: Updatable,
+    // {
+    //     // switch first!
+    //     let version = "0.0.3";
+    //     self.repository.branch(format!("release/v{version}"))?;
 
-            // determine the max bump levels by deps. this dictates the number
-            // of options that we currently have
-            let mut dep_bump = BTreeSet::new();
-            for &dep in &incoming[node] {
-                dep_bump.insert(increments[dep]);
-            }
+    //     for project in &mut self.workspace {
+    //         project
+    //             .update(
+    //                 &versions
+    //                     .iter()
+    //                     .map(|(k, v)| (k.as_str(), v.clone()))
+    //                     .collect(),
+    //             )
+    //             .unwrap();
+    //     }
 
-            if dep_bump.is_empty() {
-                // no deps! just use the exact bump!
-                increments[node] = f(name, current_version, &[bump])?;
-                // update the increment!
-                continue;
-            }
+    //     // create new branch, commit to repo, then push everything.
 
-            // now, filter all things from dep_bump taht is smaller than the
-            // current bump
-            // println!("dep_bump before filter: {:?}", dep_bump);
-            dep_bump.insert(bump); // insert earlier? or here?
-            dep_bump.retain(|&b| b >= bump);
+    //     self.repository.add("*")?;
 
-            // @todo handle max bumps!
+    //     // @todo: here we need to prompt for the release notes - add main tag
+    //     self.repository
+    //         .commit(format!("chore: release v{version}\n\n{summary}"))?;
 
-            // if the original package is not bumped, we add all levels up to
-            // the max bump / max dep bump.
+    //     // commit message must contain changelog
 
-            increments[node] = f(
-                name,
-                current_version,
-                &dep_bump.into_iter().collect::<Vec<_>>(),
-            )?;
-        }
-
-        // now, do the actual bumps? apply it to the worksapce...?
-        // for project in self.workspace.iter_mut() {}
-
-        let mut versions = BTreeMap::new();
-        for (index, increment) in increments.iter().enumerate() {
-            if let Some(increment) = increment {
-                let project = &dependents.graph[index];
-                let name = project.name().expect("invariant");
-                let current_version = project.version().expect("invariant");
-
-                let new_version = current_version.bump(*increment);
-                versions.insert(name.to_string(), new_version);
-            }
-        }
-
-        // @todo
-        Ok(versions)
-    }
-
-    // we should use the versions thing as applyable to a workspace.
-    // it should also consume the workspace
-    pub fn update(
-        &mut self, versions: BTreeMap<String, Version>, summary: String,
-    ) -> Result<()>
-    where
-        T: Updatable,
-    {
-        // switch first!
-        let version = "0.0.3";
-        self.repository.branch(format!("release/v{version}"))?;
-
-        for project in &mut self.workspace {
-            project
-                .update(
-                    &versions
-                        .iter()
-                        .map(|(k, v)| (k.as_str(), v.clone()))
-                        .collect(),
-                )
-                .unwrap();
-        }
-
-        // create new branch, commit to repo, then push everything.
-
-        self.repository.add("*")?;
-
-        // @todo: here we need to prompt for the release notes - add main tag
-        self.repository
-            .commit(format!("chore: release v{version}\n\n{summary}"))?;
-
-        // commit message must contain changelog
-
-        Ok(())
-    }
-}
-
-#[allow(clippy::must_use_candidate)]
-impl<T> Manager<T>
-where
-    T: Manifest,
-{
-    /// Returns a reference to the repository.
-    #[inline]
-    pub fn repository(&self) -> &Repository {
-        &self.repository
-    }
-
-    /// Returns a reference to the workspace.
-    #[inline]
-    pub fn workspace(&self) -> &Workspace<T> {
-        &self.workspace
-    }
+    //     Ok(())
+    // }
 }

@@ -34,6 +34,7 @@ use std::{fmt, fs, iter};
 mod error;
 pub mod manifest;
 mod members;
+pub mod version;
 pub mod workspace;
 
 pub use error::{Error, Result};

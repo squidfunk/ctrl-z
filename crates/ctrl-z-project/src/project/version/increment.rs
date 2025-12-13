@@ -27,9 +27,6 @@
 
 use std::fmt;
 
-use crate::changeset::change::Kind;
-use crate::changeset::Change;
-
 // ----------------------------------------------------------------------------
 // Enums
 // ----------------------------------------------------------------------------
@@ -46,46 +43,6 @@ pub enum Increment {
 }
 
 // ----------------------------------------------------------------------------
-// Implementations
-// ----------------------------------------------------------------------------
-
-impl Change {
-    /// Returns the corresponding version increment.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::error::Error;
-    /// # fn main() -> Result<(), Box<dyn Error>> {
-    /// use ctrl_z_changeset::{Change, Increment};
-    ///
-    /// // Create increment from change
-    /// let change: Change = "fix: summary".parse()?;
-    /// assert_eq!(change.as_increment(), Some(Increment::Patch));
-    /// # Ok(())
-    /// # }
-    /// ```
-    #[must_use]
-    pub fn as_increment(&self) -> Option<Increment> {
-        let increment = match self.kind() {
-            Kind::Feature => Increment::Minor,
-            Kind::Fix => Increment::Patch,
-            Kind::Performance => Increment::Patch,
-            Kind::Refactor => Increment::Patch,
-            _ => return None,
-        };
-
-        // If a version increment is determined, check for breaking changes,
-        // as they must always lead to a major version increment
-        if self.is_breaking() {
-            Some(Increment::Major)
-        } else {
-            Some(increment)
-        }
-    }
-}
-
-// ----------------------------------------------------------------------------
 // Trait implementations
 // ----------------------------------------------------------------------------
 
@@ -96,35 +53,6 @@ impl fmt::Display for Increment {
             Increment::Patch => f.write_str("patch"),
             Increment::Minor => f.write_str("minor"),
             Increment::Major => f.write_str("major"),
-        }
-    }
-}
-
-// ----------------------------------------------------------------------------
-// Tests
-// ----------------------------------------------------------------------------
-
-#[cfg(test)]
-mod tests {
-
-    mod as_increment {
-        use std::str::FromStr;
-
-        use crate::changeset::change::{Change, Result};
-        use crate::changeset::version::Increment;
-
-        #[test]
-        fn handles_non_breaking() -> Result {
-            let change = Change::from_str("fix: summary")?;
-            assert_eq!(change.as_increment(), Some(Increment::Patch));
-            Ok(())
-        }
-
-        #[test]
-        fn handles_breaking() -> Result {
-            let change = Change::from_str("fix!: summary")?;
-            assert_eq!(change.as_increment(), Some(Increment::Major));
-            Ok(())
         }
     }
 }

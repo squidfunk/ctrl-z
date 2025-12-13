@@ -68,6 +68,8 @@ where
             buf
         };
 
+        println!("message {:?}", message);
+
         for line in message.lines() {
             let change: Change = match line.parse() {
                 Ok(c) => c,
@@ -94,6 +96,8 @@ where
                     confirm("Does the commit resolve the issue?")
                         .initial_value(false)
                         .interact()?;
+
+                    // add issue number.
                 }
             }
 

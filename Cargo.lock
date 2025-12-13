@@ -266,7 +266,6 @@ dependencies = [
  "ctrl-z-changeset",
  "ctrl-z-project",
  "ctrl-z-repository",
- "ctrl-z-versioning",
  "semver",
  "tempfile",
  "thiserror",
@@ -279,7 +278,6 @@ dependencies = [
  "ctrl-z-project",
  "ctrl-z-repository",
  "globset",
- "semver",
  "thiserror",
 ]
 

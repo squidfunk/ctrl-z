@@ -102,7 +102,7 @@ jobs:
         run: |
           ctrl-z version changelog -s $VERSION > notes.txt
           gh release create $VERSION \
-            --title "$VERSION" \
+            --title "${VERSION#v}" \
             --notes-file notes.txt \
             --draft
 
